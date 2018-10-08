@@ -17,16 +17,18 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "commander_node.h"
+#include "bitten/control_msg.h"
+
 
  /* ----------------------------------------------------------------------
  *                      -------  Initializing   -------
  * ----------------------------------------------------------------------- */
 void InitRobot();
-// void manualCallback(const beginner_tutorials::control_Msg::ConstPtr& manual)
+// void manualCallback(const beginner_tutorials::control_msg::ConstPtr& manual)
 
-void manualCallback (/*const beginner_tutorials::FBMsgType_s::ConstPtr& manual */);
-void wpCallback     (/*const beginner_tutorials::FBMsgType_s::ConstPtr& wp*/);
-void testCallback   (/*const beginner_tutorials::FBMsgType_s::ConstPtr& test*/);
+void manualCallback (const bitten::control_msg::ConstPtr& manual);
+void wpCallback     (/*const beginner_tutorials::FBmsgType_s::ConstPtr& wp*/);
+void testCallback   (/*const beginner_tutorials::FBmsgType_s::ConstPtr& test*/);
 
 /* ----------------------------------------------------------------------
  *                       -------  Constants   -------
@@ -44,11 +46,11 @@ int main(int argc , char **argv)
     ros::NodeHandle n;
 
     ROS_INFO("Subscribing to \"manual_topic\"");
-    // ros::Subscriber manual_sub      = n.subscribe<ManualInputMsg>         ("manual_topic" , 3*loop_rate_int , &manualCallback);
+    ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>         ("manual_topic" , 3*loop_rate_int , &manualCallback);
     ROS_INFO("Subscribing to \"wp_topic\"");
-    // ros::Subscriber wp_sub          = n.subscribe<ManualInputMsg>         ("wp_topic"     , 3*loop_rate_int , &wpCallback);
+    // ros::Subscriber wp_sub          = n.subscribe<bitten::control_msg>         ("wp_topic"     , 3*loop_rate_int , &wpCallback);
     ROS_INFO("Subscribing to \"test_topic\"");
-    // ros::Subscriber test_sub        = n.subscribe<ManualInputMsg>         ("test_topic"   , 3*loop_rate_int , &testCallback);
+    // ros::Subscriber test_sub        = n.subscribe<bitten::control_msg>         ("test_topic"   , 3*loop_rate_int , &testCallback);
 
     ROS_INFO("Publishing on \"joint_states\" topic");
     ros::Publisher commander_pub    = n.advertise<sensor_msgs::JointState>  ("joint_states" , 3*loop_rate_int);
@@ -57,7 +59,7 @@ int main(int argc , char **argv)
     ros::Rate loop_rate(loop_rate_int);
 
 
-    sensor_msgs::JointState Msg;
+    sensor_msgs::JointState msg;
     CONTROL_MODE = WAYPOINT_MODE;
     ROS_INFO("Entering Superloop!");
 /*  -------------------------------------------------
@@ -65,13 +67,18 @@ int main(int argc , char **argv)
     ------------------------------------------------- */
     while(ros::ok())
     {
+
+        msg.name.clear();
+        msg.position.clear();
+
+
         for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
         {
-            Msg.name.push_back(TX90.jointNames[i]);
-            Msg.position.push_back(TX90.currPos[i]);
+            msg.name.push_back(TX90.jointNames[i]);
+            msg.position.push_back(TX90.currPos[i]);
         }
 
-        commander_pub.publish(Msg);
+        commander_pub.publish(msg);
         ros::spinOnce();
         loop_rate.sleep();
     }
@@ -132,7 +139,7 @@ void InitRobot()
  /* ----------------------------------------------------------------------
  *                 -------  manual Callback function   -------
  * ----------------------------------------------------------------------- */       
-void manualCallback (/*const beginner_tutorials::FBMsgType::ConstPtr& manual_topic*/)
+void manualCallback (const bitten::control_msg::ConstPtr& manual)
 {   
     for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
     {
@@ -153,17 +160,20 @@ void manualCallback (/*const beginner_tutorials::FBMsgType::ConstPtr& manual_top
  /* ----------------------------------------------------------------------
  *                -------  Waypoint Callback function   -------
  * ----------------------------------------------------------------------- */ 
-void wpCallback     (/*const beginner_tutorials::FBMsgType::ConstPtr& wp_topic*/)
+void wpCallback     (/* */ )
 {
     /*
      * MANDAG: Snak om hvordan WP beskeden ser ud. én WP besked med ønsket position og hastighed som skal afvikles, før næste læses?
      * */
+
+
+
 }
 
  /* ----------------------------------------------------------------------
  *                  -------  test Callback function   -------
  * ----------------------------------------------------------------------- */ 
-void testCallback   (/*const beginner_tutorials::FBMsgType::ConstPtr& test_topic*/)
+void testCallback   (/*const beginner_tutorials::FBmsgType::ConstPtr& test_topic*/)
 {
     /*
      * MANDAG: Snak om hvordan TEST beskeden ser ud. én TEST besked med flere waypoints?
