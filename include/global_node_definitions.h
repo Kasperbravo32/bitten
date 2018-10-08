@@ -53,7 +53,6 @@ struct MsgType_s
     std::array<uint8_t, 6> jointToMove;   /* Contains wanted joints to move. values can be either -1, 0 or 1. -1 for negative direction, 1 for positive, 0 for no action  */
     std::array<float, 6> jointPosition;    /* Contains the wanted positions of each joint. used in waypoint mode, not in manual.   */
     std::array<float, 6> jointVelocity;    /* Percentage of maximum velocity to move joints with                                   */
-    
 };
 
 
