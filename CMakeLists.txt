@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 2.8.3)
 project(bitten)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+ add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  sensor_msgs
   std_msgs
   message_generation
 )
@@ -70,6 +71,7 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  sensor_msgs
 )
 
 ################################################
@@ -115,7 +117,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -200,6 +202,10 @@ include_directories(
 add_executable(manual_node src/manual_node.cpp)
 target_link_libraries(manual_node ${catkin_LIBRARIES})
 add_dependencies(manual_node bitten_generate_messages_cpp)
+
+add_executable(commander_node src/commander_node.cpp)
+target_link_libraries(commander_node ${catkin_LIBRARIES})
+add_dependencies(commander_node bitten_generate_messages_cpp)
 
 add_executable(test src/test.cpp)
 target_link_libraries(test ${catkin_LIBRARIES})

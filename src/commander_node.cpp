@@ -65,10 +65,10 @@ int main(int argc , char **argv)
     ------------------------------------------------- */
     while(ros::ok())
     {
-        for (int i = TX90.MinLink-1; i < TX90.MaxLink; i++)
+        for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
         {
-            Msg.name.push_back(TX90.JointNames[i]);
-            Msg.position.push_back(TX90.CurrPos[i]);
+            Msg.name.push_back(TX90.jointNames[i]);
+            Msg.position.push_back(TX90.currPos[i]);
         }
 
         commander_pub.publish(Msg);
@@ -82,43 +82,43 @@ int main(int argc , char **argv)
  * ----------------------------------------------------------------------- */       
 void InitRobot()
 {
-    TX90.MinLink    = 1;
-    TX90.MaxLink    = 6;
-    TX90.ResetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
+    TX90.minLink    = 1;
+    TX90.maxLink    = 6;
+    TX90.resetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
 
-    TX90.CurrVelocity   = 0.5;
+    TX90.currVelocity   = 0.5;
     
-    TX90.MaxRotation = {    3.14,               /* joint_1  */
+    TX90.maxRotation = {    3.14,               /* joint_1  */
                             2.57,               /* joint_2  */
                             2.53,               /* joint_3  */
                             4.71,               /* joint_4  */
                             2.44,               /* joint_5  */
                             4.71};              /* joint_6  */
 
-    TX90.MinRotation = {    -3.14,              /* joint_1  */
+    TX90.minRotation = {    -3.14,              /* joint_1  */
                             -2.27,              /* joint_2  */
                             -2.53,              /* joint_3  */
                             -4.71,              /* joint_4  */
                             -2.01,              /* joint_5  */
                             -4.71};             /* joint_6  */ 
 
-    TX90.MaxVelocity = {    (400/180)*3.14,     /* joint_1  */
+    TX90.maxVelocity = {    (400/180)*3.14,     /* joint_1  */
                             (400/180)*3.14,     /* joint_2  */
                             (430/180)*3.14,     /* joint_3  */
                             (540/180)*3.14,     /* joint_4  */
                             (475/180)*3.14,     /* joint_5  */
                             (760/180)*3.14};    /* joint_6  */                   
 
-    TX90.MaxEffort  =   {   318,                /* joint_1  */
+    TX90.maxEffort  =   {   318,                /* joint_1  */
                             166,                /* joint_2  */
                             76,                 /* joint_3  */
                             34,                 /* joint_4  */
                             29,                 /* joint_5  */
                             11};                /* joint_6  */
                             
-    TX90.CurrPos    = { 0 , 0 , 0 , 0 , 0 , 0};
+    TX90.currPos    = { 0 , 0 , 0 , 0 , 0 , 0};
 
-    TX90.JointNames = { "joint_1", 
+    TX90.jointNames = { "joint_1", 
                         "joint_2", 
                         "joint_3", 
                         "joint_4", 
@@ -134,18 +134,18 @@ void InitRobot()
  * ----------------------------------------------------------------------- */       
 void manualCallback (/*const beginner_tutorials::FBMsgType::ConstPtr& manual_topic*/)
 {   
-    for (int i = TX90.MinLink-1; i < TX90.MaxLink; i++)
+    for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
     {
-        if (ManualInputMsg.JointVelocity[i] > 0)
+        if (manualInputMsg.jointVelocity[i] > 0)
         {
-            if (TX90.CurrPos[i] + (1/loop_rate_int * ManualInputMsg.JointVelocity[i])*TX90.CurrVelocity < TX90.MaxRotation[i])
-                TX90.CurrPos[i] += (1/loop_rate_int * ManualInputMsg.JointVelocity[i])*TX90.CurrVelocity;
+            if (TX90.currPos[i] + (1/loop_rate_int * manualInputMsg.jointVelocity[i])*TX90.currVelocity < TX90.maxRotation[i])
+                TX90.currPos[i] += (1/loop_rate_int * manualInputMsg.jointVelocity[i])*TX90.currVelocity;
         }
           
-        else if (ManualInputMsg.JointVelocity[i] < 0)
+        else if (manualInputMsg.jointVelocity[i] < 0)
         {
-            if (TX90.CurrPos[i] - (1/loop_rate_int * -ManualInputMsg.JointVelocity[i])*TX90.CurrVelocity > TX90.MinRotation[i])
-                TX90.CurrPos[i] -= (1/loop_rate_int * -ManualInputMsg.JointVelocity[i])*TX90.CurrVelocity;
+            if (TX90.currPos[i] - (1/loop_rate_int * -manualInputMsg.jointVelocity[i])*TX90.currVelocity > TX90.minRotation[i])
+                TX90.currPos[i] -= (1/loop_rate_int * -manualInputMsg.jointVelocity[i])*TX90.currVelocity;
         }   
     }
 }
@@ -172,5 +172,5 @@ void testCallback   (/*const beginner_tutorials::FBMsgType::ConstPtr& test_topic
 }
 
 // Jeg tilføjede noget!
-    
+
 
