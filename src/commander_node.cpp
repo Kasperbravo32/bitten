@@ -170,3 +170,7 @@ void testCallback   (/*const beginner_tutorials::FBMsgType::ConstPtr& test_topic
      * */
 
 }
+
+// Jeg tilføjede noget!
+    
+
