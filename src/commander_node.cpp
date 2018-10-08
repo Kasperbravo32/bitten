@@ -90,7 +90,7 @@ void InitRobot()
     TX90.maxLink    = 6;
     TX90.resetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
 
-    TX90.currVelocity   = 5;
+    TX90.currVelocity   = 1;
     
     TX90.maxRotation = {    3.14,               /* joint_1  */
                             2.57,               /* joint_2  */
@@ -140,26 +140,20 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
 {
 
     for (int i = 0; i < 6; i++)
-    {
         manualInputMsg.jointVelocity[i] = manual->jointsVelocity[i];
-        /*if (manualInputMsg.jointVelocity[i] != 0)
-        {
-            TX90.currPos[i] += manualInputMsg.jointVelocity[i];
-        }*/
 
-    }
     for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
     {
         if (manualInputMsg.jointVelocity[i] > 0)
         {
-            if (TX90.currPos[i] + (1/loop_rate_int * manualInputMsg.jointVelocity[i])*TX90.currVelocity < TX90.maxRotation[i])
-                TX90.currPos[i] += (1/loop_rate_int * manualInputMsg.jointVelocity[i])*TX90.currVelocity;
+            if (TX90.currPos[i] + (1/loop_rate_int * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) < TX90.maxRotation[i])
+                TX90.currPos[i] += (1/loop_rate_int)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
         }
           
         else if (manualInputMsg.jointVelocity[i] < 0)
         {
-            if (TX90.currPos[i] - (1/loop_rate_int * -manualInputMsg.jointVelocity[i])*TX90.currVelocity > TX90.minRotation[i])
-                TX90.currPos[i] -= (1/loop_rate_int * -manualInputMsg.jointVelocity[i])*TX90.currVelocity;
+            if (TX90.currPos[i] - (1/loop_rate_int * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) > TX90.minRotation[i])
+                TX90.currPos[i] += (1/loop_rate_int)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
         }   
     }
 }
@@ -187,10 +181,3 @@ void testCallback   (/*const beginner_tutorials::FBmsgType::ConstPtr& test_topic
      * */
 
 }
-
-// Jeg tilføjede noget!
-
-// jeg tilføjede noget igen!
-
-// Jeg tilføjede noget igen, igen!
-
