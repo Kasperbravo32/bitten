@@ -140,7 +140,7 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
 {
 
     for (int i = 0; i < 6; i++)
-        manualInputMsg.jointVelocity[i] = manual->jointsVelocity[i];
+        manualInputMsg.jointVelocity[i] = manual->jointVelocity[i];
 
     for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
     {
