@@ -44,9 +44,8 @@ int main(int argc , char **argv)
 
     ros::init(argc , argv , "commander_node");
     ros::NodeHandle n;
-
     ROS_INFO("Subscribing to \"manual_topic\"");
-    ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>         ("manual_topic" , 3*loop_rate_int , &manualCallback);
+    ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>("manual_topic" , 3*loop_rate_int , &manualCallback);
     ROS_INFO("Subscribing to \"wp_topic\"");
     // ros::Subscriber wp_sub          = n.subscribe<bitten::control_msg>         ("wp_topic"     , 3*loop_rate_int , &wpCallback);
     ROS_INFO("Subscribing to \"test_topic\"");
@@ -54,14 +53,12 @@ int main(int argc , char **argv)
 
     ROS_INFO("Publishing on \"joint_states\" topic");
     ros::Publisher commander_pub    = n.advertise<sensor_msgs::JointState>  ("joint_states" , 3*loop_rate_int);
-
-    ROS_INFO("Looping at: %d Hz" , loop_rate_int);
     ros::Rate loop_rate(loop_rate_int);
-
 
     sensor_msgs::JointState msg;
     CONTROL_MODE = WAYPOINT_MODE;
-    ROS_INFO("Entering Superloop!");
+
+    ros::spinOnce();
 /*  -------------------------------------------------
          SUPERLOOP
     ------------------------------------------------- */
@@ -93,7 +90,7 @@ void InitRobot()
     TX90.maxLink    = 6;
     TX90.resetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
 
-    TX90.currVelocity   = 0.5;
+    TX90.currVelocity   = 1;
     
     TX90.maxRotation = {    3.14,               /* joint_1  */
                             2.57,               /* joint_2  */
@@ -140,19 +137,23 @@ void InitRobot()
  *                 -------  manual Callback function   -------
  * ----------------------------------------------------------------------- */       
 void manualCallback (const bitten::control_msg::ConstPtr& manual)
-{   
+{
+
+    for (int i = 0; i < 6; i++)
+        manualInputMsg.jointVelocity[i] = manual->jointsVelocity[i];
+
     for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
     {
         if (manualInputMsg.jointVelocity[i] > 0)
         {
-            if (TX90.currPos[i] + (1/loop_rate_int * manualInputMsg.jointVelocity[i])*TX90.currVelocity < TX90.maxRotation[i])
-                TX90.currPos[i] += (1/loop_rate_int * manualInputMsg.jointVelocity[i])*TX90.currVelocity;
+            if (TX90.currPos[i] + (1/loop_rate_int * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) < TX90.maxRotation[i])
+                TX90.currPos[i] += (1/loop_rate_int)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
         }
           
         else if (manualInputMsg.jointVelocity[i] < 0)
         {
-            if (TX90.currPos[i] - (1/loop_rate_int * -manualInputMsg.jointVelocity[i])*TX90.currVelocity > TX90.minRotation[i])
-                TX90.currPos[i] -= (1/loop_rate_int * -manualInputMsg.jointVelocity[i])*TX90.currVelocity;
+            if (TX90.currPos[i] - (1/loop_rate_int * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) > TX90.minRotation[i])
+                TX90.currPos[i] += (1/loop_rate_int)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
         }   
     }
 }
@@ -180,10 +181,3 @@ void testCallback   (/*const beginner_tutorials::FBmsgType::ConstPtr& test_topic
      * */
 
 }
-
-// Jeg tilføjede noget!
-
-// jeg tilføjede noget igen!
-
-// Jeg tilføjede noget igen, igen!
-
