@@ -20,7 +20,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 /* ----------------------------------------------------------------------
  *                       -------  Constants   -------
  * ----------------------------------------------------------------------- */
-const double loop_rate_int    = 50;
+const int loop_rate_int    = 50;
 
 /* ----------------------------------------------------------------------
  *                       -------  Global variables   -------
@@ -36,7 +36,7 @@ struct msg_type
     uint8_t jointToMove[6];
 }controlMsg;
 
-int8_t msgReceived = 0;
+// int8_t msgReceived = 0;
 float jointVel[6];
 
  /* ----------------------------------------------------------------------
@@ -56,36 +56,26 @@ int main(int argc, char **argv)
 
     controlMsg.nodeName = "manual_node";
 
-    ros::Rate loop_rate(10);
-    int count = 0;
+    ros::Rate loop_rate(loop_rate_int);
 
     ros::spinOnce();
+
+    bitten::control_msg msg;
+    msg.nodeName = "manual node";
+
 /* -------------------------------------------------
 *     SUPERLOOP
 * ------------------------------------------------- */
-
     while (ros::ok())
-    {
-        if(msgReceived)
-        {
-            msgReceived = 0;
-            bitten::control_msg msg;
-            
-            msg.nodeName = "manual node";
-            msg.jointsVelocity[0] = controlMsg.jointVelocity[0];
-            msg.jointsVelocity[1] = controlMsg.jointVelocity[1];
-            msg.jointsVelocity[2] = controlMsg.jointVelocity[2];
-            msg.jointsVelocity[3] = controlMsg.jointVelocity[3];
-            msg.jointsVelocity[4] = controlMsg.jointVelocity[4];
-            msg.jointsVelocity[5] = controlMsg.jointVelocity[5];
-            
-            manualPub.publish(msg);
-        }        
-
+    {    
+        for(int i = 0; i < 6; i++)
+            msg.jointsVelocity[i] = controlMsg.jointVelocity[i];
+        
+        manualPub.publish(msg);
+ 
         ros::spinOnce();
 
         loop_rate.sleep();
-        ++count;
     }
 
     return 0;
@@ -93,7 +83,7 @@ int main(int argc, char **argv)
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
-    msgReceived = 1;
+    // msgReceived = 1;
 
     //joint 1
     controlMsg.jointVelocity[0] = joy->axes[0];
