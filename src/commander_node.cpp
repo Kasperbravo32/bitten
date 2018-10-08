@@ -33,7 +33,7 @@ void testCallback   (/*const beginner_tutorials::FBmsgType_s::ConstPtr& test*/);
 /* ----------------------------------------------------------------------
  *                       -------  Constants   -------
  * ----------------------------------------------------------------------- */
-const double loop_rate_int    = 50;
+const double loopRateInt    = 50;
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -45,15 +45,15 @@ int main(int argc , char **argv)
     ros::init(argc , argv , "commander_node");
     ros::NodeHandle n;
     ROS_INFO("Subscribing to \"manual_topic\"");
-    ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>("manual_topic" , 3*loop_rate_int , &manualCallback);
+    ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>("manual_topic" , 3*loopRateInt , &manualCallback);
     ROS_INFO("Subscribing to \"wp_topic\"");
-    // ros::Subscriber wp_sub          = n.subscribe<bitten::control_msg>         ("wp_topic"     , 3*loop_rate_int , &wpCallback);
+    // ros::Subscriber wp_sub          = n.subscribe<bitten::control_msg>         ("wp_topic"     , 3*loopRateInt , &wpCallback);
     ROS_INFO("Subscribing to \"test_topic\"");
-    // ros::Subscriber test_sub        = n.subscribe<bitten::control_msg>         ("test_topic"   , 3*loop_rate_int , &testCallback);
+    // ros::Subscriber test_sub        = n.subscribe<bitten::control_msg>         ("test_topic"   , 3*loopRateInt , &testCallback);
 
     ROS_INFO("Publishing on \"joint_states\" topic");
-    ros::Publisher commander_pub    = n.advertise<sensor_msgs::JointState>  ("joint_states" , 3*loop_rate_int);
-    ros::Rate loop_rate(loop_rate_int);
+    ros::Publisher commander_pub    = n.advertise<sensor_msgs::JointState>  ("joint_states" , 3*loopRateInt);
+    ros::Rate loop_rate(loopRateInt);
 
     sensor_msgs::JointState msg;
     CONTROL_MODE = WAYPOINT_MODE;
@@ -146,14 +146,14 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
     {
         if (manualInputMsg.jointVelocity[i] > 0)
         {
-            if (TX90.currPos[i] + (1/loop_rate_int * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) < TX90.maxRotation[i])
-                TX90.currPos[i] += (1/loop_rate_int)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
+            if (TX90.currPos[i] + (1/loopRateInt * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) < TX90.maxRotation[i])
+                TX90.currPos[i] += (1/loopRateInt)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
         }
           
         else if (manualInputMsg.jointVelocity[i] < 0)
         {
-            if (TX90.currPos[i] - (1/loop_rate_int * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) > TX90.minRotation[i])
-                TX90.currPos[i] += (1/loop_rate_int)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
+            if (TX90.currPos[i] - (1/loopRateInt * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) > TX90.minRotation[i])
+                TX90.currPos[i] += (1/loopRateInt)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
         }   
     }
 }
