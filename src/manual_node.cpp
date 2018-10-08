@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
     controlMsg.nodeName = "manual_node";
 
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(50);
     int count = 0;
 
     ros::spinOnce();
