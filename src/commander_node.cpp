@@ -17,6 +17,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "commander_node.h"
+#include "global_node_definitions.h"
 #include "bitten/control_msg.h"
 
 
@@ -30,10 +31,13 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual);
 void wpCallback     (/*const beginner_tutorials::FBmsgType_s::ConstPtr& wp*/);
 void testCallback   (/*const beginner_tutorials::FBmsgType_s::ConstPtr& test*/);
 
-/* ----------------------------------------------------------------------
- *                       -------  Constants   -------
+ /* ----------------------------------------------------------------------
+ *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
-const double loopRateInt    = 50;
+MsgType_s manualInputMsg;               /* Used to collect data from:       manual node                                         */
+MsgType_s wpInputMsg;                   /* Used to collect data from:       waypoint node                                       */
+MsgType_s testInputMsg;                 /* Used to collect data from:       test node                                           */
+
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -45,15 +49,16 @@ int main(int argc , char **argv)
     ros::init(argc , argv , "commander_node");
     ros::NodeHandle n;
     ROS_INFO("Subscribing to \"manual_topic\"");
-    ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>("manual_topic" , 3*loopRateInt , &manualCallback);
+    ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>("manual_topic" , 3*LOOP_RATE_INT , &manualCallback);
+    
     ROS_INFO("Subscribing to \"wp_topic\"");
-    // ros::Subscriber wp_sub          = n.subscribe<bitten::control_msg>         ("wp_topic"     , 3*loopRateInt , &wpCallback);
+    // ros::Subscriber wp_sub          = n.subscribe<bitten::control_msg>         ("wp_topic"     , 3*LOOP_RATE_INT , &wpCallback);
     ROS_INFO("Subscribing to \"test_topic\"");
-    // ros::Subscriber test_sub        = n.subscribe<bitten::control_msg>         ("test_topic"   , 3*loopRateInt , &testCallback);
+    // ros::Subscriber test_sub        = n.subscribe<bitten::control_msg>         ("test_topic"   , 3*LOOP_RATE_INT , &testCallback);
 
     ROS_INFO("Publishing on \"joint_states\" topic");
-    ros::Publisher commander_pub    = n.advertise<sensor_msgs::JointState>  ("joint_states" , 3*loopRateInt);
-    ros::Rate loop_rate(loopRateInt);
+    ros::Publisher commander_pub    = n.advertise<sensor_msgs::JointState>  ("joint_states" , 3*LOOP_RATE_INT);
+    ros::Rate loop_rate(LOOP_RATE_INT);
 
     sensor_msgs::JointState msg;
     CONTROL_MODE = WAYPOINT_MODE;
@@ -146,14 +151,14 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
     {
         if (manualInputMsg.jointVelocity[i] > 0)
         {
-            if (TX90.currPos[i] + (1/loopRateInt * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) < TX90.maxRotation[i])
-                TX90.currPos[i] += (1/loopRateInt)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
+            if (TX90.currPos[i] + (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) < TX90.maxRotation[i])
+                TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
         }
           
         else if (manualInputMsg.jointVelocity[i] < 0)
         {
-            if (TX90.currPos[i] - (1/loopRateInt * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) > TX90.minRotation[i])
-                TX90.currPos[i] += (1/loopRateInt)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
+            if (TX90.currPos[i] - (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) > TX90.minRotation[i])
+                TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
         }   
     }
 }
