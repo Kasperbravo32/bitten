@@ -1,8 +1,30 @@
+/* -----------------------------------------------------------------------
+ * Filename: manual_node.cpp
+ * Author: Kasper Jørgensen
+ * Purpose: Create the 'manual' node in the Leica Robot system
+ * Date of dev.: September 2018 - January 2019
+ * 
+ * -----------------------------------------------------------------------
+ *                      -------  Libraries   -------
+ * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include <sensor_msgs/Joy.h>
 #include <bitten/control_msg.h>
 
+ /* ----------------------------------------------------------------------
+ *                      -------  Initializing   -------
+ * ----------------------------------------------------------------------- */
+void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
+
+/* ----------------------------------------------------------------------
+ *                       -------  Constants   -------
+ * ----------------------------------------------------------------------- */
+const double loop_rate_int    = 50;
+
+/* ----------------------------------------------------------------------
+ *                       -------  Global variables   -------
+ * ----------------------------------------------------------------------- */
 struct msg_type
 {
     std::string nodeName;
@@ -16,6 +38,58 @@ struct msg_type
 
 int8_t msgReceived = 0;
 float jointVel[6];
+
+ /* ----------------------------------------------------------------------
+ *                          -------  Main   -------
+ * ----------------------------------------------------------------------- */        
+int main(int argc, char **argv)
+{
+    ROS_INFO("Initiating system...");
+    ros::init(argc, argv, "manual_node");
+    ros::NodeHandle n;
+
+    ROS_INFO("Subscribing to \"joy_topic\"");
+    ros::Subscriber joySub = n.subscribe<sensor_msgs::Joy>("joy", 1000, &joyCallback);
+    
+    ROS_INFO("Publishing to \"manual_topic\"");
+    ros::Publisher manualPub = n.advertise<bitten::control_msg>("manual_topic", 1000);
+
+    controlMsg.nodeName = "manual_node";
+
+    ros::Rate loop_rate(10);
+    int count = 0;
+
+    ros::spinOnce();
+/* -------------------------------------------------
+*     SUPERLOOP
+* ------------------------------------------------- */
+
+    while (ros::ok())
+    {
+        if(msgReceived)
+        {
+            msgReceived = 0;
+            bitten::control_msg msg;
+            
+            msg.nodeName = "manual node";
+            msg.jointsVelocity[0] = controlMsg.jointVelocity[0];
+            msg.jointsVelocity[1] = controlMsg.jointVelocity[1];
+            msg.jointsVelocity[2] = controlMsg.jointVelocity[2];
+            msg.jointsVelocity[3] = controlMsg.jointVelocity[3];
+            msg.jointsVelocity[4] = controlMsg.jointVelocity[4];
+            msg.jointsVelocity[5] = controlMsg.jointVelocity[5];
+            
+            manualPub.publish(msg);
+        }        
+
+        ros::spinOnce();
+
+        loop_rate.sleep();
+        ++count;
+    }
+
+    return 0;
+}
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
@@ -50,56 +124,4 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
             << "joint4: " << controlMsg.jointVelocity[3] << std::endl
             << "joint5: " << controlMsg.jointVelocity[4] << std::endl
             << "joint6: " << controlMsg.jointVelocity[5] << std::endl << std::endl;
-}
-
-int main(int argc, char **argv)
-{
-    ros::init(argc, argv, "manual_node");
-    ros::NodeHandle n;
-
-    controlMsg.nodeName = "manual_node";
-
-    ros::Subscriber joySub = n.subscribe<sensor_msgs::Joy>("joy", 1000, &joyCallback);
-
-    ros::Publisher manualPub = n.advertise<bitten::control_msg>("manual_topic", 1000);
-
-    ros::Rate loop_rate(10);
-    int count = 0;
-
-    ros::spinOnce();
-
-    while (ros::ok())
-    {
-        if(msgReceived)
-        {
-            msgReceived = 0;
-            bitten::control_msg msg;
-            
-            msg.node_name = "manual node";
-            msg.jointsVelocity[0] = controlMsg.jointVelocity[0];
-            msg.jointsVelocity[1] = controlMsg.jointVelocity[1];
-            msg.jointsVelocity[2] = controlMsg.jointVelocity[2];
-            msg.jointsVelocity[3] = controlMsg.jointVelocity[3];
-            msg.jointsVelocity[4] = controlMsg.jointVelocity[4];
-            msg.jointsVelocity[5] = controlMsg.jointVelocity[5];
-            
-            manualPub.publish(msg);
-        }
-        
-    //   std_msgs::String msg;
-
-    //   std::stringstream ss;
-    //   ss << "hello world " << count;
-    //   msg.data = ss.str();
-
-    //   ROS_INFO("%s", msg.data.c_str());
-        
-
-        ros::spinOnce();
-
-        loop_rate.sleep();
-        ++count;
-    }
-
-    return 0;
 }

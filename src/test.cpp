@@ -1,7 +1,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include <bitten/control_msg.h>
-#include <bitten/commander_node.h>
+#include <commander_node.h>
 
 struct msg_type
 {
