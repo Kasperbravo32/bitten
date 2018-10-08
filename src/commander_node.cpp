@@ -175,3 +175,5 @@ void testCallback   (/*const beginner_tutorials::FBMsgType::ConstPtr& test_topic
 
 // jeg tilføjede noget igen!
 
+// Jeg tilføjede noget igen, igen!
+
