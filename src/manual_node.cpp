@@ -5,61 +5,63 @@
 
 struct msg_type
 {
-    std::string node_name;
-    std::string program_name;
+    std::string nodeName;
+    std::string programName;
     uint32_t flags;
     uint8_t id;
-    float joint_position[6];
-    float joint_velocity[6];
-    uint8_t joint_to_move[6];
-}fb_control_msg;
+    float jointPosition[6];
+    float jointVelocity[6];
+    uint8_t jointToMove[6];
+}controlMsg;
 
-int8_t msg_received = 0;
-float joint_vel[6];
+int8_t msgReceived = 0;
+float jointVel[6];
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
-    msg_received = 1;
+    msgReceived = 1;
 
-    fb_control_msg.joint_velocity[0] = joy->axes[0];
-    fb_control_msg.joint_velocity[1] = joy->axes[4];
-    fb_control_msg.joint_velocity[2] = joy->axes[1];
-    
+    //joint 1
+    controlMsg.jointVelocity[0] = joy->axes[0];
+    //joint 2
+    controlMsg.jointVelocity[1] = joy->axes[4];
+    //joint 3
+    controlMsg.jointVelocity[2] = joy->axes[1];
+    //joint 4
     if(joy->buttons[15])
-        fb_control_msg.joint_velocity[3] = -1;
+        controlMsg.jointVelocity[3] = -1;
     else if(joy->buttons[16])
-        fb_control_msg.joint_velocity[3] = 1;
+        controlMsg.jointVelocity[3] = 1;
     else
-        fb_control_msg.joint_velocity[3] = 0;
-
-    fb_control_msg.joint_velocity[4] = joy->axes[3];
-    
+        controlMsg.jointVelocity[3] = 0;
+    //joint 5
+    controlMsg.jointVelocity[4] = joy->axes[3];
+    //joint 6
     if(joy->buttons[1])
-        fb_control_msg.joint_velocity[5] = 1;
+        controlMsg.jointVelocity[5] = 1;
     else if(joy->buttons[3])
-        fb_control_msg.joint_velocity[5] = -1;
+        controlMsg.jointVelocity[5] = -1;
     else
-        fb_control_msg.joint_velocity[5] = 0;
+        controlMsg.jointVelocity[5] = 0;
 
-    std::cout << "joint1: " << fb_control_msg.joint_velocity[0] << std::endl
-            << "joint2: " << fb_control_msg.joint_velocity[1] << std::endl
-            << "joint3: " << fb_control_msg.joint_velocity[2] << std::endl
-            << "joint4: " << fb_control_msg.joint_velocity[3] << std::endl
-            << "joint5: " << fb_control_msg.joint_velocity[4] << std::endl
-            << "joint6: " << fb_control_msg.joint_velocity[5] << std::endl << std::endl;
+    std::cout << "joint1: " << controlMsg.jointVelocity[0] << std::endl
+            << "joint2: " << controlMsg.jointVelocity[1] << std::endl
+            << "joint3: " << controlMsg.jointVelocity[2] << std::endl
+            << "joint4: " << controlMsg.jointVelocity[3] << std::endl
+            << "joint5: " << controlMsg.jointVelocity[4] << std::endl
+            << "joint6: " << controlMsg.jointVelocity[5] << std::endl << std::endl;
 }
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "manual_node");
     ros::NodeHandle n;
-    // ros::NodeHandle m;
 
-    fb_control_msg.node_name = "manual_node";
+    controlMsg.nodeName = "manual_node";
 
-    ros::Subscriber joy_sub = n.subscribe<sensor_msgs::Joy>("joy", 1000, &joyCallback);
+    ros::Subscriber joySub = n.subscribe<sensor_msgs::Joy>("joy", 1000, &joyCallback);
 
-    ros::Publisher manual_pub = n.advertise<bitten::control_msg>("manual_topic", 1000);
+    ros::Publisher manualPub = n.advertise<bitten::control_msg>("manual_topic", 1000);
 
     ros::Rate loop_rate(10);
     int count = 0;
@@ -68,20 +70,20 @@ int main(int argc, char **argv)
 
     while (ros::ok())
     {
-        if(msg_received)
+        if(msgReceived)
         {
-            msg_received = 0;
+            msgReceived = 0;
             bitten::control_msg msg;
             
             msg.node_name = "manual node";
-            msg.joints_velocity[0] = fb_control_msg.joint_velocity[0];
-            msg.joints_velocity[1] = fb_control_msg.joint_velocity[1];
-            msg.joints_velocity[2] = fb_control_msg.joint_velocity[2];
-            msg.joints_velocity[3] = fb_control_msg.joint_velocity[3];
-            msg.joints_velocity[4] = fb_control_msg.joint_velocity[4];
-            msg.joints_velocity[5] = fb_control_msg.joint_velocity[5];
+            msg.jointsVelocity[0] = controlMsg.jointVelocity[0];
+            msg.jointsVelocity[1] = controlMsg.jointVelocity[1];
+            msg.jointsVelocity[2] = controlMsg.jointVelocity[2];
+            msg.jointsVelocity[3] = controlMsg.jointVelocity[3];
+            msg.jointsVelocity[4] = controlMsg.jointVelocity[4];
+            msg.jointsVelocity[5] = controlMsg.jointVelocity[5];
             
-            manual_pub.publish(msg);
+            manualPub.publish(msg);
         }
         
     //   std_msgs::String msg;
@@ -101,6 +103,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
-
-// hej med dig.
