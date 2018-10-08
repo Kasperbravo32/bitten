@@ -32,7 +32,7 @@ std::string nodeNames[NUMBER_OF_NODES] = {
     "Test Node",
     "Commander Node",
     "Controller Node"
-}
+};
 
 std::string topicNames[NUMBER_OF_TOPICS] = {
     "joy",
@@ -40,6 +40,6 @@ std::string topicNames[NUMBER_OF_TOPICS] = {
     "wp_topic",
     "test_topic",
     "joint_states"
-}
+};
 
 
