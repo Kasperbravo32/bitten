@@ -28,8 +28,8 @@ void InitRobot();
 // void manualCallback(const beginner_tutorials::control_msg::ConstPtr& manual)
 
 void manualCallback (const bitten::control_msg::ConstPtr& manual);
-void wpCallback     (/*const beginner_tutorials::FBmsgType_s::ConstPtr& wp*/);
-void testCallback   (/*const beginner_tutorials::FBmsgType_s::ConstPtr& test*/);
+void wpCallback     (const bitten::control_msg::ConstPtr& wp);
+void testCallback   (const bitten::control_msg::ConstPtr& test);
 
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
@@ -48,13 +48,34 @@ int main(int argc , char **argv)
 
     ros::init(argc , argv , "commander_node");
     ros::NodeHandle n;
-    ROS_INFO("Subscribing to \"manual_topic\"");
-    ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>("manual_topic" , 3*LOOP_RATE_INT , &manualCallback);
     
-    ROS_INFO("Subscribing to \"wp_topic\"");
-    // ros::Subscriber wp_sub          = n.subscribe<bitten::control_msg>         ("wp_topic"     , 3*LOOP_RATE_INT , &wpCallback);
-    ROS_INFO("Subscribing to \"test_topic\"");
-    // ros::Subscriber test_sub        = n.subscribe<bitten::control_msg>         ("test_topic"   , 3*LOOP_RATE_INT , &testCallback);
+    ROS_INFO("Subscribing to %s...", topicNames[MANUAL_TOPIC].c_str());
+    ros::Subscriber manual_sub  = n.subscribe<bitten::control_msg>("manual_topic" , 3*LOOP_RATE_INT , &manualCallback);
+    if (manual_sub)
+        ROS_INFO("Subscribed to %s!\n", topicNames[MANUAL_TOPIC].c_str());
+    else
+        ROS_INFO("Couldn't subscribe to %s.\n", topicNames[MANUAL_TOPIC].c_str());
+
+
+
+    ROS_INFO("Subscribing to %s...", topicNames[WP_TOPIC].c_str());
+    ros::Subscriber wp_sub  = n.subscribe<bitten::control_msg>("wp_topic" , 3*LOOP_RATE_INT , &wpCallback);
+    if (wp_sub)
+        ROS_INFO("Subscribed to %s!\n", topicNames[WP_TOPIC].c_str());
+    else
+        ROS_INFO("Couldn't subscribe to %s.\n", topicNames[WP_TOPIC].c_str());
+
+
+
+    ROS_INFO("Subscribing to %s...", topicNames[TEST_TOPIC].c_str());
+    ros::Subscriber test_sub  = n.subscribe<bitten::control_msg>("test_topic" , 3*LOOP_RATE_INT , &testCallback);
+    if (test_sub)
+        ROS_INFO("Subscribed to %s!\n", topicNames[TEST_TOPIC].c_str());
+    else
+        ROS_INFO("Couldn't subscribe to %s.\n", topicNames[TEST_TOPIC].c_str());    
+
+
+
 
     ROS_INFO("Publishing on \"joint_states\" topic");
     ros::Publisher commander_pub    = n.advertise<sensor_msgs::JointState>  ("joint_states" , 3*LOOP_RATE_INT);
@@ -166,7 +187,7 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
  /* ----------------------------------------------------------------------
  *                -------  Waypoint Callback function   -------
  * ----------------------------------------------------------------------- */ 
-void wpCallback     (/* */ )
+void wpCallback     (const bitten::control_msg::ConstPtr& wp)
 {
     /*
      * MANDAG: Snak om hvordan WP beskeden ser ud. én WP besked med ønsket position og hastighed som skal afvikles, før næste læses?
@@ -179,7 +200,7 @@ void wpCallback     (/* */ )
  /* ----------------------------------------------------------------------
  *                  -------  test Callback function   -------
  * ----------------------------------------------------------------------- */ 
-void testCallback   (/*const beginner_tutorials::FBmsgType::ConstPtr& test_topic*/)
+void testCallback   (const bitten::control_msg::ConstPtr& test)
 {
     /*
      * MANDAG: Snak om hvordan TEST beskeden ser ud. én TEST besked med flere waypoints?
