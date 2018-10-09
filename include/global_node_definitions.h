@@ -2,6 +2,9 @@
 #include <string.h>
 
 
+void DEBUG_INFO();
+
+
 const double LOOP_RATE_INT = 50;
 
 enum NODE_INDICES {

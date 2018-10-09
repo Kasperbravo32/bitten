@@ -199,14 +199,14 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(manual_node src/manual_node.cpp)
+add_executable(manual_node src/manual_node.cpp src/global_node_definitions.cpp)
 target_link_libraries(manual_node ${catkin_LIBRARIES})
 add_dependencies(manual_node bitten_generate_messages_cpp)
 
-add_executable(commander_node src/commander_node.cpp)
+add_executable(commander_node src/commander_node.cpp src/global_node_definitions.cpp)
 target_link_libraries(commander_node ${catkin_LIBRARIES})
 add_dependencies(commander_node bitten_generate_messages_cpp)
 
-add_executable(test src/test.cpp)
+add_executable(test src/test.cpp src/global_node_definitions.cpp)
 target_link_libraries(test ${catkin_LIBRARIES})
 add_dependencies(test bitten_generate_messages_cpp)
