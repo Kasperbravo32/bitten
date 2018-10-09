@@ -1,0 +1,1 @@
+Bruge pil op/ned til at sætte current-hastighed op og ned.
