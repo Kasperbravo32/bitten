@@ -14,12 +14,15 @@
 #include <iostream>
 #include <stdio.h>
 
+#include "bitten/feedback_msg.h"
+#include "bitten/control_msg.h"
+
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "commander_node.h"
 #include "global_node_definitions.h"
-#include "bitten/control_msg.h"
-#include "bitten/feedback_msg.h"
+
+
 
 
  /* ----------------------------------------------------------------------
