@@ -31,6 +31,7 @@ float joint_vel[6];
  * ----------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
+    /*
     ROS_INFO("Initiating system...");
     ros::init(argc, argv, "test_node");
     ros::NodeHandle n;
@@ -41,7 +42,7 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(LOOP_RATE_INT);
 
     ROS_INFO("Initiating system...");
-    FBRobot_s TX90;
+    Robot_s TX90;
     // Staubli_TX90_initializer(TX90);
 
     
@@ -54,15 +55,15 @@ int main(int argc, char **argv)
     /*          -------------------------------------           */
     /* --------------- Define Waypoints below ----------------- */
     /*          -------------------------------------           */
-
+/*
     int NumberofWaypoints = 5;                                  /* Number of waypoints excluding waypoint_0.                                                    */
-    int RemainingWaypoints = NumberofWaypoints;
-
+    //int RemainingWaypoints = NumberofWaypoints;
+/*
     Waypoint_s WaypointBank[NumberofWaypoints];
 
     ROS_INFO("Loading Waypoints...");
     /* Define joints for WP#1 */
-    WaypointBank[0].joint_positions[0] = (95.0/180.0)*3.14;
+    /*WaypointBank[0].joint_positions[0] = (95.0/180.0)*3.14;
     WaypointBank[0].joint_positions[1] = -(45.0/180.0)*3.14;
     WaypointBank[0].joint_positions[2] = -(83.0/180.0)*3.14;
     WaypointBank[0].joint_positions[3] = (3.0/180.0)*3.14;
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
     WaypointBank[0].joint_positions[5] = (0.0/180.0)*3.14;
 
     /* Define joints for WP#2 */
-    WaypointBank[1].joint_positions[0] = (128.0/180.0)*3.14;
+    /**WaypointBank[1].joint_positions[0] = (128.0/180.0)*3.14;
     WaypointBank[1].joint_positions[1] = -(100.0/180.0)*3.14;
     WaypointBank[1].joint_positions[2] = -(33.0/180)*3.14;
     WaypointBank[1].joint_positions[3] = (6.0/180)*3.14;
@@ -78,7 +79,7 @@ int main(int argc, char **argv)
     WaypointBank[1].joint_positions[5] = (0.0/180)*3.14;
 
     /* Define joints for WP#3 */
-    WaypointBank[2].joint_positions[0] = (95.0/180)*3.14;;
+    /*WaypointBank[2].joint_positions[0] = (95.0/180)*3.14;;
     WaypointBank[2].joint_positions[1] = -(45.0/180)*3.14;
     WaypointBank[2].joint_positions[2] = -(83.0/180)*3.14;
     WaypointBank[2].joint_positions[3] = (3.0/180)*3.14;
@@ -86,37 +87,37 @@ int main(int argc, char **argv)
     WaypointBank[2].joint_positions[5] = (0.0/180)*3.14;
 
     /* Define joints for WP#4 */
-    WaypointBank[3].joint_positions[0] = (63.0/180)*3.14;
-    WaypointBank[3].joint_positions[1] = -(97.0/180)*3.14;
-    WaypointBank[3].joint_positions[2] = -(40.0/180)*3.14;
-    WaypointBank[3].joint_positions[3] = (0.0/180)*3.14;
-    WaypointBank[3].joint_positions[4] = -(48.0/180)*3.14;
-    WaypointBank[3].joint_positions[5] = (0.0/180)*3.14;
+    // WaypointBank[3].joint_positions[0] = (63.0/180)*3.14;
+    // WaypointBank[3].joint_positions[1] = -(97.0/180)*3.14;
+    // WaypointBank[3].joint_positions[2] = -(40.0/180)*3.14;
+    // WaypointBank[3].joint_positions[3] = (0.0/180)*3.14;
+    // WaypointBank[3].joint_positions[4] = -(48.0/180)*3.14;
+    // WaypointBank[3].joint_positions[5] = (0.0/180)*3.14;
 
-    /* Define joints for WP#5 */
-    WaypointBank[4].joint_positions[0] = (95.0/180)*3.14;;
-    WaypointBank[4].joint_positions[1] = -(45.0/180)*3.14;   
-    WaypointBank[4].joint_positions[2] = -(83.0/180)*3.14;
-    WaypointBank[4].joint_positions[3] = (3.0/180)*3.14;
-    WaypointBank[4].joint_positions[4] = -(55.0/180)*3.14;
-    WaypointBank[4].joint_positions[5] = (0.0/180)*3.14;
+    // /* Define joints for WP#5 */
+    // WaypointBank[4].joint_positions[0] = (95.0/180)*3.14;;
+    // WaypointBank[4].joint_positions[1] = -(45.0/180)*3.14;   
+    // WaypointBank[4].joint_positions[2] = -(83.0/180)*3.14;
+    // WaypointBank[4].joint_positions[3] = (3.0/180)*3.14;
+    // WaypointBank[4].joint_positions[4] = -(55.0/180)*3.14;
+    // WaypointBank[4].joint_positions[5] = (0.0/180)*3.14;
 
-    ROS_INFO("Loaded: %d Waypoints.", NumberofWaypoints);
+    // ROS_INFO("Loaded: %d Waypoints.", NumberofWaypoints);
 
-    bitten::control_msg test_msg;
+    // bitten::control_msg test_msg;
 
     while (ros::ok())
     {
         
-        for(int i = 0; i < NumberofWaypoints + 1; i++)
-        {
+        // for(int i = 0; i < NumberofWaypoints + 1; i++)
+        // {
             
-            test_pub.publish(test_msg);
+        //     test_pub.publish(test_msg);
 
-        }
+        // }
 
-        ros::spinOnce();
-        loop_rate.sleep();
+        // ros::spinOnce();
+        // loop_rate.sleep();
     }
 
     return 0;

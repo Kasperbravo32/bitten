@@ -1,3 +1,4 @@
+---------------- TO DO ----------------
 Manual node:
 - Bruge pil op/ned til at modificere currVelocity
 - Tilføje frame-mode
@@ -29,3 +30,21 @@ Generelt:
 - Skrive dataprotokol (acknowledge, start/stop transmission)
 - Lave holder/stativ til joystickene.
 - Lave CAN-til-USB til joystickene koblende til computeren.
+
+
+
+---------------- NOT TO DO ----------------
+
+Manual node:
+
+Controller node:
+
+Commander node:
+
+Waypoint node:
+
+Test node:
+
+Sikkerhed:
+
+Generelt:

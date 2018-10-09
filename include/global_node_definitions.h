@@ -24,8 +24,20 @@ enum TOPIC_INDICES {
     WP_TOPIC,
     TEST_TOPIC,
     JOINT_STATES_TOPIC,
+    FEEDBACK_TOPIC,
 
     NUMBER_OF_TOPICS
+};
+
+enum NODE_IDS {
+    COMMANDER_ID,
+    CONTROLLER_ID,
+    TEST_ID,
+    WP_ID,
+    MANUAL_ID,
+    JOY_ID,
+
+    NUMBER_OF_IDS
 };
 
 std::string nodeNames[NUMBER_OF_NODES] = {
@@ -42,7 +54,8 @@ std::string topicNames[NUMBER_OF_TOPICS] = {
     "manual_topic",
     "wp_topic",
     "test_topic",
-    "joint_states"
+    "joint_states",
+    "feedback_topic"
 };
 
 struct MsgType_s
