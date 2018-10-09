@@ -1,6 +1,31 @@
-To do:
+Manual node:
 - Bruge pil op/ned til at sætte current-hastighed op og ned
-- tilføje frame-mode
-- tilføje joint-mode til manual_node
-- tilføje sikkerhed i form af dødmandsknap
-- tilføje sikkerhed i form af at robotten ikke kan ramme sig selv
+- Tilføje frame-mode
+- Tilføje joint-mode til manual_node
+
+Controller node:
+- Åbne robotten igennem simulatoren uden move_it
+- Skrive egen controller node eller skrive move_group om.
+- Overfør controller node til styringen.
+
+Commander node:
+- Callback funktioner til waypoint og test
+- Ændrer current hastighed på pil op og ned.
+
+Waypoint node:
+- Skal skrives.
+
+Test node:
+- Skal skrives.
+
+Sikkerhed:
+- Tilføje sikkerhed i form af dødmandsknap
+- Tilføje sikkerhed i form af at robotten ikke kan ramme sig selv
+- Tilføje sikkerhed i form af at robotten ikke kan ramme palle/gulv
+
+Generelt:
+- Lave en launch fil der kører alle noderne.
+- Lave en GUI til valg af inputs og visualisering.
+- Skrive dataprotokol (acknowledge, start/stop transmission)
+- Lave holder/stativ til joystickene.
+- Lave CAN-til-USB til joystickene koblende til computeren.

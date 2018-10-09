@@ -19,11 +19,6 @@
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 
 /* ----------------------------------------------------------------------
- *                       -------  Constants   -------
- * ----------------------------------------------------------------------- */
-
-
-/* ----------------------------------------------------------------------
  *                       -------  Global variables   -------
  * ----------------------------------------------------------------------- */
 bitten::control_msg manual_msg;
@@ -73,17 +68,15 @@ int main(int argc, char **argv)
         }
         
         manualPub.publish(manual_msg);
- 
+
         ros::spinOnce();
         loop_rate.sleep();
     }
-
     return 0;
 }
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
-
     //joint 1
     manual_msg.jointVelocity[0] = joy->axes[0];
     //joint 2
