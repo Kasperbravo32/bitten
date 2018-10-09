@@ -15,6 +15,7 @@ Commander node:
 
 Waypoint node:
 - Skal skrives.
+- Der skal være en "record" mode i waypoint node. (terminaleksempel i wp_node.h)
 
 Test node:
 - Skal skrives.

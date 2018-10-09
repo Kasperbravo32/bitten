@@ -43,7 +43,7 @@ enum NODE_IDS {
 std::string nodeNames[NUMBER_OF_NODES] = {
     "joy",
     "Manual Node",
-    "Waypoint Node",
+    "Waypoint_Node",
     "Test Node",
     "Commander Node",
     "Controller Node"
@@ -70,8 +70,34 @@ struct MsgType_s
     std::array<float    ,   6> jointPosition;   /* Contains the wanted positions of each joint. used in waypoint mode, not in manual.   */
     std::array<float    ,   6> jointVelocity;   /* Percentage of maximum velocity to move joints with                                   */
     std::array<uint8_t  ,   8> buttons;         /* Array to list status of the buttons (square, triangle, X, circle + arrows)           */
+};
 
+struct feedbackMsg_s
+{
+    uint8_t senderID;
+    uint8_t recID;
+
+    uint32_t flags;
 };
 
 
-// haej 
+enum FLAGS {
+    /* 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32786 */
+    /* 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304 8388608, 16777216  */
+    ACK                     = 1,
+    DENIED                  = 2,
+    WAYPOINT_REACHED        = 4,
+    WAYPOINT_INTERRUPTED    = 8,
+    TEST_DONE_FLAG          = 16,
+    TEST_INTERRUPTED        = 32,
+    ROBOT_CRASHED           = 64,
+    DEADMAN_STATUS          = 128,
+    ESTABLISH_CONNECTION    = 256,
+    TERMINATE_CONNECTION    = 512,
+    PING                    = 1024,
+    PONG                    = 2048,
+    PAUSE                   = 4096,
+    RESUME                  = 8192,
+    START_OPERATION         = 16384,
+
+};

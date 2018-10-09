@@ -19,13 +19,13 @@
 #include "commander_node.h"
 #include "global_node_definitions.h"
 #include "bitten/control_msg.h"
+#include "bitten/feedback_msg.h"
 
 
  /* ----------------------------------------------------------------------
  *                      -------  Initializing   -------
  * ----------------------------------------------------------------------- */
 void InitRobot();
-// void manualCallback(const beginner_tutorials::control_msg::ConstPtr& manual)
 
 void manualCallback (const bitten::control_msg::ConstPtr& manual);
 void wpCallback     (const bitten::control_msg::ConstPtr& wp);
@@ -37,6 +37,16 @@ void testCallback   (const bitten::control_msg::ConstPtr& test);
 MsgType_s manualInputMsg;               /* Used to collect data from:       manual node                                         */
 MsgType_s wpInputMsg;                   /* Used to collect data from:       waypoint node                                       */
 MsgType_s testInputMsg;                 /* Used to collect data from:       test node                                           */
+
+feedbackMsg_s commanderFeedbackMsg;     /* Used to send feedback to various nodes                                               */
+
+ /* ----------------------------------------------------------------------
+ *                    -------  Global Variables   -------
+ * ----------------------------------------------------------------------- */
+bool goalExists = false;
+
+double goalArray[6];
+uint8_t jointsdone = 0;
 
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
@@ -79,12 +89,18 @@ int main(int argc , char **argv)
 
     ROS_INFO("Publishing on \"joint_states\" topic");
     ros::Publisher commander_pub    = n.advertise<sensor_msgs::JointState>  ("joint_states" , 3*LOOP_RATE_INT);
-    ros::Rate loop_rate(LOOP_RATE_INT);
+    
 
+    ROS_INFO("Publishing on \"%s\"",topicNames[FEEDBACK_TOPIC].c_str());
+    ros::Publisher commander_fb_pub = n.advertise<bitten::feedback_msg>      (topicNames[FEEDBACK_TOPIC].c_str(), 3*LOOP_RATE_INT);
+
+    ros::Rate loop_rate(LOOP_RATE_INT);
     sensor_msgs::JointState msg;
+
     CONTROL_MODE = WAYPOINT_MODE;
 
     ros::spinOnce();
+    INPUT_MODE = WP_MODE;
 /*  -------------------------------------------------
          SUPERLOOP
     ------------------------------------------------- */
@@ -94,14 +110,67 @@ int main(int argc , char **argv)
         msg.name.clear();
         msg.position.clear();
 
-
-        for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
+        switch(CONTROL_MODE)
         {
-            msg.name.push_back(TX90.jointNames[i]);
-            msg.position.push_back(TX90.currPos[i]);
-        }
+            case MANUAL_MODE:
 
-        commander_pub.publish(msg);
+            for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
+            {
+                msg.name.push_back(TX90.jointNames[i]);
+                msg.position.push_back(TX90.currPos[i]);
+            }
+
+            commander_pub.publish(msg);
+            break;
+
+            case WP_MODE:
+            if(goalExists)
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    if (TX90.currPos[i] != goalArray[i])
+                    {
+                        if (goalArray[i] > TX90.currPos[i])
+                            TX90.currPos[i] += 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
+                        else
+                            TX90.currPos[i] -= 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
+                    }
+                    else
+                        jointsdone |= 1 < i;
+                }
+                if (jointsdone == 63)
+                {
+                    goalExists = false;
+
+                    commanderFeedbackMsg.senderID   = COMMANDER_ID;
+                    commanderFeedbackMsg.recID      = WP_ID;
+                    commanderFeedbackMsg.flags      = WAYPOINT_REACHED;
+                }
+
+
+                commander_fb_pub.publish(msg);
+                ROS_INFO("Goal exists.");
+            }
+            else
+            {
+                commanderFeedbackMsg.senderID   = COMMANDER_ID;
+                commanderFeedbackMsg.recID      = WP_ID;
+                commanderFeedbackMsg.flags      = START_OPERATION;
+
+                commander_fb_pub.publish(commanderFeedbackMsg);
+
+                commanderFeedbackMsg.flags      = 0;
+                ROS_INFO("Sending start op.");
+            }
+                
+            break;
+
+            case TEST_MODE:
+            break;
+        }
+        
+
+        
         ros::spinOnce();
         loop_rate.sleep();
     }
@@ -189,9 +258,12 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
  * ----------------------------------------------------------------------- */ 
 void wpCallback     (const bitten::control_msg::ConstPtr& wp)
 {
-    /*
-     * MANDAG: Snak om hvordan WP beskeden ser ud. én WP besked med ønsket position og hastighed som skal afvikles, før næste læses?
-     * */
+    goalExists = true;
+
+    for (int i = 0; i < 6; i++)
+        goalArray[i] = wp->jointPosition[i];
+
+
 
 
 
@@ -207,7 +279,4 @@ void testCallback   (const bitten::control_msg::ConstPtr& test)
      * */
 
 }
-
-// haej
-//haej
 

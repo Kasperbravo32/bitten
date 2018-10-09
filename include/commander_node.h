@@ -43,8 +43,3 @@ enum INPUT_MODE {
 
 /* Defining robots      */
 Robot_s TX90;                             /* Staubli TX90 Robot                                                                   */
-
-/* Defining waypoints   */
-Waypoint_s waypoint_0;                      /* Waypoint 0, is origo (0.0.0)                                                         */
-Waypoint_s waypointBank[5];                 /* Bank to contain 5 waypoints. only used for tests                                     */
-
