@@ -9,19 +9,9 @@
  * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-#include <sensor_msgs/Joy.h>
 #include <bitten/control_msg.h>
+#include <manual_node.h>
 #include <global_node_definitions.h>
-
- /* ----------------------------------------------------------------------
- *                      -------  Initializing   -------
- * ----------------------------------------------------------------------- */
-void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
-
-/* ----------------------------------------------------------------------
- *                       -------  Global variables   -------
- * ----------------------------------------------------------------------- */
-bitten::control_msg manual_msg;
 
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
@@ -32,10 +22,10 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "manual_node");
     ros::NodeHandle n;
 
-    ROS_INFO("Subscribing to \"joy_topic\"");
+    ROS_INFO("Subscribing to \"%s\"", topicNames[JOY_TOPIC].c_str());
     ros::Subscriber joySub = n.subscribe<sensor_msgs::Joy>("joy", 1000, &joyCallback);
     
-    ROS_INFO("Publishing to \"manual_topic\"");
+    ROS_INFO("Publishing to \"%s\"", topicNames[MANUAL_TOPIC].c_str());
     ros::Publisher manualPub = n.advertise<bitten::control_msg>("manual_topic", 1000);
 
     manual_msg.nodeName = "manual node";
@@ -100,10 +90,10 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
     else
         manual_msg.jointVelocity[5] = 0;
     
-    std::cout << "joint1: " << manual_msg.jointVelocity[0] << std::endl
-            << "joint2: " << manual_msg.jointVelocity[1] << std::endl
-            << "joint3: " << manual_msg.jointVelocity[2] << std::endl
-            << "joint4: " << manual_msg.jointVelocity[3] << std::endl
-            << "joint5: " << manual_msg.jointVelocity[4] << std::endl
-            << "joint6: " << manual_msg.jointVelocity[5] << std::endl << std::endl;
+    std::cout << "Joint 1: " << manual_msg.jointVelocity[0] << std::endl
+            << "Jøoint 2: " << manual_msg.jointVelocity[1] << std::endl
+            << "Joint 3: " << manual_msg.jointVelocity[2] << std::endl
+            << "Joint 4: " << manual_msg.jointVelocity[3] << std::endl
+            << "Joint 5: " << manual_msg.jointVelocity[4] << std::endl
+            << "Joint 6: " << manual_msg.jointVelocity[5] << std::endl << std::endl;
 }
