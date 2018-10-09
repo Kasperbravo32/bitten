@@ -11,6 +11,7 @@
 #include "std_msgs/String.h"
 #include <sensor_msgs/Joy.h>
 #include <bitten/control_msg.h>
+#include <global_node_definitions.h>
 
  /* ----------------------------------------------------------------------
  *                      -------  Initializing   -------
@@ -20,7 +21,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
 /* ----------------------------------------------------------------------
  *                       -------  Constants   -------
  * ----------------------------------------------------------------------- */
-const int loop_rate_int = 50;
+
 
 /* ----------------------------------------------------------------------
  *                       -------  Global variables   -------
@@ -44,12 +45,33 @@ int main(int argc, char **argv)
 
     manual_msg.nodeName = "manual node";
 
-    ros::Rate loop_rate(loop_rate_int);
+    ros::Rate loop_rate(LOOP_RATE_INT);
     /* -------------------------------------------------
     *     SUPERLOOP
     * ------------------------------------------------- */
     while (ros::ok())
     {
+        if((manual_msg.jointVelocity[0] == 1) || (manual_msg.jointVelocity[0] == -1))
+        {
+            if((manual_msg.jointVelocity[2] >= -0.3) && (manual_msg.jointVelocity[2] <= 0.3))
+                manual_msg.jointVelocity[2] = 0;
+        }
+        if((manual_msg.jointVelocity[2] == 1) || (manual_msg.jointVelocity[2] == -1))
+        {
+            if((manual_msg.jointVelocity[0] >= -0.3) && (manual_msg.jointVelocity[0] <= 0.3))
+                manual_msg.jointVelocity[0] = 0;
+        }
+        if((manual_msg.jointVelocity[1] == 1) || (manual_msg.jointVelocity[1] == -1))
+        {
+            if((manual_msg.jointVelocity[4] >= -0.3) && (manual_msg.jointVelocity[4] <= 0.3))
+                manual_msg.jointVelocity[4] = 0;
+        }
+        if((manual_msg.jointVelocity[4] == 1) || (manual_msg.jointVelocity[4] == -1))
+        {
+            if((manual_msg.jointVelocity[1] >= -0.3) && (manual_msg.jointVelocity[1] <= 0.3))
+                manual_msg.jointVelocity[1] = 0;
+        }
+        
         manualPub.publish(manual_msg);
  
         ros::spinOnce();
@@ -62,7 +84,7 @@ int main(int argc, char **argv)
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
 
-    //joint 1
+    //joint 1)
     manual_msg.jointVelocity[0] = joy->axes[0];
     //joint 2
     manual_msg.jointVelocity[1] = joy->axes[4];
@@ -84,7 +106,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         manual_msg.jointVelocity[5] = -1;
     else
         manual_msg.jointVelocity[5] = 0;
-
+    
     std::cout << "joint1: " << manual_msg.jointVelocity[0] << std::endl
             << "joint2: " << manual_msg.jointVelocity[1] << std::endl
             << "joint3: " << manual_msg.jointVelocity[2] << std::endl
