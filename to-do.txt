@@ -1,5 +1,5 @@
 Manual node:
-- Bruge pil op/ned til at sætte current-hastighed op og ned
+- Bruge pil op/ned til at modificere currVelocity
 - Tilføje frame-mode
 - Tilføje joint-mode til manual_node
 
@@ -10,7 +10,7 @@ Controller node:
 
 Commander node:
 - Callback funktioner til waypoint og test
-- Ændrer current hastighed på pil op og ned.
+- Ændre currVelocity på pil op og ned.
 
 Waypoint node:
 - Skal skrives.
@@ -19,9 +19,9 @@ Test node:
 - Skal skrives.
 
 Sikkerhed:
-- Tilføje sikkerhed i form af dødmandsknap
-- Tilføje sikkerhed i form af at robotten ikke kan ramme sig selv
-- Tilføje sikkerhed i form af at robotten ikke kan ramme palle/gulv
+- dødmandsknap
+- Robotten kan ikke ramme sig selv
+- Robotten kan ikke ramme palle/gulv
 
 Generelt:
 - Lave en launch fil der kører alle noderne.
