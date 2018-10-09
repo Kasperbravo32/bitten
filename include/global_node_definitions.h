@@ -57,7 +57,8 @@ struct MsgType_s
     std::array<float    ,   6> jointPosition;   /* Contains the wanted positions of each joint. used in waypoint mode, not in manual.   */
     std::array<float    ,   6> jointVelocity;   /* Percentage of maximum velocity to move joints with                                   */
     std::array<uint8_t  ,   8> buttons;         /* Array to list status of the buttons (square, triangle, X, circle + arrows)           */
-    
+
 };
 
 
+// haej 
