@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
 
-    //joint 1)
+    //joint 1
     manual_msg.jointVelocity[0] = joy->axes[0];
     //joint 2
     manual_msg.jointVelocity[1] = joy->axes[4];
