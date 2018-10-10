@@ -1,5 +1,6 @@
 ---------------- TO DO ----------------
 Manual node:
+- Handshake til oprettelse af forbindelse (ligesom wp_node)
 - Bruge pil op/ned til at modificere currVelocity
 - Tilføje frame-mode
 - Tilføje joint-mode til manual_node
@@ -10,15 +11,15 @@ Controller node:
 - Overfør controller node til styringen.
 
 Commander node:
-- Callback funktioner til waypoint og test
 - Ændre currVelocity på pil op og ned.
 
 Waypoint node:
-- Skal skrives.
+
 - Der skal være en "record" mode i waypoint node. (terminaleksempel i wp_node.h)
 
 Test node:
 - Skal skrives.
+- Handshake til oprettelse af forbindelse (ligesom wp_node)
 
 Sikkerhed:
 - dødmandsknap
@@ -43,6 +44,8 @@ Controller node:
 Commander node:
 
 Waypoint node:
+- Skal skrives.
+- Callback funktioner til waypoint og test
 
 Test node:
 
