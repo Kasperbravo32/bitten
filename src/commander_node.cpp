@@ -14,14 +14,15 @@
 #include <iostream>
 #include <stdio.h>
 
-#include "bitten/feedback_msg.h"
-#include "bitten/control_msg.h"
+
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "commander_node.h"
 #include "global_node_definitions.h"
 
+#include "bitten/feedback_msg.h"
+#include "bitten/control_msg.h"
 
 
 
@@ -41,12 +42,25 @@ MsgType_s manualInputMsg;               /* Used to collect data from:       manu
 MsgType_s wpInputMsg;                   /* Used to collect data from:       waypoint node                                       */
 MsgType_s testInputMsg;                 /* Used to collect data from:       test node                                           */
 
-feedbackMsg_s commanderFeedbackMsg;     /* Used to send feedback to various nodes                                               */
+feedbackMsg_s fbMsg;
+
+sensor_msgs::JointState msg;
+bitten::feedback_msg commanderFeedbackMsg;     /* Used to send feedback to various nodes */
+
 
  /* ----------------------------------------------------------------------
  *                    -------  Global Variables   -------
  * ----------------------------------------------------------------------- */
 bool goalExists = false;
+bool waiting = false;
+bool ping = true;
+bool fbTransmitReady = false;
+bool jointStatesTransmitReady = false;
+
+const   int PING_RATE = LOOP_RATE_INT / 2;
+        int poll_timer = LOOP_RATE_INT*2;
+        int ping_timer = PING_RATE;
+        int ping_timeout = PING_RATE;
 
 double goalArray[6];
 uint8_t jointsdone = 0;
@@ -56,6 +70,8 @@ uint8_t jointsdone = 0;
  * ----------------------------------------------------------------------- */        
 int main(int argc , char **argv)
 {
+
+    commanderFeedbackMsg.senderID = COMMANDER_ID;
     ROS_INFO("Initiating system...");
     InitRobot();
 
@@ -80,12 +96,12 @@ int main(int argc , char **argv)
 
 
 
-    ROS_INFO("Subscribing to %s...", topicNames[TEST_TOPIC].c_str());
-    ros::Subscriber test_sub  = n.subscribe<bitten::control_msg>("test_topic" , 3*LOOP_RATE_INT , &testCallback);
-    if (test_sub)
-        ROS_INFO("Subscribed to %s!\n", topicNames[TEST_TOPIC].c_str());
-    else
-        ROS_INFO("Couldn't subscribe to %s.\n", topicNames[TEST_TOPIC].c_str());    
+    // ROS_INFO("Subscribing to %s...", topicNames[TEST_TOPIC].c_str());
+    // ros::Subscriber test_sub  = n.subscribe<bitten::control_msg>("test_topic" , 3*LOOP_RATE_INT , &testCallback);
+    // if (test_sub)
+    //     ROS_INFO("Subscribed to %s!\n", topicNames[TEST_TOPIC].c_str());
+    // else
+    //     ROS_INFO("Couldn't subscribe to %s.\n", topicNames[TEST_TOPIC].c_str());    
 
 
 
@@ -95,15 +111,17 @@ int main(int argc , char **argv)
     
 
     ROS_INFO("Publishing on \"%s\"",topicNames[FEEDBACK_TOPIC].c_str());
-    ros::Publisher commander_fb_pub = n.advertise<bitten::feedback_msg>      (topicNames[FEEDBACK_TOPIC].c_str(), 3*LOOP_RATE_INT);
+    ros::Publisher commander_fb_pub = n.advertise<bitten::feedback_msg>      ("feedback_topic" , 3*LOOP_RATE_INT);
+    if (commander_fb_pub)
+        ROS_INFO("Publishing succesful\n");
+
+
 
     ros::Rate loop_rate(LOOP_RATE_INT);
-    sensor_msgs::JointState msg;
-
-    CONTROL_MODE = WAYPOINT_MODE;
+    
 
     ros::spinOnce();
-    INPUT_MODE = WP_MODE;
+    INPUT_MODE = POLL_MODE;
 /*  -------------------------------------------------
          SUPERLOOP
     ------------------------------------------------- */
@@ -113,7 +131,7 @@ int main(int argc , char **argv)
         msg.name.clear();
         msg.position.clear();
 
-        switch(CONTROL_MODE)
+        switch(INPUT_MODE)
         {
             case MANUAL_MODE:
 
@@ -127,53 +145,109 @@ int main(int argc , char **argv)
             break;
 
             case WP_MODE:
-            if(goalExists)
-            {
-                for (int i = 0; i < 6; i++)
+                if (goalExists)
                 {
-                    if (TX90.currPos[i] != goalArray[i])
+                    msg.name.clear();
+                    msg.position.clear();
+
+                    for (int i = 0; i < 6; i++)
                     {
-                        if (goalArray[i] > TX90.currPos[i])
-                            TX90.currPos[i] += 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
+
+
+                        if (TX90.currPos[i] != goalArray[i])
+                        {
+                            if (goalArray[i] > TX90.currPos[i])
+                            {
+                                if ( -(TX90.currPos[i] - goalArray[i]) > 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity)
+                                    TX90.currPos[i] += 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
+                                else
+                                    TX90.currPos[i] += goalArray[i] - TX90.currPos[i];
+                            }
+                                
+                            else if (goalArray[i] < TX90.currPos[i])
+                            {
+                                if ((TX90.currPos[i] - goalArray[i]) > 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity)
+                                    TX90.currPos[i] -= 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
+                                else
+                                    TX90.currPos[i] -= TX90.currPos[i] - goalArray[i];
+                            }
+
+                            msg.name.push_back(TX90.jointNames[i]);
+                            msg.position.push_back(TX90.currPos[i]);
+                        }
                         else
-                            TX90.currPos[i] -= 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
+                        {
+                            //ROS_INFO("Joint: %d reached goal rotation", i);
+                            jointsdone |= (1 << i);
+                        }
                     }
-                    else
-                        jointsdone |= 1 < i;
+                    jointStatesTransmitReady = true;
+
+                    if (jointsdone == 63)
+                    {
+                        ROS_INFO("Reached %s",wpInputMsg.programName.c_str());
+                        goalExists = false;
+                        commanderFeedbackMsg.flags = WAYPOINT_REACHED;
+                        fbTransmitReady = true;
+                        jointsdone = 0;
+                    }
                 }
-                if (jointsdone == 63)
-                {
-                    goalExists = false;
-
-                    commanderFeedbackMsg.senderID   = COMMANDER_ID;
-                    commanderFeedbackMsg.recID      = WP_ID;
-                    commanderFeedbackMsg.flags      = WAYPOINT_REACHED;
-                }
-
-
-                commander_fb_pub.publish(msg);
-                ROS_INFO("Goal exists.");
-            }
-            else
-            {
-                commanderFeedbackMsg.senderID   = COMMANDER_ID;
-                commanderFeedbackMsg.recID      = WP_ID;
-                commanderFeedbackMsg.flags      = START_OPERATION;
-
-                commander_fb_pub.publish(commanderFeedbackMsg);
-
-                commanderFeedbackMsg.flags      = 0;
-                ROS_INFO("Sending start op.");
-            }
-                
             break;
 
             case TEST_MODE:
+
+            break;
+
+            case POLL_MODE:
+
+                if (! --poll_timer)
+                {
+                    ROS_INFO("waiting in poll_mode");
+                    poll_timer = 2*LOOP_RATE_INT;
+                }
+                
+
+            break;
+            default:
+
             break;
         }
-        
 
+        if (INPUT_MODE != POLL_MODE)
+        {
+            if (! --ping_timer)
+            {
+                commanderFeedbackMsg.flags = PING;
+                fbTransmitReady = true;
+
+                if (ping == true)
+                {
+                    ping = false;
+                    ping_timer = PING_RATE;
+                }
+                else
+                {
+                    ROS_INFO("Ping timeout, returning to poll_mode");
+                    ping_timer = PING_RATE;
+                    INPUT_MODE = POLL_MODE;
+                    ping = true;
+                }
+            }
+        }
         
+        if (jointStatesTransmitReady)
+        {
+            commander_pub.publish(msg);
+            jointStatesTransmitReady = false;
+        }
+        
+        if (fbTransmitReady)
+        {
+            commander_fb_pub.publish(commanderFeedbackMsg);
+            fbTransmitReady = false;
+        }
+
+
         ros::spinOnce();
         loop_rate.sleep();
     }
@@ -188,7 +262,7 @@ void InitRobot()
     TX90.maxLink    = 6;
     TX90.resetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
 
-    TX90.currVelocity   = 0.5;
+    TX90.currVelocity   = 0.1;
     
     TX90.maxRotation = {    3.14,               /* joint_1  */
                             2.57,               /* joint_2  */
@@ -261,15 +335,49 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
  * ----------------------------------------------------------------------- */ 
 void wpCallback     (const bitten::control_msg::ConstPtr& wp)
 {
-    goalExists = true;
+    switch(wp->flags)
+    {
+        case ESTABLISH_CONNECTION:
+            if (INPUT_MODE == POLL_MODE)
+            {
+                INPUT_MODE = WP_MODE;
+                ROS_INFO("Establishing connection to %s",nodeNames[WP_NODE].c_str());
+                commanderFeedbackMsg.flags = ACK;
+                commanderFeedbackMsg.recID = WP_ID;
 
-    for (int i = 0; i < 6; i++)
-        goalArray[i] = wp->jointPosition[i];
+                fbTransmitReady = true;
+            }
+        break;
 
+        case TERMINATE_CONNECTION:
+            if (INPUT_MODE == WP_MODE)
+            {
+                INPUT_MODE = POLL_MODE;
+                commanderFeedbackMsg.flags = ACK;
+                commanderFeedbackMsg.recID = WP_ID;
+                fbTransmitReady = true;
+                ROS_INFO("Terminated connection to %s", wpInputMsg.nodeName.c_str());
+            }
+        break;
 
+        case NEW_WAYPOINT:
+            if (INPUT_MODE == WP_MODE)
+            {
+                if (goalExists == false)
+                {
+                    wpInputMsg.programName = wp->programName;
+                    ROS_INFO("Setting new goal to: %s",wp->programName.c_str());
+                    goalExists = true;
+                    for (int i = 0; i < 6; i++)
+                        goalArray[i] = wp ->jointPosition[i];
+                }
+            }
+        break;
 
-
-
+        case PONG:
+            ping = true;
+        break;
+    }
 }
 
  /* ----------------------------------------------------------------------

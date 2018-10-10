@@ -37,7 +37,8 @@ enum CONTROL_MODE {
 enum INPUT_MODE {
     MANUAL_MODE,
     WP_MODE,
-    TEST_MODE
+    TEST_MODE,
+    POLL_MODE
 } INPUT_MODE;
 
 
