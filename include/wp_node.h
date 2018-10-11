@@ -1,3 +1,8 @@
+ /* ----------------------------------------------------------------------
+ *                      -------  Initializing   -------
+ * ----------------------------------------------------------------------- */
+void fbCallback(const bitten::feedback_msg::ConstPtr& feedback);
+
 
 struct Waypoint_s {
     double jointPosition[6];
@@ -6,7 +11,23 @@ struct Waypoint_s {
     std::string waypointName;
 };  
 
+/* ----------------------------------------------------------------------
+ *                       -------  Global variables   -------
+ * ----------------------------------------------------------------------- */
+bitten::control_msg wp_msg;
+bitten::feedback_msg fb_msg;
 
+bool readyForNextWp = false;
+bool transmitWpReady = false;
+bool newConnection = true;
+bool connectionEstablished = false;
+
+
+int NumberofWaypoints = 5;                                  /* Number of waypoints excluding waypoint_0.                                                    */
+int RemainingWaypoints = NumberofWaypoints;
+
+Waypoint_s Waypoint_0;
+Waypoint_s WaypointBank[5];
 
 
 /*_Terminaleksempel på waypoint record mode_______________________________

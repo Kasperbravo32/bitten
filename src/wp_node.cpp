@@ -15,32 +15,6 @@
 #include <global_node_definitions.h>
 #include "wp_node.h"
 
-
-
- /* ----------------------------------------------------------------------
- *                      -------  Initializing   -------
- * ----------------------------------------------------------------------- */
-void fbCallback(const bitten::feedback_msg::ConstPtr& feedback);
-
-/* ----------------------------------------------------------------------
- *                       -------  Global variables   -------
- * ----------------------------------------------------------------------- */
-bitten::control_msg wp_msg;
-bitten::feedback_msg fb_msg;
-
-bool readyForNextWp = false;
-bool transmitWpReady = false;
-bool newConnection = true;
-bool connectionEstablished = false;
-
-
-int NumberofWaypoints = 5;                                  /* Number of waypoints excluding waypoint_0.                                                    */
-int RemainingWaypoints = NumberofWaypoints;
-
-Waypoint_s Waypoint_0;
-Waypoint_s WaypointBank[5];
-
-
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        

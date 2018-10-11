@@ -11,21 +11,9 @@
 #include "std_msgs/String.h"
 #include <bitten/control_msg.h>
 #include <bitten/feedback_msg.h>
-
 #include <manual_node.h>
 #include <global_node_definitions.h>
 
- /* ----------------------------------------------------------------------
- *                      -------  Initializing   -------
- * ----------------------------------------------------------------------- */
-void fbCallbackManual(const bitten::feedback_msg::ConstPtr& feedbackManual);
-
-/* ----------------------------------------------------------------------
- *                       -------  Global variables   -------
- * ----------------------------------------------------------------------- */
-bool connectionEstablished = false;
-bool transmitManualRdy = false;
-bool newConnection = true;
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        
