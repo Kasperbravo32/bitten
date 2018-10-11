@@ -1,17 +1,21 @@
 ---------------- TO DO ----------------
 Manual node:
-- Handshake til oprettelse af forbindelse (ligesom wp_node)
+- Handshake til oprettelse af forbindelse (ligesom wp_node) 
+- Skal pong'e iflg. feedback node
+
 - Bruge pil op/ned til at modificere currVelocity
 - Tilføje frame-mode
 - Tilføje joint-mode til manual_node
 
 Controller node:
-- Åbne robotten igennem simulatoren uden move_it
-- Skrive egen controller node eller skrive move_group om.
+- skal skrives eller skrives om fra move_group?
 - Overfør controller node til styringen.
+- Åbne robotten igennem simulatoren uden move_it
+
 
 Commander node:
 - Ændre currVelocity på pil op og ned.
+
 
 Waypoint node:
 

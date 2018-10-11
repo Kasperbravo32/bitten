@@ -121,7 +121,7 @@ int main(int argc , char **argv)
     
 
     ros::spinOnce();
-    INPUT_MODE = POLL_MODE;
+    INPUT_MODE = MANUAL_MODE;
 /*  -------------------------------------------------
          SUPERLOOP
     ------------------------------------------------- */
@@ -213,7 +213,7 @@ int main(int argc , char **argv)
             break;
         }
 
-        if (INPUT_MODE != POLL_MODE)
+        if (INPUT_MODE == POLL_MODE)
         {
             if (! --ping_timer)
             {
@@ -262,7 +262,7 @@ void InitRobot()
     TX90.maxLink    = 6;
     TX90.resetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
 
-    TX90.currVelocity   = 0.1;
+    TX90.currVelocity   = 0.2;
     
     TX90.maxRotation = {    3.14,               /* joint_1  */
                             2.57,               /* joint_2  */

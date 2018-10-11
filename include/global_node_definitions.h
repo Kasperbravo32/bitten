@@ -84,7 +84,7 @@ struct feedbackMsg_s
 enum FLAGS {
     /* 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 */
     /* 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304 8388608, 16777216  */
-    ACK                     = 1,
+    ACK                     = 1,    
     DENIED                  = 2,
     WAYPOINT_REACHED        = 4,
     WAYPOINT_INTERRUPTED    = 8,
@@ -101,5 +101,5 @@ enum FLAGS {
     START_OPERATION         = 16384,
     STOP_OPERATION          = 32786,
     NEW_WAYPOINT            = 65536,
-
+    
 };
