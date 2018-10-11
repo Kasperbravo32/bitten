@@ -77,7 +77,7 @@ int main(int argc , char **argv)
 
     ros::init(argc , argv , "commander_node");
     ros::NodeHandle n;
-    
+
     ROS_INFO("Subscribing to %s...", topicNames[MANUAL_TOPIC].c_str());
     ros::Subscriber manual_sub  = n.subscribe<bitten::control_msg>("manual_topic" , 3*LOOP_RATE_INT , &manualCallback);
     if (manual_sub)
@@ -121,7 +121,7 @@ int main(int argc , char **argv)
     
 
     ros::spinOnce();
-    INPUT_MODE = MANUAL_MODE;
+    INPUT_MODE = POLL_MODE;
 /*  -------------------------------------------------
          SUPERLOOP
     ------------------------------------------------- */
@@ -213,7 +213,7 @@ int main(int argc , char **argv)
             break;
         }
 
-        if (INPUT_MODE == POLL_MODE)
+        if (INPUT_MODE != POLL_MODE)
         {
             if (! --ping_timer)
             {
@@ -311,22 +311,40 @@ void InitRobot()
 void manualCallback (const bitten::control_msg::ConstPtr& manual)
 {
 
-    for (int i = 0; i < 6; i++)
-        manualInputMsg.jointVelocity[i] = manual->jointVelocity[i];
+    if (manual->flags & PONG)
+        ping = true;
 
-    for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
+    if (manual->flags & ESTABLISH_CONNECTION)
     {
-        if (manualInputMsg.jointVelocity[i] > 0)
+        if (INPUT_MODE == POLL_MODE)
+            {
+                INPUT_MODE = MANUAL_MODE;
+                ROS_INFO("Established connection to %s",nodeNames[MANUAL_NODE].c_str());
+                commanderFeedbackMsg.flags = ACK;
+                commanderFeedbackMsg.recID = MANUAL_ID;
+
+                fbTransmitReady = true;
+            }
+    }
+    if (INPUT_MODE == MANUAL_MODE)
+    {
+        for (int i = 0; i < 6; i++)
+            manualInputMsg.jointVelocity[i] = manual->jointVelocity[i];
+
+        for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
         {
-            if (TX90.currPos[i] + (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) < TX90.maxRotation[i])
-                TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
+            if (manualInputMsg.jointVelocity[i] > 0)
+            {
+                if (TX90.currPos[i] + (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) < TX90.maxRotation[i])
+                    TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
+            }
+            
+            else if (manualInputMsg.jointVelocity[i] < 0)
+            {
+                if (TX90.currPos[i] - (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) > TX90.minRotation[i])
+                    TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
+            }   
         }
-          
-        else if (manualInputMsg.jointVelocity[i] < 0)
-        {
-            if (TX90.currPos[i] - (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) > TX90.minRotation[i])
-                TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
-        }   
     }
 }
 
@@ -341,7 +359,7 @@ void wpCallback     (const bitten::control_msg::ConstPtr& wp)
             if (INPUT_MODE == POLL_MODE)
             {
                 INPUT_MODE = WP_MODE;
-                ROS_INFO("Establishing connection to %s",nodeNames[WP_NODE].c_str());
+                ROS_INFO("Established connection to %s",nodeNames[WP_NODE].c_str());
                 commanderFeedbackMsg.flags = ACK;
                 commanderFeedbackMsg.recID = WP_ID;
 

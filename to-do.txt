@@ -1,8 +1,5 @@
 ---------------- TO DO ----------------
 Manual node:
-- Handshake til oprettelse af forbindelse (ligesom wp_node) 
-- Skal pong'e iflg. feedback node
-
 - Bruge pil op/ned til at modificere currVelocity
 - Tilføje frame-mode
 - Tilføje joint-mode til manual_node
@@ -15,7 +12,6 @@ Controller node:
 
 Commander node:
 - Ændre currVelocity på pil op og ned.
-
 
 Waypoint node:
 
@@ -31,6 +27,8 @@ Sikkerhed:
 - Robotten kan ikke ramme palle/gulv
 
 Generelt:
+- Lave ping server/client (service)
+- Lave establish connection server/client (service)
 - Lave en launch fil der kører alle noderne.
 - Lave en GUI til valg af inputs og visualisering.
 - Skrive dataprotokol (acknowledge, start/stop transmission)
@@ -42,6 +40,8 @@ Generelt:
 ---------------- NOT TO DO ----------------
 
 Manual node:
+- Handshake til oprettelse af forbindelse (ligesom wp_node) 
+- Skal pong'e iflg. feedback node
 
 Controller node:
 
