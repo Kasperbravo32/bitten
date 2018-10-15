@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(bitten)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
- add_compile_options(-std=c++11)
+ add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -52,7 +52,6 @@ add_message_files(
   FILES
   feedback_msg.msg
   control_msg.msg
-  
 )
 
 ## Generate services in the 'srv' folder
@@ -107,7 +106,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES bitten
-  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+  CATKIN_DEPENDS roscpp std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -215,3 +214,7 @@ add_dependencies(test_node bitten_generate_messages_cpp)
 add_executable(wp_node src/wp_node.cpp src/global_node_definitions.cpp)
 target_link_libraries(wp_node ${catkin_LIBRARIES})
 add_dependencies(wp_node bitten_generate_messages_cpp)
+
+add_executable(can_driver_node src/can_driver_node.cpp)
+target_link_libraries(can_driver_node ${catkin_LIBRARIES})
+add_dependencies(can_driver_node bitten_generate_messages_cpp)
