@@ -131,7 +131,7 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         manual_msg.jointVelocity[5] = 0;
     
     std::cout << "Joint 1: " << manual_msg.jointVelocity[0] << std::endl
-            << "Jøoint 2: " << manual_msg.jointVelocity[1] << std::endl
+            << "Joint 2: " << manual_msg.jointVelocity[1] << std::endl
             << "Joint 3: " << manual_msg.jointVelocity[2] << std::endl
             << "Joint 4: " << manual_msg.jointVelocity[3] << std::endl
             << "Joint 5: " << manual_msg.jointVelocity[4] << std::endl
