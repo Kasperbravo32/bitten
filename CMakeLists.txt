@@ -52,6 +52,7 @@ add_message_files(
   FILES
   feedback_msg.msg
   control_msg.msg
+  canopen_msg.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -207,14 +208,10 @@ add_executable(commander_node src/commander_node.cpp src/global_node_definitions
 target_link_libraries(commander_node ${catkin_LIBRARIES})
 add_dependencies(commander_node bitten_generate_messages_cpp)
 
-add_executable(test_node src/test_node.cpp src/global_node_definitions.cpp)
-target_link_libraries(test_node ${catkin_LIBRARIES})
-add_dependencies(test_node bitten_generate_messages_cpp)
-
 add_executable(wp_node src/wp_node.cpp src/global_node_definitions.cpp)
 target_link_libraries(wp_node ${catkin_LIBRARIES})
 add_dependencies(wp_node bitten_generate_messages_cpp)
 
-add_executable(can_driver_node src/can_driver_node.cpp)
+add_executable(can_driver_node src/can_driver_node.cpp src/global_node_definitions.cpp)
 target_link_libraries(can_driver_node ${catkin_LIBRARIES})
 add_dependencies(can_driver_node bitten_generate_messages_cpp)

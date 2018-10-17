@@ -20,12 +20,12 @@
 #include <cstring>
 
 #include "ros/ros.h"
-#include <bitten/control_msg.h>
+#include <bitten/canopen_msg.h>
 #include <global_node_definitions.h>
 #include <can_driver_node.h>
 
-#define PROGNAME  "socketcan-raw-demo"
-#define VERSION  "2.0.0"
+#define PROGNAME  "socketcan"
+#define VERSION  "0.1.0"
 
 namespace
 {
@@ -64,7 +64,7 @@ void processFrame(const struct canfd_frame& frame)
     case 0x8CFDD734:
     {
         std::cout << "CAN-ID: 0x" << std::hex << std::uppercase
-                //   << std::setw(3) << std::setfill('0')
+                  << std::setw(3) << std::setfill('0')
                   << frame.can_id << std::endl;
         std::cout << "Length: " << (int)frame.len << std::endl; //payload is 8 bytes in length
         std::cout << "Data: ";
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
     ros::NodeHandle n;
 
     ROS_INFO("Publishing to can_topic");
-    ros::Publisher canPub = n.advertise<bitten::control_msg>("can_topic", 1000);
+    ros::Publisher canPub = n.advertise<bitten::canopen_msg>("can_topic", 1000);
 
     ros::Rate loop_rate(LOOP_RATE_INT);
 
@@ -266,7 +266,6 @@ int main(int argc, char** argv)
             processFrame(frame);
             break;
         case CANFD_MTU:
-            // TODO: Should make an example for CAN FD
             break;
         case -1:
             // Check the signal value on interrupt
