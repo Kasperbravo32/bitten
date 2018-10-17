@@ -22,28 +22,13 @@
 #include "ros/ros.h"
 #include <bitten/control_msg.h>
 #include <global_node_definitions.h>
+#include <can_driver_node.h>
 
 #define PROGNAME  "socketcan-raw-demo"
 #define VERSION  "2.0.0"
 
 namespace
 {
-
-// struct EngineFrame
-// {
-//     std::uint16_t rpm;
-//     // TODO: Some more hypothetical data
-// };
-
-// struct VehicleFrame
-// {
-//     // TODO: Some hypothetical vehicle status measurements
-// };
-
-// struct BodyControllerFrame
-// {
-//     // TODO: Some hypothetical vehicle settings flags
-// };
 
 std::sig_atomic_t signalValue;
 
@@ -74,37 +59,24 @@ void processFrame(const struct canfd_frame& frame)
     switch (frame.can_id)
     {
     case 0x8CFDD633:
-    {
-        std::cout << "Got 0xCFDD633" << std::endl; // XXX
-        std::cout << "CAN-ID: " << frame.can_id << std::endl;
-        // EngineFrame engine;
-        // engine.rpm = be16toh(*(std::uint16_t *)(frame.data + 0));
-        // std::cout << "RPM: " << engine.rpm << std::endl;
-    }
-        break;
     case 0x8CFDD634:
-    {
-        // TODO: Work!
-        // VehicleFrame vehicle;
-        std::cout << "Got 0xCFDD634" << std::endl; // XXX
-    }
-        break;
     case 0x8CFDD733:
-    {
-        // TODO: Work!
-        // BodyControllerFrame bodyController;
-        std::cout << "Got 0xCFDD733" << std::endl; // XXX
-    }
-        break;
     case 0x8CFDD734:
     {
-        // TODO: Work!
-        // BodyControllerFrame bodyController;
-        std::cout << "Got 0xCFDD734" << std::endl; // XXX
+        std::cout << "CAN-ID: 0x" << std::hex << std::uppercase
+                //   << std::setw(3) << std::setfill('0')
+                  << frame.can_id << std::endl;
+        std::cout << "Length: " << (int)frame.len << std::endl; //payload is 8 bytes in length
+        std::cout << "Data: ";
+        for(int i = 0; i < (int)frame.len; i++)
+        {
+            std::cout << (int)frame.data[i];
+        }
+        std::cout << std::endl;
     }
         break;
+
     default:
-        // Should never get here if the receive filters were set up correctly
         std::cerr << "Unexpected CAN ID: 0x"
                   << std::hex << std::uppercase
                   << std::setw(3) << std::setfill('0')
@@ -167,7 +139,8 @@ int main(int argc, char** argv)
         }
 
         // Check for the one positional argument
-        if (optind != (argc - 1)) {
+        if (optind != (argc - 1))
+        {
             std::cerr << "Missing network interface option!" << std::endl;
             usage();
             return EXIT_FAILURE;
@@ -180,7 +153,8 @@ int main(int argc, char** argv)
     // Check if the service should be run as a daemon
     if (!foreground)
     {
-        if (::daemon(0, 1) == -1) {
+        if (::daemon(0, 1) == -1)
+        {
             std::perror("daemon");
             return EXIT_FAILURE;
         }
@@ -203,7 +177,7 @@ int main(int argc, char** argv)
     if (-1 == sockfd)
     {
         std::perror("socket");
-        goto errSocket;
+        return errno;
     }
 
     // Set a receive filter so we only receive select CAN IDs
@@ -228,7 +202,8 @@ int main(int argc, char** argv)
         if (-1 == rc)
         {
             std::perror("setsockopt filter");
-            goto errSetup;
+            ::close(sockfd);
+            return errno;
         }
     }
 
@@ -246,7 +221,8 @@ int main(int argc, char** argv)
         if (-1 == rc)
         {
             std::perror("setsockopt CAN FD");
-            goto errSetup;
+            ::close(sockfd);
+            return errno;
         }
     }
 
@@ -255,7 +231,8 @@ int main(int argc, char** argv)
     if (::ioctl(sockfd, SIOCGIFINDEX, &ifr) == -1)
     {
         std::perror("ioctl");
-        goto errSetup;
+        ::close(sockfd);
+        return errno;
     }
 
     // Bind the socket to the network interface
@@ -269,7 +246,8 @@ int main(int argc, char** argv)
     if (-1 == rc)
     {
         std::perror("bind");
-        goto errSetup;
+        ::close(sockfd);
+        return errno;
     }
 
     // Log that the service is up and running
@@ -312,10 +290,4 @@ int main(int argc, char** argv)
 
     std::cout << std::endl << "Bye!" << std::endl;
     return EXIT_SUCCESS;
-
-    // Error handling (reverse order cleanup)
-errSetup:
-    ::close(sockfd);
-errSocket:
-    return errno;
 }
