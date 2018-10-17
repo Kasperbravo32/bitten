@@ -109,6 +109,7 @@ int main(int argc , char **argv)
     ROS_INFO("Publishing on \"joint_states\" topic");
     ros::Publisher commander_pub    = n.advertise<sensor_msgs::JointState>  ("joint_states" , 3*LOOP_RATE_INT);
     
+    
 
     ROS_INFO("Publishing on \"%s\"",topicNames[FEEDBACK_TOPIC].c_str());
     ros::Publisher commander_fb_pub = n.advertise<bitten::feedback_msg>      ("feedback_topic" , 3*LOOP_RATE_INT);

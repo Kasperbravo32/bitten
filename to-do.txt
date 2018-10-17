@@ -27,8 +27,6 @@ Sikkerhed:
 - Robotten kan ikke ramme palle/gulv
 
 Generelt:
-- Lave ping server/client (service)
-- Lave establish connection server/client (service)
 - Lave en launch fil der kører alle noderne.
 - Lave en GUI til valg af inputs og visualisering.
 - Skrive dataprotokol (acknowledge, start/stop transmission)
