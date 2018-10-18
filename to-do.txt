@@ -11,6 +11,7 @@ Controller node:
 
 
 Commander node:
+- Læs currPos fra /feedback_states
 - Ændre currVelocity på pil op og ned.
 
 Waypoint node:

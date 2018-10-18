@@ -18,16 +18,7 @@ enum NODE_INDICES {
     NUMBER_OF_NODES
 };
 
-enum TOPIC_INDICES {
-    JOY_TOPIC,
-    MANUAL_TOPIC,
-    WP_TOPIC,
-    TEST_TOPIC,
-    JOINT_STATES_TOPIC,
-    FEEDBACK_TOPIC,
 
-    NUMBER_OF_TOPICS
-};
 
 enum NODE_IDS {
     COMMANDER_ID,
@@ -49,13 +40,36 @@ std::string nodeNames[NUMBER_OF_NODES] = {
     "Controller Node"
 };
 
+enum TOPIC_INDICES {
+    JOY_TOPIC,
+    MANUAL_TOPIC,
+    WP_TOPIC,
+    TEST_TOPIC,
+    JOINT_STATES_TOPIC,
+    FEEDBACK_TOPIC,
+    JOINT_PATH_COMMAND_TOPIC,
+
+    NUMBER_OF_TOPICS
+};
+
+enum JOINT_FLUT {
+    POSITIONS,
+    VELOCITIES,
+    ACCELERATIONS,
+    EFFORT,
+    TIME,
+
+    NUMBER_OF_FLUT
+};
+
 std::string topicNames[NUMBER_OF_TOPICS] = {
     "joy",
     "manual_topic",
     "wp_topic",
     "test_topic",
     "joint_states",
-    "feedback_topic"
+    "feedback_topic",
+    "joint_path_command"
 };
 
 struct MsgType_s

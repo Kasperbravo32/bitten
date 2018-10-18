@@ -9,12 +9,12 @@
  * ----------------------------------------------------------------------- */
 
 #include <sensor_msgs/JointState.h>
+#include <trajectory_msgs/JointTrajectory.h>
+
 #include <array>
 #include <sstream>
 #include <iostream>
 #include <stdio.h>
-
-
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
@@ -44,7 +44,10 @@ MsgType_s testInputMsg;                 /* Used to collect data from:       test
 
 feedbackMsg_s fbMsg;
 
-sensor_msgs::JointState msg;
+//sensor_msgs::JointState msg;
+trajectory_msgs::JointTrajectory msg;
+trajectory_msgs::JointTrajectoryPoint point_msg;
+
 bitten::feedback_msg commanderFeedbackMsg;     /* Used to send feedback to various nodes */
 
 
@@ -56,11 +59,13 @@ bool waiting = false;
 bool ping = true;
 bool fbTransmitReady = false;
 bool jointStatesTransmitReady = false;
+bool not_run = true;
 
 const   int PING_RATE = LOOP_RATE_INT / 2;
         int poll_timer = LOOP_RATE_INT*2;
         int ping_timer = PING_RATE;
         int ping_timeout = PING_RATE;
+        int pub_counter = LOOP_RATE_INT / 10;
 
 double goalArray[6];
 uint8_t jointsdone = 0;
@@ -94,27 +99,16 @@ int main(int argc , char **argv)
     else
         ROS_INFO("Couldn't subscribe to %s.\n", topicNames[WP_TOPIC].c_str());
 
-
-
-    // ROS_INFO("Subscribing to %s...", topicNames[TEST_TOPIC].c_str());
-    // ros::Subscriber test_sub  = n.subscribe<bitten::control_msg>("test_topic" , 3*LOOP_RATE_INT , &testCallback);
-    // if (test_sub)
-    //     ROS_INFO("Subscribed to %s!\n", topicNames[TEST_TOPIC].c_str());
-    // else
-    //     ROS_INFO("Couldn't subscribe to %s.\n", topicNames[TEST_TOPIC].c_str());    
-
-
-
-
-    ROS_INFO("Publishing on \"joint_states\" topic");
-    ros::Publisher commander_pub    = n.advertise<sensor_msgs::JointState>  ("joint_states" , 3*LOOP_RATE_INT);
-    
+    ROS_INFO("Publishing on \"joint_path_command\"");
+    ros::Publisher commander_pub    = n.advertise<trajectory_msgs::JointTrajectory>  ("joint_path_command" , 3*LOOP_RATE_INT);
     
 
     ROS_INFO("Publishing on \"%s\"",topicNames[FEEDBACK_TOPIC].c_str());
     ros::Publisher commander_fb_pub = n.advertise<bitten::feedback_msg>      ("feedback_topic" , 3*LOOP_RATE_INT);
     if (commander_fb_pub)
         ROS_INFO("Publishing succesful\n");
+
+    ros::Publisher test_pub = n.advertise<trajectory_msgs::JointTrajectory>("test0_topic", 3*LOOP_RATE_INT);
 
 
 
@@ -123,14 +117,30 @@ int main(int argc , char **argv)
 
     ros::spinOnce();
     INPUT_MODE = POLL_MODE;
+
+
+    point_msg.positions.resize(6);
+    point_msg.velocities.resize(6);
+    point_msg.accelerations.resize(6);
+    point_msg.effort.resize(1);
+
+    sleep(1);
+    ROS_INFO("Ready for operation");
+
 /*  -------------------------------------------------
          SUPERLOOP
     ------------------------------------------------- */
     while(ros::ok())
     {
 
-        msg.name.clear();
-        msg.position.clear();
+        msg.joint_names.clear();
+        msg.points.clear();
+        point_msg.positions.clear();
+        point_msg.effort.clear();
+        point_msg.accelerations.clear();
+        point_msg.velocities.clear();
+
+
 
         switch(INPUT_MODE)
         {
@@ -138,23 +148,33 @@ int main(int argc , char **argv)
 
             for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
             {
-                msg.name.push_back(TX90.jointNames[i]);
-                msg.position.push_back(TX90.currPos[i]);
-            }
+                msg.joint_names.push_back(TX90.jointNames[i]);
+                point_msg.positions.push_back(TX90.currPos[i]);
 
-            commander_pub.publish(msg);
+            }
+            point_msg.accelerations.push_back(0);
+            point_msg.effort.push_back(0);
+            point_msg.velocities.push_back(0);
+
+            msg.points.push_back(point_msg);
+            jointStatesTransmitReady = true;
+            // if (! --pub_counter)
+            // {
+            //     commander_pub.publish(msg);
+            //     pub_counter = LOOP_RATE_INT / 10 ;
+            // }
+
+            
             break;
 
             case WP_MODE:
                 if (goalExists)
                 {
-                    msg.name.clear();
-                    msg.position.clear();
+                    msg.joint_names.clear();
+                    point_msg.positions.clear();
 
                     for (int i = 0; i < 6; i++)
                     {
-
-
                         if (TX90.currPos[i] != goalArray[i])
                         {
                             if (goalArray[i] > TX90.currPos[i])
@@ -173,16 +193,19 @@ int main(int argc , char **argv)
                                     TX90.currPos[i] -= TX90.currPos[i] - goalArray[i];
                             }
 
-                            msg.name.push_back(TX90.jointNames[i]);
-                            msg.position.push_back(TX90.currPos[i]);
+                            msg.joint_names.push_back(TX90.jointNames[i]);
+                            point_msg.positions.push_back(TX90.currPos[i]);
+                            // point_msg.time_from_start = ros::Duration(1);
+
                         }
                         else
                         {
-                            //ROS_INFO("Joint: %d reached goal rotation", i);
                             jointsdone |= (1 << i);
                         }
                     }
+                    msg.points.push_back(point_msg);
                     jointStatesTransmitReady = true;
+
 
                     if (jointsdone == 63)
                     {
@@ -195,9 +218,44 @@ int main(int argc , char **argv)
                 }
             break;
 
-            case TEST_MODE:
 
+
+
+
+
+
+            case TEST_MODE:
+            if (not_run)
+            {
+                for(int i = 0; i < 6; i++)
+                {
+                    msg.joint_names.push_back(TX90.jointNames[i]);
+                    if (i != 0)
+                        point_msg.positions.push_back(0);
+                    else
+                        point_msg.positions.push_back(0);
+                    
+                    point_msg.velocities.push_back(1);
+                    point_msg.accelerations.push_back(0);
+                }
+
+
+                point_msg.effort.push_back(0);
+                point_msg.time_from_start = ros::Duration(0.5);
+                msg.points.push_back(point_msg);
+                jointStatesTransmitReady = true;
+                not_run = false;
+            }
             break;
+
+
+
+
+
+
+
+
+
 
             case POLL_MODE:
 
@@ -206,15 +264,13 @@ int main(int argc , char **argv)
                     ROS_INFO("waiting in poll_mode");
                     poll_timer = 2*LOOP_RATE_INT;
                 }
-                
-
             break;
             default:
 
             break;
         }
 
-        if (INPUT_MODE != POLL_MODE)
+        if (INPUT_MODE == MANUAL_MODE || INPUT_MODE == WP_MODE)
         {
             if (! --ping_timer)
             {
@@ -263,7 +319,7 @@ void InitRobot()
     TX90.maxLink    = 6;
     TX90.resetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
 
-    TX90.currVelocity   = 0.2;
+    TX90.currVelocity   = 0.05;
     
     TX90.maxRotation = {    3.14,               /* joint_1  */
                             2.57,               /* joint_2  */
