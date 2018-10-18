@@ -263,7 +263,7 @@ void InitRobot()
     TX90.maxLink    = 6;
     TX90.resetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
 
-    TX90.currVelocity   = 0.2;
+    TX90.currVelocity   = 0.05;
     
     TX90.maxRotation = {    3.14,               /* joint_1  */
                             2.57,               /* joint_2  */

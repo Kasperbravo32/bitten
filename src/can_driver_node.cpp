@@ -37,52 +37,17 @@ void onSignal(int value)
     signalValue = static_cast<decltype(signalValue)>(value);
 }
 
-void usage()
-{
-    std::cout << "Usage: " PROGNAME " [-h] [-V] [-f] interface" << std::endl
-              << "Options:" << std::endl
-              << "  -h  Display this information" << std::endl
-              << "  -V  Display version information" << std::endl
-              << "  -f  Run in the foreground" << std::endl
-              << std::endl;
-}
-
-void version()
-{
-    std::cout << PROGNAME " version " VERSION << std::endl
-              << "Compiled on " __DATE__ ", " __TIME__ << std::endl
-              << std::endl;
-}
-
 void processFrame(const struct canfd_frame& frame)
 {
-    switch (frame.can_id)
+    can_msg.can_id = frame.can_id;
+    can_msg.lenth = frame.len; //payload is 8 bytes in length
+    for(int i = 0; i < (int)frame.len; i++)
     {
-    case 0x8CFDD633:
-    case 0x8CFDD634:
-    case 0x8CFDD733:
-    case 0x8CFDD734:
-    {
-        std::cout << "CAN-ID: 0x" << std::hex << std::uppercase
-                  << std::setw(3) << std::setfill('0')
-                  << frame.can_id << std::endl;
-        std::cout << "Length: " << (int)frame.len << std::endl; //payload is 8 bytes in length
-        std::cout << "Data: ";
-        for(int i = 0; i < (int)frame.len; i++)
+        if(i > 7)
         {
-            std::cout << (int)frame.data[i];
+            break;
         }
-        std::cout << std::endl;
-    }
-        break;
-
-    default:
-        std::cerr << "Unexpected CAN ID: 0x"
-                  << std::hex << std::uppercase
-                  << std::setw(3) << std::setfill('0')
-                  << frame.can_id << std::endl;
-        std::cerr.copyfmt(std::ios(nullptr));
-        break;
+        can_msg.data[i] = frame.data[i];
     }
 }
 
@@ -92,18 +57,9 @@ int main(int argc, char** argv)
 {   
     using namespace std::chrono_literals;
 
-    ROS_INFO("Initiating system...");
-    ros::init(argc, argv, "can_driver_node");
-    ros::NodeHandle n;
-
-    ROS_INFO("Publishing to can_topic");
-    ros::Publisher canPub = n.advertise<bitten::canopen_msg>("can_topic", 1000);
-
-    ros::Rate loop_rate(LOOP_RATE_INT);
-
     // Options
     const char* interface;
-    bool foreground = false;
+    // bool background = false;
 
     // Service variables
     struct sigaction sa;
@@ -114,51 +70,15 @@ int main(int argc, char** argv)
     struct ifreq ifr;
     int sockfd;
 
-    // Parse command line arguments
+    // Check for the one positional argument
+    if (optind != (argc - 1))
     {
-        int opt;
-
-        // Parse option flags
-        while ((opt = ::getopt(argc, argv, "Vfh")) != -1)
-        {
-            switch (opt)
-            {
-            case 'V':
-                version();
-                return EXIT_SUCCESS;
-            case 'f':
-                foreground = true;
-                break;
-            case 'h':
-                usage();
-                return EXIT_SUCCESS;
-            default:
-                usage();
-                return EXIT_FAILURE;
-            }
-        }
-
-        // Check for the one positional argument
-        if (optind != (argc - 1))
-        {
-            std::cerr << "Missing network interface option!" << std::endl;
-            usage();
-            return EXIT_FAILURE;
-        }
-
-        // Set the network interface to use
-        interface = argv[optind];
+        ROS_ERROR("Missing network interface option!");
+        return EXIT_FAILURE;
     }
 
-    // Check if the service should be run as a daemon
-    if (!foreground)
-    {
-        if (::daemon(0, 1) == -1)
-        {
-            std::perror("daemon");
-            return EXIT_FAILURE;
-        }
-    }
+    // Set the network interface to use
+    interface = argv[optind];
 
     // Register signal handlers
     sa.sa_handler = onSignal;
@@ -176,7 +96,8 @@ int main(int argc, char** argv)
     sockfd = ::socket(PF_CAN, SOCK_RAW, CAN_RAW);
     if (-1 == sockfd)
     {
-        std::perror("socket");
+
+        ROS_ERROR("socket: %s", strerror(errno));
         return errno;
     }
 
@@ -201,7 +122,7 @@ int main(int argc, char** argv)
         );
         if (-1 == rc)
         {
-            std::perror("setsockopt filter");
+            ROS_ERROR("setsockopt filter: %s", strerror(errno));
             ::close(sockfd);
             return errno;
         }
@@ -220,7 +141,7 @@ int main(int argc, char** argv)
         );
         if (-1 == rc)
         {
-            std::perror("setsockopt CAN FD");
+            ROS_ERROR("setsockopt CAN FD: %s", strerror(errno));
             ::close(sockfd);
             return errno;
         }
@@ -230,11 +151,11 @@ int main(int argc, char** argv)
     std::strncpy(ifr.ifr_name, interface, IFNAMSIZ);
     if (::ioctl(sockfd, SIOCGIFINDEX, &ifr) == -1)
     {
-        std::perror("ioctl");
+        ROS_ERROR("ioctl: %s", strerror(errno));
         ::close(sockfd);
         return errno;
     }
-
+    
     // Bind the socket to the network interface
     addr.can_family = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
@@ -245,16 +166,25 @@ int main(int argc, char** argv)
     );
     if (-1 == rc)
     {
-        std::perror("bind");
+        ROS_ERROR("bind: %s", strerror(errno));
         ::close(sockfd);
         return errno;
     }
 
-    // Log that the service is up and running
-    std::cout << "Started" << std::endl;
+    ROS_INFO("Initiating node");
+    ros::init(argc, argv, "can_driver_node");
+    ros::NodeHandle n;
 
+    ROS_INFO("Publishing to can_topic");
+    ros::Publisher canPub = n.advertise<bitten::canopen_msg>("can_topic", 1000);
+
+    ros::Rate loop_rate(LOOP_RATE_INT);
+    sleep(1);
+
+    ROS_INFO("CAN read started");
+    
     // Main loop
-    while ( ( 0 == signalValue ) && ( ros::ok() ) )
+    while ( ( 0 == signalValue ) && ros::ok() )
     {
         struct canfd_frame frame;
 
@@ -263,7 +193,9 @@ int main(int argc, char** argv)
         switch (numBytes)
         {
         case CAN_MTU:
+        {
             processFrame(frame);
+        }
             break;
         case CANFD_MTU:
             break;
@@ -273,20 +205,24 @@ int main(int argc, char** argv)
                 continue;
 
             // Delay before continuing
-            std::perror("read");
+            ROS_ERROR("read: %s", strerror(errno));
             std::this_thread::sleep_for(100ms);
+            return errno;
         default:
             continue;
         }
+        canPub.publish(can_msg);
+
+        // ros::spinOnce();
+        // loop_rate.sleep();
     }
 
     // Cleanup
     if (::close(sockfd) == -1)
     {
-        std::perror("close");
+        ROS_ERROR("close: %s", strerror(errno));
         return errno;
     }
 
-    std::cout << std::endl << "Bye!" << std::endl;
     return EXIT_SUCCESS;
 }
