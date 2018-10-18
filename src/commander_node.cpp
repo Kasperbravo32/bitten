@@ -110,15 +110,11 @@ int main(int argc , char **argv)
 
     ros::Publisher test_pub = n.advertise<trajectory_msgs::JointTrajectory>("test0_topic", 3*LOOP_RATE_INT);
 
-
-
     ros::Rate loop_rate(LOOP_RATE_INT);
-    
 
     ros::spinOnce();
     INPUT_MODE = POLL_MODE;
-
-
+    
     point_msg.positions.resize(6);
     point_msg.velocities.resize(6);
     point_msg.accelerations.resize(6);

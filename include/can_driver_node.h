@@ -1,0 +1,1 @@
+bitten::canopen_msg can_msg;

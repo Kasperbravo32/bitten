@@ -7,6 +7,7 @@
  *                      -------  Initializing   -------
  * ----------------------------------------------------------------------- */
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
+void canCallback(const bitten::canopen_msg::ConstPtr& can);
 void fbCallbackManual(const bitten::feedback_msg::ConstPtr& feedbackManual);
 
 /* ----------------------------------------------------------------------

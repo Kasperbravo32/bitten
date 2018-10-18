@@ -11,21 +11,25 @@
 #include "std_msgs/String.h"
 #include <bitten/control_msg.h>
 #include <bitten/feedback_msg.h>
-#include <manual_node.h>
+#include <bitten/canopen_msg.h>
 #include <global_node_definitions.h>
+#include <manual_node.h>
 
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        
 int main(int argc, char **argv)
 {
-    ROS_INFO("Initiating system...");
+    ROS_INFO("Initiating node");
     ros::init(argc, argv, "manual_node");
     ros::NodeHandle n;
 
     ROS_INFO("Subscribing to \"%s\"", topicNames[JOY_TOPIC].c_str());
     ros::Subscriber joySub = n.subscribe<sensor_msgs::Joy>("joy", 1000, &joyCallback);
     
+    ROS_INFO("Subscribing to can_topic");
+    ros::Subscriber canSub = n.subscribe<bitten::canopen_msg>("can_topic", 1000, &canCallback);
+
     ROS_INFO("Subscribing to %s",topicNames[FEEDBACK_TOPIC].c_str());
     ros::Subscriber feedbackSub = n.subscribe<bitten::feedback_msg>(topicNames[FEEDBACK_TOPIC], 3*LOOP_RATE_INT, &fbCallbackManual);
     if (feedbackSub)
@@ -130,25 +134,173 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
     else
         manual_msg.jointVelocity[5] = 0;
     
-    std::cout << "Joint 1: " << manual_msg.jointVelocity[0] << std::endl
-            << "Joint 2: " << manual_msg.jointVelocity[1] << std::endl
-            << "Joint 3: " << manual_msg.jointVelocity[2] << std::endl
-            << "Joint 4: " << manual_msg.jointVelocity[3] << std::endl
-            << "Joint 5: " << manual_msg.jointVelocity[4] << std::endl
-            << "Joint 6: " << manual_msg.jointVelocity[5] << std::endl << std::endl;
-
-    
+    for(int i = 0; i < 6; i++)
+    {
+        ROS_INFO("Joint %d: %f", i+1, manual_msg.jointVelocity[i]);
+    }
+    std::cout << std::endl;
 }
-
-
-
-
 
 /* ----------------------------------------------------------------------
  *                -------  Feedback Callback function   -------
- * ----------------------------------------------------------------------- */ 
+ * ----------------------------------------------------------------------- */
+void canCallback(const bitten::canopen_msg::ConstPtr& can)
+{
+    switch(can->can_id)
+    {
+    case 0x8CFDD633:
+    {
+        int check = can->data[0] % 16;
+        if(check == 4)
+        {
+            float res = can->data[1] * 0xFF + can->data[0];
+            res = -(res / float(0xFA * 0xFF + 0x04));
+            ROS_INFO("0xCFDD633 %f", res);
+            manual_msg.jointVelocity[4] = res;
+        }
+        else if(check == 0) 
+        {
+            float res = can->data[1] * 0xFF + can->data[0];
+            res = res / float(0xFA * 0xFF + 0x10);
+            ROS_INFO("0xCFDD633 %f", res);
+            manual_msg.jointVelocity[4] = res;
+        }
+        else
+        {
+            float res = 0;
+            ROS_INFO("0xCFDD633 %f", res);
+            manual_msg.jointVelocity[4] = res;
+        }
+        
+        check = can->data[2] % 16;
+        if(check == 4)
+        {
+            float res = can->data[3] * 0xFF + can->data[2];
+            res = -(res / float(0xFA * 0xFF + 0x04));
+            ROS_INFO("0xCFDD634 %f", res);
+            manual_msg.jointVelocity[1] = res;
+        }
+        else if(check == 0) 
+        {
+            float res = can->data[3] * 0xFF + can->data[2];
+            res = res / float(0xFA * 0xFF + 0x10);
+            ROS_INFO("0xCFDD634 %f", res);
+            manual_msg.jointVelocity[1] = res;
+        }
+        else
+        {
+            float res = 0;
+            ROS_INFO("0xCFDD634 %f", res);
+            manual_msg.jointVelocity[1] = res;
+        }
+        break;
+    }
+    case 0x8CFDD634:
+    {
+        int check = can->data[0] % 16;
+        if(check == 4)
+        {
+            float res = can->data[1] * 0xFF + can->data[0];
+            res = -(res / float(0xFA * 0xFF + 0x04));
+            ROS_INFO("0xCFDD634 %f", res);
+            manual_msg.jointVelocity[0] = res;
+        }
+        else if(check == 0) 
+        {
+            float res = can->data[1] * 0xFF + can->data[0];
+            res = res / float(0xFA * 0xFF + 0x10);
+            ROS_INFO("0xCFDD634 %f", res);
+            manual_msg.jointVelocity[0] = res;
+        }
+        else
+        {
+            float res = 0;
+            ROS_INFO("0xCFDD634 %f", res);
+            manual_msg.jointVelocity[0] = res;
+        }
 
+        check = can->data[2] % 16;
+        if(check == 4)
+        {
+            float res = can->data[3] * 0xFF + can->data[2];
+            res = -(res / float(0xFA * 0xFF + 0x04));
+            ROS_INFO("0xCFDD634 %f", res);
+            manual_msg.jointVelocity[2] = res;
+        }
+        else if(check == 0) 
+        {
+            float res = can->data[3] * 0xFF + can->data[2];
+            res = res / float(0xFA * 0xFF + 0x10);
+            ROS_INFO("0xCFDD634 %f", res);
+            manual_msg.jointVelocity[2] = res;
+        }
+        else
+        {
+            float res = 0;
+            ROS_INFO("0xCFDD634 %f", res);
+            manual_msg.jointVelocity[2] = res;
+        }
+        break;
+    }
+    case 0x8CFDD733:
+    {
+        int check = can->data[0] % 16;
+        if(check == 4)
+        {
+            float res = can->data[1] * 0xFF + can->data[0];
+            res = -(res / float(0xFA * 0xFF + 0x04));
+            ROS_INFO("0xCFDD733 %f", res);
+            manual_msg.jointVelocity[5] = res;
+        }
+        else if(check == 0) 
+        {
+            float res = can->data[1] * 0xFF + can->data[0];
+            res = res / float(0xFA * 0xFF + 0x10);
+            ROS_INFO("0xCFDD733 %f", res);
+            manual_msg.jointVelocity[5] = res;
+        }
+        else
+        {
+            float res = 0;
+            ROS_INFO("0xCFDD733 %f", res);
+            manual_msg.jointVelocity[5] = res;
+        }
+        break;
+    }
+    case 0x8CFDD734:
+    {
+        int check = can->data[0] % 16;
+        if(check == 4)
+        {
+            float res = can->data[1] * 0xFF + can->data[0];
+            res = -(res / float(0xFA * 0xFF + 0x04));
+            ROS_INFO("0xCFDD734 %f", res);
+            manual_msg.jointVelocity[3] = res;
+        }
+        else if(check == 0) 
+        {
+            float res = can->data[1] * 0xFF + can->data[0];
+            res = res / float(0xFA * 0xFF + 0x10);
+            ROS_INFO("0xCFDD734 %f", res);
+            manual_msg.jointVelocity[3] = res;
+        }
+        else
+        {
+            float res = 0;
+            ROS_INFO("0xCFDD734 %f", res);
+            manual_msg.jointVelocity[3] = res;
+        }
+        break;
+    }
+    default:
+        break; 
+    }
+    ROS_INFO(" ");
+}
 
+/* ----------------------------------------------------------------------
+ *                -------  Feedback Callback function   -------
+ * ----------------------------------------------------------------------- */
 void fbCallbackManual(const bitten::feedback_msg::ConstPtr& feedbackManual)
 {
     if (feedbackManual->recID == MANUAL_ID)
