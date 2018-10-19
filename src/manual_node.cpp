@@ -312,12 +312,8 @@ void fbCallbackManual(const bitten::feedback_msg::ConstPtr& feedbackManual)
             transmitManualRdy = true;
         }
 
-
         if (connectionEstablished == false && feedbackManual->flags & ACK)
-        {
-            connectionEstablished = true;
-        }
-            
+            connectionEstablished = true;            
 
         else if (connectionEstablished == false && feedbackManual->flags == DENIED)
             ROS_INFO("Connection denied");
