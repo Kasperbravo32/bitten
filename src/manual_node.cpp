@@ -81,6 +81,7 @@ int main(int argc, char **argv)
 
             transmitManualRdy = true;
         }
+        
         else
         {
             static int timer = LOOP_RATE_INT;
