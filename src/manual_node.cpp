@@ -87,7 +87,7 @@ int main(int argc, char **argv)
             if (! --timer)
             {
                 ROS_INFO("Trying to establish connection...");
-                manual_msg.flags = ESTABLISH_CONNECTION;
+                manual_msg.flags |= ESTABLISH_CONNECTION;
                 timer = LOOP_RATE_INT;
                 transmitManualRdy = true;
             }
@@ -96,6 +96,7 @@ int main(int argc, char **argv)
         if (transmitManualRdy == true)
         {
             manualPub.publish(manual_msg);
+            manual_msg.flags = 0;
             transmitManualRdy = false;
         }
 
@@ -307,13 +308,16 @@ void fbCallbackManual(const bitten::feedback_msg::ConstPtr& feedbackManual)
     {
         if (feedbackManual->flags & PING)
         {
-            manual_msg.flags = PONG;
+            manual_msg.flags |= PONG;
             transmitManualRdy = true;
         }
 
 
         if (connectionEstablished == false && feedbackManual->flags & ACK)
+        {
             connectionEstablished = true;
+        }
+            
 
         else if (connectionEstablished == false && feedbackManual->flags == DENIED)
             ROS_INFO("Connection denied");
