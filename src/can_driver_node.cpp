@@ -1,3 +1,12 @@
+/* -----------------------------------------------------------------------
+ * Filename: can_driver_node.cpp
+ * Author: Kasper Jørgensen
+ * Purpose: Create the 'can_driver' node in the Leica Robot system
+ * Date of dev.: September 2018 - January 2019
+ * 
+ * -----------------------------------------------------------------------
+ *                      -------  Libraries   -------
+ * ----------------------------------------------------------------------- */
 #include <linux/can.h>
 #include <linux/can/raw.h>
 
@@ -52,14 +61,16 @@ void processFrame(const struct canfd_frame& frame)
 }
 
 } // namespace
-
+ 
+ /* ----------------------------------------------------------------------
+ *                          -------  Main   -------
+ * ----------------------------------------------------------------------- */  
 int main(int argc, char** argv)
 {   
     using namespace std::chrono_literals;
 
     // Options
     const char* interface;
-    // bool background = false;
 
     // Service variables
     struct sigaction sa;
@@ -183,7 +194,9 @@ int main(int argc, char** argv)
 
     ROS_INFO("CAN read started");
     
-    // Main loop
+    /* -------------------------------------------------
+    *     SUPERLOOP
+    * ------------------------------------------------- */
     while ( ( 0 == signalValue ) && ros::ok() )
     {
         struct canfd_frame frame;
@@ -192,29 +205,26 @@ int main(int argc, char** argv)
         auto numBytes = ::read(sockfd, &frame, CANFD_MTU);
         switch (numBytes)
         {
-        case CAN_MTU:
-        {
-            processFrame(frame);
-        }
-            break;
-        case CANFD_MTU:
-            break;
-        case -1:
-            // Check the signal value on interrupt
-            if (EINTR == errno)
-                continue;
+            case CAN_MTU:
+            {
+                processFrame(frame);
+            }
+                break;
+            case CANFD_MTU:
+                break;
+            case -1:
+                // Check the signal value on interrupt
+                if (EINTR == errno)
+                    continue;
 
-            // Delay before continuing
-            ROS_ERROR("read: %s", strerror(errno));
-            std::this_thread::sleep_for(100ms);
-            return errno;
-        default:
-            continue;
+                // Delay before continuing
+                ROS_ERROR("read: %s", strerror(errno));
+                std::this_thread::sleep_for(100ms);
+                return errno;
+            default:
+                continue;
         }
         canPub.publish(can_msg);
-
-        // ros::spinOnce();
-        // loop_rate.sleep();
     }
 
     // Cleanup

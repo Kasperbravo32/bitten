@@ -37,8 +37,6 @@ int main(int argc, char **argv)
     else
         ROS_INFO("Couldn't subscribe to \"%s\".",topicNames[FEEDBACK_TOPIC].c_str());
 
-
-
     ROS_INFO("Publishing to \"%s\"", topicNames[MANUAL_TOPIC].c_str());
     ros::Publisher manualPub = n.advertise<bitten::control_msg>("manual_topic", 1000);
 
@@ -58,26 +56,26 @@ int main(int argc, char **argv)
                 newConnection = false;
             }
 
-            if((manual_msg.jointVelocity[0] == 1) || (manual_msg.jointVelocity[0] == -1))
-            {
-                if((manual_msg.jointVelocity[2] >= -0.3) && (manual_msg.jointVelocity[2] <= 0.3))
-                    manual_msg.jointVelocity[2] = 0;
-            }
-            if((manual_msg.jointVelocity[2] == 1) || (manual_msg.jointVelocity[2] == -1))
-            {
-                if((manual_msg.jointVelocity[0] >= -0.3) && (manual_msg.jointVelocity[0] <= 0.3))
-                    manual_msg.jointVelocity[0] = 0;
-            }
-            if((manual_msg.jointVelocity[1] == 1) || (manual_msg.jointVelocity[1] == -1))
-            {
-                if((manual_msg.jointVelocity[4] >= -0.3) && (manual_msg.jointVelocity[4] <= 0.3))
-                    manual_msg.jointVelocity[4] = 0;
-            }
-            if((manual_msg.jointVelocity[4] == 1) || (manual_msg.jointVelocity[4] == -1))
-            {
-                if((manual_msg.jointVelocity[1] >= -0.3) && (manual_msg.jointVelocity[1] <= 0.3))
-                    manual_msg.jointVelocity[1] = 0;
-            }
+            // if((manual_msg.jointVelocity[0] == 1) || (manual_msg.jointVelocity[0] == -1))
+            // {
+            //     if((manual_msg.jointVelocity[2] >= -0.3) && (manual_msg.jointVelocity[2] <= 0.3))
+            //         manual_msg.jointVelocity[2] = 0;
+            // }
+            // if((manual_msg.jointVelocity[2] == 1) || (manual_msg.jointVelocity[2] == -1))
+            // {
+            //     if((manual_msg.jointVelocity[0] >= -0.3) && (manual_msg.jointVelocity[0] <= 0.3))
+            //         manual_msg.jointVelocity[0] = 0;
+            // }
+            // if((manual_msg.jointVelocity[1] == 1) || (manual_msg.jointVelocity[1] == -1))
+            // {
+            //     if((manual_msg.jointVelocity[4] >= -0.3) && (manual_msg.jointVelocity[4] <= 0.3))
+            //         manual_msg.jointVelocity[4] = 0;
+            // }
+            // if((manual_msg.jointVelocity[4] == 1) || (manual_msg.jointVelocity[4] == -1))
+            // {
+            //     if((manual_msg.jointVelocity[1] >= -0.3) && (manual_msg.jointVelocity[1] <= 0.3))
+            //         manual_msg.jointVelocity[1] = 0;
+            // }
 
             transmitManualRdy = true;
         }
@@ -108,7 +106,6 @@ int main(int argc, char **argv)
 /* ----------------------------------------------------------------------
  *                -------  Joy Callback function   -------
  * ----------------------------------------------------------------------- */ 
-
 void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 {
     //joint 1
@@ -133,12 +130,6 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
         manual_msg.jointVelocity[5] = -1;
     else
         manual_msg.jointVelocity[5] = 0;
-    
-    for(int i = 0; i < 6; i++)
-    {
-        ROS_INFO("Joint %d: %f", i+1, manual_msg.jointVelocity[i]);
-    }
-    std::cout << std::endl;
 }
 
 /* ----------------------------------------------------------------------
@@ -148,154 +139,137 @@ void canCallback(const bitten::canopen_msg::ConstPtr& can)
 {
     switch(can->can_id)
     {
-    case 0x8CFDD633:
+    case 0x8CFDD633: //right joystick, basic message
     {
         int check = can->data[0] % 16;
+        float actual_pos;
+        float max_pos;
         if(check == 4)
         {
-            float res = can->data[1] * 0xFF + can->data[0];
-            res = -(res / float(0xFA * 0xFF + 0x04));
-            ROS_INFO("0xCFDD633 %f", res);
-            manual_msg.jointVelocity[4] = res;
+            actual_pos = can->data[1] * 0xFF + can->data[0];
+            max_pos = 0xFA * 0xFF + 0x04;
+            manual_msg.jointVelocity[4] = -(actual_pos / max_pos);
         }
         else if(check == 0) 
         {
-            float res = can->data[1] * 0xFF + can->data[0];
-            res = res / float(0xFA * 0xFF + 0x10);
-            ROS_INFO("0xCFDD633 %f", res);
-            manual_msg.jointVelocity[4] = res;
+            actual_pos = can->data[1] * 0xFF + can->data[0];
+            max_pos = 0xFA * 0xFF + 0x10;
+            manual_msg.jointVelocity[4] = actual_pos / max_pos;
         }
         else
         {
-            float res = 0;
-            ROS_INFO("0xCFDD633 %f", res);
-            manual_msg.jointVelocity[4] = res;
+            manual_msg.jointVelocity[4] = 0;
         }
         
         check = can->data[2] % 16;
         if(check == 4)
         {
-            float res = can->data[3] * 0xFF + can->data[2];
-            res = -(res / float(0xFA * 0xFF + 0x04));
-            ROS_INFO("0xCFDD634 %f", res);
-            manual_msg.jointVelocity[1] = res;
+            actual_pos = can->data[3] * 0xFF + can->data[2];
+            max_pos = 0xFA * 0xFF + 0x04;
+            manual_msg.jointVelocity[1] = -(actual_pos / max_pos);
         }
         else if(check == 0) 
         {
-            float res = can->data[3] * 0xFF + can->data[2];
-            res = res / float(0xFA * 0xFF + 0x10);
-            ROS_INFO("0xCFDD634 %f", res);
-            manual_msg.jointVelocity[1] = res;
+            actual_pos = can->data[3] * 0xFF + can->data[2];
+            max_pos = 0xFA * 0xFF + 0x10;
+            manual_msg.jointVelocity[1] = actual_pos / max_pos;
         }
         else
         {
-            float res = 0;
-            ROS_INFO("0xCFDD634 %f", res);
-            manual_msg.jointVelocity[1] = res;
+            manual_msg.jointVelocity[1] = 0;
         }
         break;
     }
-    case 0x8CFDD634:
+    case 0x8CFDD634: //left joystick, basic message
     {
         int check = can->data[0] % 16;
+        float actual_pos;
+        float max_pos;
         if(check == 4)
         {
-            float res = can->data[1] * 0xFF + can->data[0];
-            res = -(res / float(0xFA * 0xFF + 0x04));
-            ROS_INFO("0xCFDD634 %f", res);
-            manual_msg.jointVelocity[0] = res;
+            actual_pos = can->data[1] * 0xFF + can->data[0];
+            max_pos = 0xFA * 0xFF + 0x04;
+            manual_msg.jointVelocity[0] = -(actual_pos / max_pos);
         }
         else if(check == 0) 
         {
-            float res = can->data[1] * 0xFF + can->data[0];
-            res = res / float(0xFA * 0xFF + 0x10);
-            ROS_INFO("0xCFDD634 %f", res);
-            manual_msg.jointVelocity[0] = res;
+            actual_pos = can->data[1] * 0xFF + can->data[0];
+            max_pos = 0xFA * 0xFF + 0x10;
+            manual_msg.jointVelocity[0] = actual_pos / max_pos;
         }
         else
         {
-            float res = 0;
-            ROS_INFO("0xCFDD634 %f", res);
-            manual_msg.jointVelocity[0] = res;
+            manual_msg.jointVelocity[0] = 0;
         }
 
         check = can->data[2] % 16;
         if(check == 4)
         {
-            float res = can->data[3] * 0xFF + can->data[2];
-            res = -(res / float(0xFA * 0xFF + 0x04));
-            ROS_INFO("0xCFDD634 %f", res);
-            manual_msg.jointVelocity[2] = res;
+            actual_pos = can->data[3] * 0xFF + can->data[2];
+            max_pos = 0xFA * 0xFF + 0x04;
+            manual_msg.jointVelocity[2] = -(actual_pos / max_pos);
         }
-        else if(check == 0) 
+        else if(check == 0)
         {
-            float res = can->data[3] * 0xFF + can->data[2];
-            res = res / float(0xFA * 0xFF + 0x10);
-            ROS_INFO("0xCFDD634 %f", res);
-            manual_msg.jointVelocity[2] = res;
+            actual_pos = can->data[3] * 0xFF + can->data[2];
+            max_pos = 0xFA * 0xFF + 0x10;
+            manual_msg.jointVelocity[2] = actual_pos / max_pos;
         }
         else
         {
-            float res = 0;
-            ROS_INFO("0xCFDD634 %f", res);
-            manual_msg.jointVelocity[2] = res;
+            manual_msg.jointVelocity[2] = 0;
         }
         break;
     }
-    case 0x8CFDD733:
+    case 0x8CFDD733: //right joystick, extended message
     {
         int check = can->data[0] % 16;
+        float actual_pos;
+        float max_pos;
         if(check == 4)
         {
-            float res = can->data[1] * 0xFF + can->data[0];
-            res = -(res / float(0xFA * 0xFF + 0x04));
-            ROS_INFO("0xCFDD733 %f", res);
-            manual_msg.jointVelocity[5] = res;
+            actual_pos = can->data[1] * 0xFF + can->data[0];
+            max_pos = 0xFA * 0xFF + 0x04;
+            manual_msg.jointVelocity[5] = -(actual_pos / max_pos);
         }
         else if(check == 0) 
         {
-            float res = can->data[1] * 0xFF + can->data[0];
-            res = res / float(0xFA * 0xFF + 0x10);
-            ROS_INFO("0xCFDD733 %f", res);
-            manual_msg.jointVelocity[5] = res;
+            actual_pos = can->data[1] * 0xFF + can->data[0];
+            max_pos = 0xFA * 0xFF + 0x10;
+            manual_msg.jointVelocity[5] = actual_pos / max_pos;
         }
         else
         {
-            float res = 0;
-            ROS_INFO("0xCFDD733 %f", res);
-            manual_msg.jointVelocity[5] = res;
+            manual_msg.jointVelocity[5] = 0;
         }
         break;
     }
-    case 0x8CFDD734:
+    case 0x8CFDD734: //left joystick, extended message
     {
         int check = can->data[0] % 16;
+        float actual_pos;
+        float max_pos;
         if(check == 4)
         {
-            float res = can->data[1] * 0xFF + can->data[0];
-            res = -(res / float(0xFA * 0xFF + 0x04));
-            ROS_INFO("0xCFDD734 %f", res);
-            manual_msg.jointVelocity[3] = res;
+            actual_pos = can->data[1] * 0xFF + can->data[0];
+            max_pos = 0xFA * 0xFF + 0x04;
+            manual_msg.jointVelocity[3] = -(actual_pos / max_pos);
         }
         else if(check == 0) 
         {
-            float res = can->data[1] * 0xFF + can->data[0];
-            res = res / float(0xFA * 0xFF + 0x10);
-            ROS_INFO("0xCFDD734 %f", res);
-            manual_msg.jointVelocity[3] = res;
+            actual_pos = can->data[1] * 0xFF + can->data[0];
+            max_pos = 0xFA * 0xFF + 0x10;
+            manual_msg.jointVelocity[3] = actual_pos / max_pos;
         }
         else
         {
-            float res = 0;
-            ROS_INFO("0xCFDD734 %f", res);
-            manual_msg.jointVelocity[3] = res;
+            manual_msg.jointVelocity[3] = 0;
         }
         break;
     }
     default:
         break; 
     }
-    ROS_INFO(" ");
 }
 
 /* ----------------------------------------------------------------------
