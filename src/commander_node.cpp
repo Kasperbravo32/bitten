@@ -77,8 +77,6 @@ int main(int argc , char **argv)
 {
 
     commanderFeedbackMsg.senderID = COMMANDER_ID;
-    ROS_INFO("Initiating system...");
-    InitRobot();
 
     ros::init(argc , argv , "commander_node");
     ros::NodeHandle n;
@@ -89,7 +87,6 @@ int main(int argc , char **argv)
         ROS_INFO("Subscribed to %s!\n", topicNames[MANUAL_TOPIC].c_str());
     else
         ROS_INFO("Couldn't subscribe to %s.\n", topicNames[MANUAL_TOPIC].c_str());
-
 
 
     ROS_INFO("Subscribing to %s...", topicNames[WP_TOPIC].c_str());
@@ -136,18 +133,16 @@ int main(int argc , char **argv)
         point_msg.accelerations.clear();
         point_msg.velocities.clear();
 
-
-
         switch(INPUT_MODE)
         {
             case MANUAL_MODE:
 
-            for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
-            {
-                msg.joint_names.push_back(TX90.jointNames[i]);
-                point_msg.positions.push_back(TX90.currPos[i]);
+            // for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
+            // {
+            //     // msg.joint_names.push_back(TX90.jointNames[i]);
+            //     // point_msg.positions.push_back(TX90.currPos[i]);
 
-            }
+            // }
             point_msg.accelerations.push_back(0);
             point_msg.effort.push_back(0);
             point_msg.velocities.push_back(0);
@@ -171,27 +166,27 @@ int main(int argc , char **argv)
 
                     for (int i = 0; i < 6; i++)
                     {
-                        if (TX90.currPos[i] != goalArray[i])
+                        if (1/*TX90.currPos[i] != goalArray[i]*/)
                         {
-                            if (goalArray[i] > TX90.currPos[i])
-                            {
-                                if ( -(TX90.currPos[i] - goalArray[i]) > 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity)
-                                    TX90.currPos[i] += 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
-                                else
-                                    TX90.currPos[i] += goalArray[i] - TX90.currPos[i];
-                            }
+                            // if (goalArray[i] > TX90.currPos[i])
+                            // {
+                            //     if ( -(TX90.currPos[i] - goalArray[i]) > 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity)
+                            //         TX90.currPos[i] += 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
+                            //     else
+                            //         TX90.currPos[i] += goalArray[i] - TX90.currPos[i];
+                            // }
                                 
-                            else if (goalArray[i] < TX90.currPos[i])
-                            {
-                                if ((TX90.currPos[i] - goalArray[i]) > 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity)
-                                    TX90.currPos[i] -= 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
-                                else
-                                    TX90.currPos[i] -= TX90.currPos[i] - goalArray[i];
-                            }
+                            // else if (goalArray[i] < TX90.currPos[i])
+                            // {
+                            //     if ((TX90.currPos[i] - goalArray[i]) > 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity)
+                            //         TX90.currPos[i] -= 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
+                            //     else
+                            //         TX90.currPos[i] -= TX90.currPos[i] - goalArray[i];
+                            // }
 
-                            msg.joint_names.push_back(TX90.jointNames[i]);
-                            point_msg.positions.push_back(TX90.currPos[i]);
-                            // point_msg.time_from_start = ros::Duration(1);
+                            // msg.joint_names.push_back(TX90.jointNames[i]);
+                            // point_msg.positions.push_back(TX90.currPos[i]);
+                            // // point_msg.time_from_start = ros::Duration(1);
 
                         }
                         else
@@ -225,7 +220,7 @@ int main(int argc , char **argv)
             {
                 for(int i = 0; i < 6; i++)
                 {
-                    msg.joint_names.push_back(TX90.jointNames[i]);
+                    // msg.joint_names.push_back(TX90.jointNames[i]);
                     if (i != 0)
                         point_msg.positions.push_back(0);
                     else
@@ -306,56 +301,7 @@ int main(int argc , char **argv)
     }
 }
 
- /* ----------------------------------------------------------------------
- *                 -------  Initialize TX90 Robot   -------
- * ----------------------------------------------------------------------- */       
-void InitRobot()
-{
-    TX90.minLink    = 1;
-    TX90.maxLink    = 6;
-    TX90.resetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
 
-    TX90.currVelocity   = 0.05;
-    
-    TX90.maxRotation = {    3.14,               /* joint_1  */
-                            2.57,               /* joint_2  */
-                            2.53,               /* joint_3  */
-                            4.71,               /* joint_4  */
-                            2.44,               /* joint_5  */
-                            4.71};              /* joint_6  */
-
-    TX90.minRotation = {    -3.14,              /* joint_1  */
-                            -2.27,              /* joint_2  */
-                            -2.53,              /* joint_3  */
-                            -4.71,              /* joint_4  */
-                            -2.01,              /* joint_5  */
-                            -4.71};             /* joint_6  */ 
-
-    TX90.maxVelocity = {    (400/180)*3.14,     /* joint_1  */
-                            (400/180)*3.14,     /* joint_2  */
-                            (430/180)*3.14,     /* joint_3  */
-                            (540/180)*3.14,     /* joint_4  */
-                            (475/180)*3.14,     /* joint_5  */
-                            (760/180)*3.14};    /* joint_6  */                   
-
-    TX90.maxEffort  =   {   318,                /* joint_1  */
-                            166,                /* joint_2  */
-                            76,                 /* joint_3  */
-                            34,                 /* joint_4  */
-                            29,                 /* joint_5  */
-                            11};                /* joint_6  */
-                            
-    TX90.currPos    = { 0 , 0 , 0 , 0 , 0 , 0};
-
-    TX90.jointNames = { "joint_1", 
-                        "joint_2", 
-                        "joint_3", 
-                        "joint_4", 
-                        "joint_5", 
-                        "joint_6"};
-
-    TX90.tool = false;
-}
 
 
  /* ----------------------------------------------------------------------
@@ -384,20 +330,20 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
         for (int i = 0; i < 6; i++)
             manualInputMsg.jointVelocity[i] = manual->jointVelocity[i];
 
-        for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
-        {
-            if (manualInputMsg.jointVelocity[i] > 0)
-            {
-                if (TX90.currPos[i] + (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) < TX90.maxRotation[i])
-                    TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
-            }
+        // for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
+        // {
+        //     if (manualInputMsg.jointVelocity[i] > 0)
+        //     {
+        //         if (TX90.currPos[i] + (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) < TX90.maxRotation[i])
+        //             TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
+        //     }
             
-            else if (manualInputMsg.jointVelocity[i] < 0)
-            {
-                if (TX90.currPos[i] - (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) > TX90.minRotation[i])
-                    TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
-            }   
-        }
+        //     else if (manualInputMsg.jointVelocity[i] < 0)
+        //     {
+        //         if (TX90.currPos[i] - (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) > TX90.minRotation[i])
+        //             TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
+        //     }   
+        // }
     }
 }
 

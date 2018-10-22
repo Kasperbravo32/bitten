@@ -7,19 +7,6 @@ void DEBUG_INFO();
 
 const double LOOP_RATE_INT = 50;
 
-enum NODE_INDICES {
-    JOY_NODE,
-    MANUAL_NODE,
-    WP_NODE,
-    TEST_NODE,
-    COMMANDER_NODE,
-    CONTROLLER_NODE,
-
-    NUMBER_OF_NODES
-};
-
-
-
 enum NODE_IDS {
     COMMANDER_ID,
     CONTROLLER_ID,
@@ -27,30 +14,57 @@ enum NODE_IDS {
     WP_ID,
     MANUAL_ID,
     JOY_ID,
+    MOVEMENT_ID,
 
     NUMBER_OF_IDS
 };
+
+
+enum NODE_INDICES {
+    JOY_NODE,
+    MANUAL_NODE,
+    WP_NODE,
+    COMMANDER_NODE,
+    CONTROLLER_NODE,
+    MOVEMENT_NODE,
+
+    NUMBER_OF_NODES
+};
+
 
 std::string nodeNames[NUMBER_OF_NODES] = {
     "joy",
     "Manual Node",
     "Waypoint_Node",
-    "Test Node",
     "Commander Node",
-    "Controller Node"
+    "Controller Node",
+    "Movement Node"
 };
+
 
 enum TOPIC_INDICES {
     JOY_TOPIC,
     MANUAL_TOPIC,
     WP_TOPIC,
-    TEST_TOPIC,
     JOINT_STATES_TOPIC,
     FEEDBACK_TOPIC,
     JOINT_PATH_COMMAND_TOPIC,
+    MOVEMENT_TOPIC,
 
     NUMBER_OF_TOPICS
 };
+
+
+std::string topicNames[NUMBER_OF_TOPICS] = {
+    "joy",
+    "manual_topic",
+    "wp_topic",
+    "joint_states",
+    "feedback_topic",
+    "joint_path_command",
+    "movement_topic"
+};
+
 
 enum JOINT_FLUT {
     POSITIONS,
@@ -62,22 +76,13 @@ enum JOINT_FLUT {
     NUMBER_OF_FLUT
 };
 
-std::string topicNames[NUMBER_OF_TOPICS] = {
-    "joy",
-    "manual_topic",
-    "wp_topic",
-    "test_topic",
-    "joint_states",
-    "feedback_topic",
-    "joint_path_command"
-};
 
 struct MsgType_s
 {
     std::string nodeName;                       /* Used to write the name of the waypoint/manual/test-node                              */
     std::string programName;                    /* Used to see if e.g. test 1 in test_node is running                                   */
     
-    uint32_t flags;                             /* Used for ???                                                                         */
+    uint32_t flags;                             /* Used for setting flags, initiating various processes, asking for stuff etc           */
     uint8_t id;                                 /* Used to see if controlling node is test/waypoint/manual node                         */
 
     std::array<uint8_t  ,   6> jointToMove;     /* Contains wanted joints to move. values can be either -1, 0 or 1. -1 for negative direction, 1 for positive, 0 for no action  */
@@ -85,6 +90,7 @@ struct MsgType_s
     std::array<float    ,   6> jointVelocity;   /* Percentage of maximum velocity to move joints with                                   */
     std::array<uint8_t  ,   8> buttons;         /* Array to list status of the buttons (square, triangle, X, circle + arrows)           */
 };
+
 
 struct feedbackMsg_s
 {

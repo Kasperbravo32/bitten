@@ -1,26 +1,29 @@
 ---------------- TO DO ----------------
 Manual node:
-- Bruge pil op/ned til at modificere currVelocity
-- Tilføje frame-mode
-- Tilføje joint-mode til manual_node
-
-Controller node:
-- skal skrives eller skrives om fra move_group?
-- Overfør controller node til styringen.
-- Åbne robotten igennem simulatoren uden move_it
+- Bruge sorte knapper på højre joy til at modificere currVelocity op/ned
+- Tilføj Deadman på begge joys, uafhængigt af hinanden
+- Pretty
+- Tilføje frame-mode (Lav Priotitet)
+- Fix Publish frekvens, evt. tag højde tag højde for om der er oprettet forbindel (connectionEstablished == true || connectionEstablished == false)
 
 
 Commander node:
 - Læs currPos fra /feedback_states
 - Ændre currVelocity på pil op og ned.
 
+Movement node:
+- Skal skrives
+- Være simpel.
+- 
+
+Terminal node
+- Skal acceptere brugerinputs, og spytte videre til commander_node
+
+
 Waypoint node:
-
 - Der skal være en "record" mode i waypoint node. (terminaleksempel i wp_node.h)
+- Skal læse waypoints fra fil.txt og sende dem til commander_node
 
-Test node:
-- Skal skrives.
-- Handshake til oprettelse af forbindelse (ligesom wp_node)
 
 Sikkerhed:
 - dødmandsknap
