@@ -215,3 +215,7 @@ add_dependencies(wp_node bitten_generate_messages_cpp)
 add_executable(can_driver_node src/can_driver_node.cpp src/global_node_definitions.cpp)
 target_link_libraries(can_driver_node ${catkin_LIBRARIES})
 add_dependencies(can_driver_node bitten_generate_messages_cpp)
+
+add_executable(movement_node src/movement_node.cpp src/global_node_definitions.cpp)
+target_link_libraries(movement_node ${catkin_LIBRARIES})
+add_dependencies(movement_node bitten_generate_messages_cpp)

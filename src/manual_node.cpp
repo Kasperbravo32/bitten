@@ -43,7 +43,8 @@ int main(int argc, char **argv)
     ros::Publisher manualPub = n.advertise<bitten::control_msg>("manual_topic", 1000);
 
     manual_msg.nodeName = "manual node";
-
+    manual_msg.id = MANUAL_ID;
+    
     ros::Rate loop_rate(LOOP_RATE_INT);
     /* -------------------------------------------------
     *     SUPERLOOP
