@@ -31,9 +31,10 @@
  * ----------------------------------------------------------------------- */
 void InitRobot();
 
-void manualCallback (const bitten::control_msg::ConstPtr& manual);
-void wpCallback     (const bitten::control_msg::ConstPtr& wp);
-void testCallback   (const bitten::control_msg::ConstPtr& test);
+void manualCallback             (const bitten::control_msg::ConstPtr& manual);
+void wpCallback                 (const bitten::control_msg::ConstPtr& wp);
+void testCallback               (const bitten::control_msg::ConstPtr& test);
+void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedback);
 
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
@@ -75,145 +76,50 @@ uint8_t jointsdone = 0;
  * ----------------------------------------------------------------------- */        
 int main(int argc , char **argv)
 {
-
-    commanderFeedbackMsg.senderID = COMMANDER_ID;
-
+    ROS_INFO("Initiating %s",nodeNames[COMMANDER_NODE].c_str());
+    
     ros::init(argc , argv , "commander_node");
     ros::NodeHandle n;
+    commanderFeedbackMsg.senderID = COMMANDER_ID;   
 
-    ROS_INFO("Subscribing to %s...", topicNames[MANUAL_TOPIC].c_str());
-    ros::Subscriber manual_sub  = n.subscribe<bitten::control_msg>("manual_topic" , 3*LOOP_RATE_INT , &manualCallback);
-    if (manual_sub)
-        ROS_INFO("Subscribed to %s!\n", topicNames[MANUAL_TOPIC].c_str());
-    else
-        ROS_INFO("Couldn't subscribe to %s.\n", topicNames[MANUAL_TOPIC].c_str());
-
-
-    ROS_INFO("Subscribing to %s...", topicNames[WP_TOPIC].c_str());
-    ros::Subscriber wp_sub  = n.subscribe<bitten::control_msg>("wp_topic" , 3*LOOP_RATE_INT , &wpCallback);
-    if (wp_sub)
-        ROS_INFO("Subscribed to %s!\n", topicNames[WP_TOPIC].c_str());
-    else
-        ROS_INFO("Couldn't subscribe to %s.\n", topicNames[WP_TOPIC].c_str());
-
-    ROS_INFO("Publishing on \"joint_path_command\"");
-    ros::Publisher commander_pub    = n.advertise<trajectory_msgs::JointTrajectory>  ("joint_path_command" , 3*LOOP_RATE_INT);
+    ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>  ("manual_topic"   , 3*LOOP_RATE_INT , &manualCallback);
+    ros::Subscriber wp_sub          = n.subscribe<bitten::control_msg>  ("wp_topic"       , 3*LOOP_RATE_INT , &wpCallback);
+    ros::Subscriber movement_feedback = n.subscribe<bitten::feedback_msg>("movement_feedback",3*LOOP_RATE_INT, &movementFeedbackCallback);
+    // ros::Subscriber terminal_sub    = n.subscribe<bitten::control_msg>("terminal_topic" , 3*LOOP_RATE_INT , &terminalCallback);
     
+    ros::Publisher commander_pub    = n.advertise<bitten::control_msg>  ("movement_topic" , 3*LOOP_RATE_INT);
+    ros::Publisher commander_fb_pub = n.advertise<bitten::feedback_msg> ("feedback_topic" , 3*LOOP_RATE_INT);
 
-    ROS_INFO("Publishing on \"%s\"",topicNames[FEEDBACK_TOPIC].c_str());
-    ros::Publisher commander_fb_pub = n.advertise<bitten::feedback_msg>      ("feedback_topic" , 3*LOOP_RATE_INT);
-    if (commander_fb_pub)
-        ROS_INFO("Publishing succesful\n");
+    // ros::Publisher test_pub = n.advertise<trajectory_msgs::JointTrajectory>("test0_topic", 3*LOOP_RATE_INT);
 
-    ros::Publisher test_pub = n.advertise<trajectory_msgs::JointTrajectory>("test0_topic", 3*LOOP_RATE_INT);
-
-    ros::Rate loop_rate(2);
-
-    ros::spinOnce();
+    ros::Rate loop_rate(LOOP_RATE_INT);
     INPUT_MODE = POLL_MODE;
 
-    point_msg.positions.resize(6);
-    point_msg.velocities.resize(6);
-    point_msg.accelerations.resize(6);
-    point_msg.effort.resize(1);
-
     sleep(1);
-    ROS_INFO("Ready for operation");
+    if (manual_sub && wp_sub && commander_pub && commander_fb_pub)
+        ROS_INFO("Initiated %s",nodeNames[COMMANDER_NODE].c_str());
+    else
+        ROS_INFO("Didn't initiate %s",nodeNames[COMMANDER_NODE].c_str());
+
 
 /*  -------------------------------------------------
          SUPERLOOP
     ------------------------------------------------- */
     while(ros::ok())
     {
-
-        msg.joint_names.clear();
-        msg.points.clear();
-        point_msg.positions.clear();
-        point_msg.effort.clear();
-        point_msg.accelerations.clear();
-        point_msg.velocities.clear();
-
         switch(INPUT_MODE)
         {
             case MANUAL_MODE:
+                msg.points.push_back(point_msg);
+                jointStatesTransmitReady = true;
 
-            // for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
-            // {
-            //     // msg.joint_names.push_back(TX90.jointNames[i]);
-            //     // point_msg.positions.push_back(TX90.currPos[i]);
-
-            // }
-            point_msg.accelerations.push_back(0);
-            point_msg.effort.push_back(0);
-            point_msg.velocities.push_back(0);
-
-            msg.points.push_back(point_msg);
-            jointStatesTransmitReady = true;
-            // if (! --pub_counter)
-            // {
-            //     commander_pub.publish(msg);
-            //     pub_counter = LOOP_RATE_INT / 10 ;
-            // }
-
-            
             break;
 
             case WP_MODE:
-                if (goalExists)
-                {
-                    msg.joint_names.clear();
-                    point_msg.positions.clear();
+                msg.joint_names.clear();
+                point_msg.positions.clear();
 
-                    for (int i = 0; i < 6; i++)
-                    {
-                        if (1/*TX90.currPos[i] != goalArray[i]*/)
-                        {
-                            // if (goalArray[i] > TX90.currPos[i])
-                            // {
-                            //     if ( -(TX90.currPos[i] - goalArray[i]) > 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity)
-                            //         TX90.currPos[i] += 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
-                            //     else
-                            //         TX90.currPos[i] += goalArray[i] - TX90.currPos[i];
-                            // }
-                                
-                            // else if (goalArray[i] < TX90.currPos[i])
-                            // {
-                            //     if ((TX90.currPos[i] - goalArray[i]) > 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity)
-                            //         TX90.currPos[i] -= 1/LOOP_RATE_INT*TX90.maxVelocity[i]*TX90.currVelocity;
-                            //     else
-                            //         TX90.currPos[i] -= TX90.currPos[i] - goalArray[i];
-                            // }
-
-                            // msg.joint_names.push_back(TX90.jointNames[i]);
-                            // point_msg.positions.push_back(TX90.currPos[i]);
-                            // // point_msg.time_from_start = ros::Duration(1);
-
-                        }
-                        else
-                        {
-                            jointsdone |= (1 << i);
-                        }
-                    }
-                    msg.points.push_back(point_msg);
-                    jointStatesTransmitReady = true;
-
-
-                    if (jointsdone == 63)
-                    {
-                        ROS_INFO("Reached %s",wpInputMsg.programName.c_str());
-                        goalExists = false;
-                        commanderFeedbackMsg.flags = WAYPOINT_REACHED;
-                        fbTransmitReady = true;
-                        jointsdone = 0;
-                    }
-                }
             break;
-
-
-
-
-
-
 
             case TEST_MODE:
             if (not_run)
@@ -238,14 +144,6 @@ int main(int argc , char **argv)
                 not_run = false;
             }
             break;
-
-
-
-
-
-
-
-
 
 
             case POLL_MODE:
@@ -285,7 +183,7 @@ int main(int argc , char **argv)
         
         if (jointStatesTransmitReady)
         {
-            commander_pub.publish(msg);
+            // commander_pub.publish(msg);
             jointStatesTransmitReady = false;
         }
         
@@ -293,6 +191,7 @@ int main(int argc , char **argv)
         {
             commander_fb_pub.publish(commanderFeedbackMsg);
             fbTransmitReady = false;
+            commanderFeedbackMsg.flags = 0;
         }
 
 
@@ -406,5 +305,27 @@ void testCallback   (const bitten::control_msg::ConstPtr& test)
      * MANDAG: Snak om hvordan TEST beskeden ser ud. én TEST besked med flere waypoints?
      * */
 
+}
+
+
+void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedback)
+{
+    if (moveFeedback->flags & GOAL_REACHED)
+    {
+        switch(INPUT_MODE)
+        {
+            commanderFeedbackMsg.flags |= GOAL_REACHED;
+
+            case WP_MODE:
+                commanderFeedbackMsg.recID = WP_ID;
+            break;
+
+            case MANUAL_MODE:
+                commanderFeedbackMsg.recID = MANUAL_ID;
+            break;
+
+            fbTransmitReady = true;
+        }
+    }
 }
 

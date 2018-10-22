@@ -85,7 +85,6 @@ struct MsgType_s
     uint32_t flags;                             /* Used for setting flags, initiating various processes, asking for stuff etc           */
     uint8_t id;                                 /* Used to see if controlling node is test/waypoint/manual node                         */
 
-    std::array<uint8_t  ,   6> jointToMove;     /* Contains wanted joints to move. values can be either -1, 0 or 1. -1 for negative direction, 1 for positive, 0 for no action  */
     std::array<float    ,   6> jointPosition;   /* Contains the wanted positions of each joint. used in waypoint mode, not in manual.   */
     std::array<float    ,   6> jointVelocity;   /* Percentage of maximum velocity to move joints with                                   */
     std::array<uint8_t  ,   8> buttons;         /* Array to list status of the buttons (square, triangle, X, circle + arrows)           */
@@ -121,5 +120,6 @@ enum FLAGS {
     START_OPERATION         = 16384,
     STOP_OPERATION          = 32786,
     NEW_WAYPOINT            = 65536,
+    GOAL_REACHED            = 131072,
     
 };
