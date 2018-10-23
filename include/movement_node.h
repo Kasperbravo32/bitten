@@ -1,8 +1,6 @@
 /* Declare Struct to define new robots, containing various info, like amount of links, max rotation in each link, max speed etc.    */
 struct Robot_s {
 
-uint8_t jointsAtGoal = 0;
-
 int     links;
 int     minLink;    
 int     maxLink;
@@ -16,6 +14,8 @@ std::array<double,6> maxVelocity;
 std::array<double,6> maxEffort;
 std::array<double,6> currPos;
 std::array<double,6> goalPosition;
+
+std::array<int,6>    jointsAtGoal;
 
 std::array<std::string,6> jointNames;
 

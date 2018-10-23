@@ -23,11 +23,8 @@ bool newConnection = true;
 bool connectionEstablished = false;
 
 
-int NumberofWaypoints = 5;                                  /* Number of waypoints excluding waypoint_0.                                                    */
-int RemainingWaypoints = NumberofWaypoints;
 
 Waypoint_s Waypoint_0;
-Waypoint_s WaypointBank[5];
 
 
 /*_Terminaleksempel på waypoint record mode_______________________________

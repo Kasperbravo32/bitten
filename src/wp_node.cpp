@@ -15,6 +15,9 @@
 #include <global_node_definitions.h>
 #include "wp_node.h"
 
+
+int NumberofWaypoints = 5;                                  /* Number of waypoints excluding waypoint_0.                                                    */
+int RemainingWaypoints = NumberofWaypoints;
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -47,6 +50,8 @@ int main(int argc, char **argv)
 
     ROS_INFO("Loading Waypoints...");    
 
+
+
     Waypoint_0.jointPosition[0] = 0;
     Waypoint_0.jointPosition[1] = 0;
     Waypoint_0.jointPosition[2] = 0;
@@ -54,6 +59,9 @@ int main(int argc, char **argv)
     Waypoint_0.jointPosition[4] = 0;
     Waypoint_0.jointPosition[5] = 0;
     Waypoint_0.waypointName = "Waypoint_0";
+    
+
+    Waypoint_s WaypointBank[NumberofWaypoints];
 
     /* Define joints for WP#1 */
     WaypointBank[0].jointPosition[0] = (95.0/180.0)*3.14;
@@ -61,7 +69,7 @@ int main(int argc, char **argv)
     WaypointBank[0].jointPosition[2] = -(83.0/180.0)*3.14;
     WaypointBank[0].jointPosition[3] = (3.0/180.0)*3.14;
     WaypointBank[0].jointPosition[4] = -(55.0/180.0)*3.14;
-    WaypointBank[0].jointPosition[5] = (0.0/180.0)*3.14;
+    WaypointBank[0].jointPosition[5] = (10.0/180.0)*3.14;
     WaypointBank[0].waypointName = "Waypoint 1";
 
     /* Define joints for WP#2 */
@@ -70,7 +78,7 @@ int main(int argc, char **argv)
     WaypointBank[1].jointPosition[2] = -(33.0/180)*3.14;
     WaypointBank[1].jointPosition[3] = (6.0/180)*3.14;
     WaypointBank[1].jointPosition[4] = -(50.0/180)*3.14;
-    WaypointBank[1].jointPosition[5] = (0.0/180)*3.14;
+    WaypointBank[1].jointPosition[5] = (1.0/180)*3.14;
     WaypointBank[1].waypointName = "Waypoint 2";
 
     /* Define joints for WP#3 */
@@ -79,16 +87,16 @@ int main(int argc, char **argv)
     WaypointBank[2].jointPosition[2] = -(83.0/180)*3.14;
     WaypointBank[2].jointPosition[3] = (3.0/180)*3.14;
     WaypointBank[2].jointPosition[4] = -(55.0/180)*3.14;
-    WaypointBank[2].jointPosition[5] = (0.0/180)*3.14;
+    WaypointBank[2].jointPosition[5] = (1.0/180)*3.14;
     WaypointBank[2].waypointName = "Waypoint 3";
 
     /* Define joints for WP#4 */
     WaypointBank[3].jointPosition[0] = (63.0/180)*3.14;
     WaypointBank[3].jointPosition[1] = -(97.0/180)*3.14;
     WaypointBank[3].jointPosition[2] = -(40.0/180)*3.14;
-    WaypointBank[3].jointPosition[3] = (0.0/180)*3.14;
+    WaypointBank[3].jointPosition[3] = (1.0/180)*3.14;
     WaypointBank[3].jointPosition[4] = -(48.0/180)*3.14;
-    WaypointBank[3].jointPosition[5] = (0.0/180)*3.14;
+    WaypointBank[3].jointPosition[5] = (1.0/180)*3.14;
     WaypointBank[3].waypointName = "Waypoint 4";
 
     /* Define joints for WP#5 */
@@ -97,10 +105,13 @@ int main(int argc, char **argv)
     WaypointBank[4].jointPosition[2] = -(83.0/180)*3.14;
     WaypointBank[4].jointPosition[3] = (3.0/180)*3.14;
     WaypointBank[4].jointPosition[4] = -(55.0/180)*3.14;
-    WaypointBank[4].jointPosition[5] = (0.0/180)*3.14;
+    WaypointBank[4].jointPosition[5] = (1.0/180)*3.14;
     WaypointBank[4].waypointName = "Waypoint 5";
 
     static int connectionTimer = 10*LOOP_RATE_INT;
+    static int first_wp = true;
+
+
     while(ros::ok())
     {
         if (connectionEstablished)
@@ -112,7 +123,24 @@ int main(int argc, char **argv)
                 readyForNextWp = true;
             }
 
-            if (readyForNextWp == true)
+            if (first_wp == true && readyForNextWp == true)
+            {
+                ROS_INFO("Sending WP_ZERO");
+                wp_msg.flags=NEW_WAYPOINT;
+                wp_msg.programName = "WP_ZERO";
+
+                for (int i = 0; i < 6; i++)
+                {
+                    wp_msg.jointPosition[i] = 0;
+                    transmitWpReady = true;
+                    readyForNextWp = false;
+                }
+                first_wp = false;
+                readyForNextWp = false;
+
+            }
+            
+            else if (readyForNextWp == true)
             {
                 ROS_INFO("Sending wp: %s", WaypointBank[NumberofWaypoints - RemainingWaypoints].waypointName.c_str());
                 wp_msg.flags = NEW_WAYPOINT;
@@ -170,7 +198,7 @@ void fbCallback(const bitten::feedback_msg::ConstPtr& feedback)
         else if (connectionEstablished == false && feedback->flags == DENIED)
             ROS_INFO("Connection denied");
 
-        if (feedback->flags & WAYPOINT_REACHED)
+        if (feedback->flags & GOAL_REACHED)
         {
             ROS_INFO("Received WAYPOINT_REACHED");
             if (--RemainingWaypoints > 0)

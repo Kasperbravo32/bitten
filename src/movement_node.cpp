@@ -38,8 +38,8 @@ bitten::feedback_msg                    movementFeedbackMsg;        /* Message u
  * ----------------------------------------------------------------------- */
 bool robotInitialized       = false;
 bool goalExists             = false;
-bool goalReached            = false;
-bool jointTransmitReady     = false;
+bool jointTransmitReady     = true;
+bool feedbackTransmitReady  = false;
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -90,34 +90,21 @@ int main (int argc , char **argv)
     ------------------------------------------------- */
     while(ros::ok())
     {
-        if (robotInitialized == true)
+        if (goalExists == true && robotInitialized)
         {
-            if (goalExists == true && goalReached == false)
+            jointPathMsg.joint_names.clear();
+            jointPathMsg.points.clear();
+            jointPathPointMsg.positions.clear();
+            jointPathPointMsg.velocities.clear();
+            // jointPathPointMsg.accelerations.clear();
+
+            for (int i = 0; i < 6; i++)
             {
-                for (int i = 0; i < 6; i++)
-                {
-
-                    if (TX90.currPos[i] >= TX90.goalPosition[i]*0.999 && TX90.currPos[i] <= TX90.goalPosition[i] * 1.001)
-                        TX90.jointsAtGoal |= (1 < i);
-
-                    else
-                    {
-                        jointPathMsg.joint_names.push_back(TX90.jointNames[i]);
-                        jointPathPointMsg.positions.push_back(TX90.goalPosition[i]);
-                        jointPathPointMsg.velocities.push_back(TX90.currVelocity*TX90.maxVelocity[i]);
-                    }
-
-                    if (TX90.jointsAtGoal & 0b111111)
-                    {
-
-                        feedback_msg.flags |= GOAL_REACHED;
-                        goalReached = true;
-                        goalExists  = false;
-
-                    }
-                }
-                jointPathMsg.points.push_back(jointPathPointMsg);
+                jointPathMsg.joint_names.push_back(TX90.jointNames[i]);
+                jointPathPointMsg.positions.push_back(TX90.goalPosition[i]);
+                jointPathPointMsg.velocities.push_back(TX90.currVelocity*TX90.maxVelocity[i]);
             }
+            jointPathMsg.points.push_back(jointPathPointMsg);
         }
 
         if (jointTransmitReady)
@@ -128,9 +115,9 @@ int main (int argc , char **argv)
 
         if (feedbackTransmitReady)
         {
-            feedback_pub.publish(feedback_msg);
+            feedback_pub.publish(movementFeedbackMsg);
             
-            feedback_msg.flags = 0;
+            movementFeedbackMsg.flags = 0;
             feedbackTransmitReady = false;
         }
 
@@ -149,7 +136,7 @@ void InitRobot()
     TX90.resetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
 
     TX90.currVelocity   = 0.05;
-    
+
     TX90.maxRotation = {    3.14,               /* joint_1  */
                             2.57,               /* joint_2  */
                             2.53,               /* joint_3  */
@@ -199,6 +186,7 @@ void commanderCallback  (const bitten::control_msg::ConstPtr&                   
         switch(commander->id)
         {
             case MANUAL_ID:
+            ROS_INFO("Entered manual ID callback");
                 for (int i = 0; i < 6; i++)
                 {
                     if (commander->jointVelocity[i] > 0)        /* If goalposition is in positive rotational direction */
@@ -214,61 +202,26 @@ void commanderCallback  (const bitten::control_msg::ConstPtr&                   
                     }   
                 }
 
-                TX90.jointsAtGoal = 0;
+                for (int i = 0; i < 6; i++)
+                    TX90.jointsAtGoal[i] = 0;
+
                 goalExists = true;
-                goalReached = false;
             break;
 
             case WP_ID:
+            
                 for (int i = 0; i < 6; i++)
                     TX90.goalPosition[i] = commander->jointPosition[i];
-
-                TX90.jointsAtGoal = 0;
-                goalExists = true;
-                goalReached = false;
-            break;
-
-            default:
-            break;
-        }
-    }
-
-    else if (goalExists == true && goalReached == true)
-    {
-        switch(commander->id)
-        {
-            case MANUAL_ID:
-                for (int i = 0; i < 6; i++)
-                {
-                    if (commander->jointVelocity[i] > 0)        /* If goalposition is in positive rotational direction */
-                    {
-                        if (TX90.currPos[i] +  (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) < TX90.maxRotation[i])
-                            TX90.goalPosition[i] += (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
-                    }
                     
-                    else if (commander->jointVelocity[i] < 0)   /* if goalposition is in negative rotational direction */
-                    {
-                        if (TX90.currPos[i] -  (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) > TX90.minRotation[i])
-                            TX90.goalPosition[i] += (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
-                    }   
-                }
                 goalExists = true;
-                goalReached = false;
-            break;
-
-            case WP_ID:
-                for (int i = 0; i < 6; i++)
-                    TX90.goalPosition[i] = commander->jointPosition[i];
-                goalExists = true;
-                goalReached = false;
+                jointTransmitReady = true;
             break;
 
             default:
-                /* Didn't recognize the ID  */
+                ROS_INFO("Entered Missing ID callback");
             break;
         }
     }
-
     else
     {
         /* Received data, but is currently occupied */
@@ -286,9 +239,33 @@ void commanderCallback  (const bitten::control_msg::ConstPtr&                   
 void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr&   RobotState)
 {
     /* Update currPos from the feedback, measuring on the sensors   */
+    int jointAtGoalCounter = 0;
     for (int i = 0; i < 6; i++)
-        TX90.currPos[i] = RobotState->actual.positions[i];
-    
+    {
+        if (TX90.goalPosition[i] >= 0)
+        {
+            if (((TX90.currPos[i]) > 0.999 * TX90.goalPosition[i]) && ((TX90.currPos[i]) < 1.001 * TX90.goalPosition[i]) && goalExists == true && robotInitialized == true)
+                jointAtGoalCounter++;
+            else
+                TX90.currPos[i] = RobotState->actual.positions[i];
+        }
+
+        else if (TX90.goalPosition[i] < 0)
+        {
+            if (((TX90.currPos[i]) < 0.999 * TX90.goalPosition[i]) && ((TX90.currPos[i]) >= 1.001 * TX90.goalPosition[i]) && goalExists == true && robotInitialized == true)
+                jointAtGoalCounter++;
+            else
+                TX90.currPos[i] = RobotState->actual.positions[i];
+        }
+    }
+
+    if (robotInitialized && jointAtGoalCounter == 6)
+    {
+        movementFeedbackMsg.flags |= GOAL_REACHED;
+        goalExists  = false;
+        feedbackTransmitReady = true;
+    }
+        
     /* Set an 'initialized' flag    */
     if (!robotInitialized)
         robotInitialized = true;

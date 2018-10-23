@@ -50,7 +50,7 @@ trajectory_msgs::JointTrajectory msg;
 trajectory_msgs::JointTrajectoryPoint point_msg;
 
 bitten::feedback_msg commanderFeedbackMsg;     /* Used to send feedback to various nodes */
-
+bitten::control_msg passOnMsg;
 
  /* ----------------------------------------------------------------------
  *                    -------  Global Variables   -------
@@ -61,6 +61,7 @@ bool ping = true;
 bool fbTransmitReady = false;
 bool jointStatesTransmitReady = false;
 bool not_run = true;
+bool robotOccupied = false;
 
 const   int PING_RATE = LOOP_RATE_INT / 2;
         int poll_timer = LOOP_RATE_INT*2;
@@ -159,7 +160,7 @@ int main(int argc , char **argv)
             break;
         }
 
-        if (INPUT_MODE == MANUAL_MODE || INPUT_MODE == WP_MODE)
+        if (INPUT_MODE == MANUAL_MODE)
         {
             if (! --ping_timer)
             {
@@ -183,7 +184,7 @@ int main(int argc , char **argv)
         
         if (jointStatesTransmitReady)
         {
-            // commander_pub.publish(msg);
+            commander_pub.publish(passOnMsg);
             jointStatesTransmitReady = false;
         }
         
@@ -229,20 +230,6 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
         for (int i = 0; i < 6; i++)
             manualInputMsg.jointVelocity[i] = manual->jointVelocity[i];
 
-        // for (int i = TX90.minLink-1; i < TX90.maxLink; i++)
-        // {
-        //     if (manualInputMsg.jointVelocity[i] > 0)
-        //     {
-        //         if (TX90.currPos[i] + (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) < TX90.maxRotation[i])
-        //             TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
-        //     }
-            
-        //     else if (manualInputMsg.jointVelocity[i] < 0)
-        //     {
-        //         if (TX90.currPos[i] - (1/LOOP_RATE_INT * manualInputMsg.jointVelocity[i]*TX90.maxVelocity[i]*TX90.currVelocity) > TX90.minRotation[i])
-        //             TX90.currPos[i] += (1/LOOP_RATE_INT)*(manualInputMsg.jointVelocity[i])*TX90.maxVelocity[i]*TX90.currVelocity;
-        //     }   
-        // }
     }
 }
 
@@ -272,21 +259,24 @@ void wpCallback     (const bitten::control_msg::ConstPtr& wp)
                 commanderFeedbackMsg.flags = ACK;
                 commanderFeedbackMsg.recID = WP_ID;
                 fbTransmitReady = true;
-                ROS_INFO("Terminated connection to %s", wpInputMsg.nodeName.c_str());
+                ROS_INFO("Terminated connection to %s", nodeNames[WP_NODE].c_str());
             }
         break;
 
         case NEW_WAYPOINT:
             if (INPUT_MODE == WP_MODE)
             {
-                if (goalExists == false)
+                if (robotOccupied == false)
                 {
-                    wpInputMsg.programName = wp->programName;
+                    passOnMsg.programName = wp->programName;
                     ROS_INFO("Setting new goal to: %s",wp->programName.c_str());
-                    goalExists = true;
+                    robotOccupied = true;
                     for (int i = 0; i < 6; i++)
-                        goalArray[i] = wp ->jointPosition[i];
-                }
+                        passOnMsg.jointPosition[i] = wp->jointPosition[i];
+
+                    passOnMsg.id = WP_ID;
+                    jointStatesTransmitReady = true;       
+                }   
             }
         break;
 
@@ -307,24 +297,32 @@ void testCallback   (const bitten::control_msg::ConstPtr& test)
 
 }
 
-
+ /* ----------------------------------------------------------------------
+ *                  -------  MovementFeedback Callback function   -------
+ * ----------------------------------------------------------------------- */
 void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedback)
 {
+    ROS_INFO("GOT SOME FEEDBACK");
     if (moveFeedback->flags & GOAL_REACHED)
     {
+        ROS_INFO("ENTERED GOAL_REACHED IF");
         switch(INPUT_MODE)
         {
-            commanderFeedbackMsg.flags |= GOAL_REACHED;
-
             case WP_MODE:
+                ROS_INFO("ENTERED WP_MODE SWITCH");
                 commanderFeedbackMsg.recID = WP_ID;
+                commanderFeedbackMsg.flags |= GOAL_REACHED;
+                fbTransmitReady = true;
+                robotOccupied = false;
             break;
 
             case MANUAL_MODE:
                 commanderFeedbackMsg.recID = MANUAL_ID;
+                commanderFeedbackMsg.flags |= GOAL_REACHED;
+                fbTransmitReady = true;
             break;
 
-            fbTransmitReady = true;
+            
         }
     }
 }
