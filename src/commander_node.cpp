@@ -160,7 +160,7 @@ int main(int argc , char **argv)
             break;
         }
 
-        if (INPUT_MODE == MANUAL_MODE)
+        if (INPUT_MODE == 19)
         {
             if (! --ping_timer)
             {
@@ -225,11 +225,20 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
                 fbTransmitReady = true;
             }
     }
+
     if (INPUT_MODE == MANUAL_MODE)
     {
-        for (int i = 0; i < 6; i++)
-            manualInputMsg.jointVelocity[i] = manual->jointVelocity[i];
+        if (robotOccupied == false)
+        {
+            robotOccupied = true;
 
+            for (int i = 0; i < 6; i++)
+                passOnMsg.jointVelocity[i] = manual->jointVelocity[i];
+
+            passOnMsg.buttons = manual->buttons;
+            passOnMsg.id = MANUAL_ID;
+            jointStatesTransmitReady = true; 
+        }
     }
 }
 
@@ -317,9 +326,11 @@ void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedb
             break;
 
             case MANUAL_MODE:
+                ROS_INFO("Entered MANUAL_MODE in movementFeedback");
                 commanderFeedbackMsg.recID = MANUAL_ID;
                 commanderFeedbackMsg.flags |= GOAL_REACHED;
                 fbTransmitReady = true;
+                robotOccupied = false;
             break;
 
             
