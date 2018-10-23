@@ -70,7 +70,7 @@ int main(int argc, char** argv)
     using namespace std::chrono_literals;
 
     // Options
-    const char* interface;
+    const char* interface = "can0";
 
     // Service variables
     struct sigaction sa;
@@ -82,14 +82,16 @@ int main(int argc, char** argv)
     int sockfd;
 
     // Check for the one positional argument
-    if (optind != (argc - 1))
-    {
-        ROS_ERROR("Missing network interface option!");
-        return EXIT_FAILURE;
-    }
+    // if (optind != (argc - 1))
+    // {
+    //     ROS_ERROR("Missing network interface option!");
+    //     return EXIT_FAILURE;
+    // }
 
     // Set the network interface to use
-    interface = argv[optind];
+    // interface = argv[optind];
+    // interface = "can0";
+    
 
     // Register signal handlers
     sa.sa_handler = onSignal;
