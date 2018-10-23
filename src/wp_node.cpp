@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     WaypointBank[6].waypointName = "Waypoint 6";
 
     static int connectionTimer = 10*LOOP_RATE_INT;
-
+    bool newConnection = true;
 
     while(ros::ok())
     {

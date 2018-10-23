@@ -32,35 +32,6 @@
 #include <bitten/canopen_msg.h>
 #include <global_node_definitions.h>
 #include <can_driver_node.h>
-
-#define PROGNAME  "socketcan"
-#define VERSION  "0.1.0"
-
-namespace
-{
-
-std::sig_atomic_t signalValue;
-
-void onSignal(int value)
-{
-    signalValue = static_cast<decltype(signalValue)>(value);
-}
-
-void processFrame(const struct canfd_frame& frame)
-{
-    can_msg.can_id = frame.can_id;
-    can_msg.lenth = frame.len; //payload is 8 bytes in length
-    for(int i = 0; i < (int)frame.len; i++)
-    {
-        if(i > 7)
-        {
-            break;
-        }
-        can_msg.data[i] = frame.data[i];
-    }
-}
-
-} // namespace
  
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
@@ -73,7 +44,6 @@ int main(int argc, char** argv)
     const char* interface = "can0";
 
     // Service variables
-    struct sigaction sa;
     int rc;
 
     // CAN connection variables
@@ -81,17 +51,7 @@ int main(int argc, char** argv)
     struct ifreq ifr;
     int sockfd;
 
-    // Register signal handlers
-    sa.sa_handler = onSignal;
-    ::sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    ::sigaction(SIGINT, &sa, nullptr);
-    ::sigaction(SIGTERM, &sa, nullptr);
-    ::sigaction(SIGQUIT, &sa, nullptr);
-    ::sigaction(SIGHUP, &sa, nullptr);
-
-    // Initialize the signal value to zero
-    signalValue = 0;
+    struct canfd_frame frame;
 
     // Open the CAN network interface
     sockfd = ::socket(PF_CAN, SOCK_RAW, CAN_RAW);
@@ -186,10 +146,8 @@ int main(int argc, char** argv)
     /* -------------------------------------------------
     *     SUPERLOOP
     * ------------------------------------------------- */
-    while ( ( 0 == signalValue ) && ros::ok() )
+    while ( /*( 0 == signalValue ) && */ros::ok() )
     {
-        struct canfd_frame frame;
-
         // Read in a CAN frame
         auto numBytes = ::read(sockfd, &frame, CANFD_MTU);
         switch (numBytes)
@@ -197,6 +155,7 @@ int main(int argc, char** argv)
             case CAN_MTU:
             {
                 processFrame(frame);
+                canPub.publish(can_msg);
             }
                 break;
             case CANFD_MTU:
@@ -208,12 +167,10 @@ int main(int argc, char** argv)
 
                 // Delay before continuing
                 ROS_ERROR("read: %s", strerror(errno));
-                std::this_thread::sleep_for(100ms);
                 return errno;
             default:
                 continue;
         }
-        canPub.publish(can_msg);
     }
 
     // Cleanup
@@ -222,6 +179,13 @@ int main(int argc, char** argv)
         ROS_ERROR("close: %s", strerror(errno));
         return errno;
     }
+    return 0;
+}
 
-    return EXIT_SUCCESS;
+void processFrame(const struct canfd_frame& frame)
+{
+    can_msg.can_id = frame.can_id;
+    can_msg.lenth = frame.len; //payload is 8 bytes in length
+    for(int i = 0; i < 8; i++)
+        can_msg.data[i] = frame.data[i];
 }
