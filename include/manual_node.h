@@ -17,4 +17,3 @@ bitten::control_msg manual_msg;
 
 bool connectionEstablished = false;
 bool transmitManualRdy = false;
-bool newConnection = true;

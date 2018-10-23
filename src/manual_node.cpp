@@ -8,10 +8,9 @@
  *                      -------  Libraries   -------
  * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
-#include "std_msgs/String.h"
 #include <bitten/control_msg.h>
-#include <bitten/feedback_msg.h>
 #include <bitten/canopen_msg.h>
+#include <bitten/feedback_msg.h>
 #include <global_node_definitions.h>
 #include <manual_node.h>
 
@@ -27,10 +26,10 @@ int main(int argc, char **argv)
     ROS_INFO("Subscribing to \"%s\"", topicNames[JOY_TOPIC].c_str());
     ros::Subscriber joySub = n.subscribe<sensor_msgs::Joy>("joy", 1000, &joyCallback);
     
-    ROS_INFO("Subscribing to can_topic");
+    ROS_INFO("Subscribing to \"can_topic\"");
     ros::Subscriber canSub = n.subscribe<bitten::canopen_msg>("can_topic", 1000, &canCallback);
 
-    ROS_INFO("Subscribing to %s",topicNames[FEEDBACK_TOPIC].c_str());
+    ROS_INFO("Subscribing to \"%s\"",topicNames[FEEDBACK_TOPIC].c_str());
     ros::Subscriber feedbackSub = n.subscribe<bitten::feedback_msg>(topicNames[FEEDBACK_TOPIC], 3*LOOP_RATE_INT, &fbCallback);
     if (feedbackSub)
         ROS_INFO("Subscribed to \"%s\"!", topicNames[FEEDBACK_TOPIC].c_str());
@@ -44,6 +43,8 @@ int main(int argc, char **argv)
     manual_msg.id = MANUAL_ID;
     
     ros::Rate loop_rate(LOOP_RATE_INT);
+    bool newConnection = true;
+
     /* -------------------------------------------------
     *     SUPERLOOP
     * ------------------------------------------------- */
@@ -58,7 +59,6 @@ int main(int argc, char **argv)
             }
             transmitManualRdy = true;
         }
-        
         else
         {
             static int timer = LOOP_RATE_INT;

@@ -3,13 +3,12 @@
  * ----------------------------------------------------------------------- */
 void fbCallback(const bitten::feedback_msg::ConstPtr& feedback);
 
-
 struct Waypoint_s {
     double jointPosition[6];
     double velocity[6];
     double effort[6];
     std::string waypointName;
-};  
+};
 
 /* ----------------------------------------------------------------------
  *                       -------  Global variables   -------
@@ -19,13 +18,9 @@ bitten::feedback_msg fb_msg;
 
 bool readyForNextWp = false;
 bool transmitWpReady = false;
-bool newConnection = true;
 bool connectionEstablished = false;
 
-
-
 Waypoint_s Waypoint_0;
-
 
 /*_Terminaleksempel på waypoint record mode_______________________________
 |
