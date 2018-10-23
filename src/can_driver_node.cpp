@@ -81,18 +81,6 @@ int main(int argc, char** argv)
     struct ifreq ifr;
     int sockfd;
 
-    // Check for the one positional argument
-    // if (optind != (argc - 1))
-    // {
-    //     ROS_ERROR("Missing network interface option!");
-    //     return EXIT_FAILURE;
-    // }
-
-    // Set the network interface to use
-    // interface = argv[optind];
-    // interface = "can0";
-    
-
     // Register signal handlers
     sa.sa_handler = onSignal;
     ::sigemptyset(&sa.sa_mask);
@@ -107,9 +95,8 @@ int main(int argc, char** argv)
 
     // Open the CAN network interface
     sockfd = ::socket(PF_CAN, SOCK_RAW, CAN_RAW);
-    if (-1 == sockfd)
+    if (sockfd == -1)
     {
-
         ROS_ERROR("socket: %s", strerror(errno));
         return errno;
     }
@@ -133,7 +120,7 @@ int main(int argc, char** argv)
             &filter,
             sizeof(filter)
         );
-        if (-1 == rc)
+        if (rc == -1)
         {
             ROS_ERROR("setsockopt filter: %s", strerror(errno));
             ::close(sockfd);
@@ -152,7 +139,7 @@ int main(int argc, char** argv)
             &enable,
             sizeof(enable)
         );
-        if (-1 == rc)
+        if (rc == -1)
         {
             ROS_ERROR("setsockopt CAN FD: %s", strerror(errno));
             ::close(sockfd);
@@ -177,7 +164,7 @@ int main(int argc, char** argv)
         reinterpret_cast<struct sockaddr*>(&addr),
         sizeof(addr)
     );
-    if (-1 == rc)
+    if (rc == -1)
     {
         ROS_ERROR("bind: %s", strerror(errno));
         ::close(sockfd);
