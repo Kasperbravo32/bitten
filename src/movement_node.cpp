@@ -96,7 +96,6 @@ int main (int argc , char **argv)
             jointPathMsg.points.clear();
             jointPathPointMsg.positions.clear();
             jointPathPointMsg.velocities.clear();
-            // jointPathPointMsg.accelerations.clear();
 
             for (int i = 0; i < 6; i++)
             {
@@ -186,26 +185,31 @@ void commanderCallback  (const bitten::control_msg::ConstPtr&                   
         switch(commander->id)
         {
             case MANUAL_ID:
-            ROS_INFO("Entered manual ID callback");
+            // ROS_INFO("Entered manual ID callback");
                 for (int i = 0; i < 6; i++)
                 {
-                    if (commander->jointVelocity[i] > 0)        /* If goalposition is in positive rotational direction */
+                    if (commander->jointVelocity[i] >= 0)        /* If goalposition is in positive rotational direction */
                     {
-                        if (TX90.currPos[i] +  (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) < TX90.maxRotation[i])
+                        if (TX90.goalPosition[i] +  (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) < TX90.maxRotation[i])
+                        {
+                            // ROS_INFO("Adjusted goalposition on joint (+) %i",i);
                             TX90.goalPosition[i] += (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
+                        }
                     }
                     
                     else if (commander->jointVelocity[i] < 0)   /* if goalposition is in negative rotational direction */
                     {
                         if (TX90.currPos[i] -  (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) > TX90.minRotation[i])
-                            TX90.goalPosition[i] += (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
+                        {
+                            // ROS_INFO("Adjusted goalposition on joint (-) %i",i);
+                            TX90.goalPosition[i] += (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);                            
+                        }
                     }   
                 }
-
-                for (int i = 0; i < 6; i++)
-                    TX90.jointsAtGoal[i] = 0;
-
                 goalExists = true;
+                jointTransmitReady = true;
+
+                
             break;
 
             case WP_ID:
@@ -227,11 +231,11 @@ void commanderCallback  (const bitten::control_msg::ConstPtr&                   
         /* Received data, but is currently occupied */
     }
 
-    if (commander->buttons[0] == 1 && TX90.currVelocity >=0.05)     /* Check for Reduce speed input     */
-        TX90.currVelocity -= 0.05;
+    // if (commander->buttons[0] == 1 && TX90.currVelocity >=0.05)     /* Check for Reduce speed input     */
+    //     TX90.currVelocity -= 0.05;
 
-    if (commander->buttons[1] == 1 && TX90.currVelocity <= 0.95)    /* Check for increase speed input   */
-        TX90.currVelocity += 0.05;
+    // if (commander->buttons[1] == 1 && TX90.currVelocity <= 0.95)    /* Check for increase speed input   */
+    //     TX90.currVelocity += 0.05;
 }
 /* ----------------------------------------------------------------------
  *              -------  robot_state Callback function   -------
@@ -240,10 +244,20 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
 {
     /* Update currPos from the feedback, measuring on the sensors   */
     int jointAtGoalCounter = 0;
+
+    if (!robotInitialized)
+    {
+        robotInitialized = true;
+        for (int i = 0; i < 6; i++)
+            TX90.currPos[i] = RobotState->actual.positions[i];
+    }
+        robotInitialized = true;
     for (int i = 0; i < 6; i++)
     {
         if (TX90.goalPosition[i] >= 0)
         {
+            ROS_INFO("Checking Goalposition on joint %i",i);
+
             if (((TX90.currPos[i]) > 0.999 * TX90.goalPosition[i]) && ((TX90.currPos[i]) < 1.001 * TX90.goalPosition[i]) && goalExists == true && robotInitialized == true)
                 jointAtGoalCounter++;
             else
@@ -252,7 +266,8 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
 
         else if (TX90.goalPosition[i] < 0)
         {
-            if (((TX90.currPos[i]) < 0.999 * TX90.goalPosition[i]) && ((TX90.currPos[i]) >= 1.001 * TX90.goalPosition[i]) && goalExists == true && robotInitialized == true)
+            ROS_INFO("Checking Goalposition on joint %i",i);
+            if (((TX90.currPos[i]) < 0.999 * TX90.goalPosition[i]) && ((TX90.currPos[i]) > 1.001 * TX90.goalPosition[i]) && goalExists == true && robotInitialized == true)
                 jointAtGoalCounter++;
             else
                 TX90.currPos[i] = RobotState->actual.positions[i];
