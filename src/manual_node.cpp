@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     ros::Subscriber canSub = n.subscribe<bitten::canopen_msg>("can_topic", 1000, &canCallback);
 
     ROS_INFO("Subscribing to %s",topicNames[FEEDBACK_TOPIC].c_str());
-    ros::Subscriber feedbackSub = n.subscribe<bitten::feedback_msg>(topicNames[FEEDBACK_TOPIC], 3*LOOP_RATE_INT, &fbCallbackManual);
+    ros::Subscriber feedbackSub = n.subscribe<bitten::feedback_msg>(topicNames[FEEDBACK_TOPIC], 3*LOOP_RATE_INT, &fbCallback);
     if (feedbackSub)
         ROS_INFO("Subscribed to \"%s\"!", topicNames[FEEDBACK_TOPIC].c_str());
     else
@@ -56,28 +56,6 @@ int main(int argc, char **argv)
                 ROS_INFO("Connected!");
                 newConnection = false;
             }
-
-            // if((manual_msg.jointVelocity[0] == 1) || (manual_msg.jointVelocity[0] == -1))
-            // {
-            //     if((manual_msg.jointVelocity[2] >= -0.3) && (manual_msg.jointVelocity[2] <= 0.3))
-            //         manual_msg.jointVelocity[2] = 0;
-            // }
-            // if((manual_msg.jointVelocity[2] == 1) || (manual_msg.jointVelocity[2] == -1))
-            // {
-            //     if((manual_msg.jointVelocity[0] >= -0.3) && (manual_msg.jointVelocity[0] <= 0.3))
-            //         manual_msg.jointVelocity[0] = 0;
-            // }
-            // if((manual_msg.jointVelocity[1] == 1) || (manual_msg.jointVelocity[1] == -1))
-            // {
-            //     if((manual_msg.jointVelocity[4] >= -0.3) && (manual_msg.jointVelocity[4] <= 0.3))
-            //         manual_msg.jointVelocity[4] = 0;
-            // }
-            // if((manual_msg.jointVelocity[4] == 1) || (manual_msg.jointVelocity[4] == -1))
-            // {
-            //     if((manual_msg.jointVelocity[1] >= -0.3) && (manual_msg.jointVelocity[1] <= 0.3))
-            //         manual_msg.jointVelocity[1] = 0;
-            // }
-
             transmitManualRdy = true;
         }
         
@@ -144,130 +122,178 @@ void canCallback(const bitten::canopen_msg::ConstPtr& can)
     {
     case 0x8CFDD633: //right joystick, basic message
     {
-        int check = can->data[0] % 16;
         float actual_pos;
         float max_pos;
-        if(check == 4)
+        if(can->data[0] & 0x04) //tilt left
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
             max_pos = 0xFA * 0xFF + 0x04;
             manual_msg.jointVelocity[4] = -(actual_pos / max_pos);
         }
-        else if(check == 0) 
+        else if(can->data[0] & 0x10) //tilt right
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
             max_pos = 0xFA * 0xFF + 0x10;
             manual_msg.jointVelocity[4] = actual_pos / max_pos;
         }
         else
-        {
             manual_msg.jointVelocity[4] = 0;
-        }
         
-        check = can->data[2] % 16;
-        if(check == 4)
+        if(can->data[2] & 0x04) //tilt backwards
         {
             actual_pos = can->data[3] * 0xFF + can->data[2];
             max_pos = 0xFA * 0xFF + 0x04;
             manual_msg.jointVelocity[1] = -(actual_pos / max_pos);
         }
-        else if(check == 0) 
+        else if(can->data[2] & 0x10) //tilt forwards
         {
             actual_pos = can->data[3] * 0xFF + can->data[2];
             max_pos = 0xFA * 0xFF + 0x10;
             manual_msg.jointVelocity[1] = actual_pos / max_pos;
         }
         else
-        {
             manual_msg.jointVelocity[1] = 0;
-        }
+
+        //push buttons
+        if(can->data[5] & 0x04)
+            manual_msg.buttons[0] = 1;
+        else
+            manual_msg.buttons[0] = 0;
+
+        if(can->data[5] & 0x10)
+            manual_msg.buttons[1] = 1;
+        else
+            manual_msg.buttons[1] = 0;
+
+        if(can->data[6] & 0x01)
+            manual_msg.buttons[2] = 1;
+        else
+            manual_msg.buttons[2] = 0;
+
+        if(can->data[6] & 0x04)
+            manual_msg.buttons[3] = 1;
+        else
+            manual_msg.buttons[3] = 0;
+
+        if(can->data[7] & 0x10)
+            manual_msg.buttons[4] = 1;
+        else
+            manual_msg.buttons[4] = 0;
+        
+        if(can->data[7] & 0x04)
+            manual_msg.buttons[5] = 1;
+        else
+            manual_msg.buttons[5] = 0;
+
         break;
     }
     case 0x8CFDD634: //left joystick, basic message
     {
-        int check = can->data[0] % 16;
         float actual_pos;
         float max_pos;
-        if(check == 4)
+        if(can->data[0] & 0x04) //tilt left
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
             max_pos = 0xFA * 0xFF + 0x04;
             manual_msg.jointVelocity[0] = -(actual_pos / max_pos);
         }
-        else if(check == 0) 
+        else if(can->data[0] & 0x10) //tilt right
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
             max_pos = 0xFA * 0xFF + 0x10;
             manual_msg.jointVelocity[0] = actual_pos / max_pos;
         }
         else
-        {
             manual_msg.jointVelocity[0] = 0;
-        }
 
-        check = can->data[2] % 16;
-        if(check == 4)
+        if(can->data[2] & 0x04) //tilt backwards
         {
             actual_pos = can->data[3] * 0xFF + can->data[2];
             max_pos = 0xFA * 0xFF + 0x04;
             manual_msg.jointVelocity[2] = -(actual_pos / max_pos);
         }
-        else if(check == 0)
+        else if(can->data[2] & 0x10) //tilt forwards
         {
             actual_pos = can->data[3] * 0xFF + can->data[2];
             max_pos = 0xFA * 0xFF + 0x10;
             manual_msg.jointVelocity[2] = actual_pos / max_pos;
         }
         else
-        {
             manual_msg.jointVelocity[2] = 0;
-        }
+
+        //push buttons
+        if(can->data[5] & 0x04)
+            manual_msg.buttons[6] = 1;
+        else
+            manual_msg.buttons[6] = 0;
+
+        if(can->data[5] & 0x10)
+            manual_msg.buttons[7] = 1;
+        else
+            manual_msg.buttons[7] = 0;
+
+        if(can->data[6] & 0x01)
+            manual_msg.buttons[8] = 1;
+        else
+            manual_msg.buttons[8] = 0;
+
+        if(can->data[6] & 0x04)
+            manual_msg.buttons[9] = 1;
+        else
+            manual_msg.buttons[9] = 0;
+
+        if(can->data[7] & 0x10)
+            manual_msg.buttons[10] = 1;
+        else
+            manual_msg.buttons[10] = 0;
+        
+        if(can->data[7] & 0x04)
+            manual_msg.buttons[11] = 1;
+        else
+            manual_msg.buttons[11] = 0;
+
         break;
     }
     case 0x8CFDD733: //right joystick, extended message
     {
-        int check = can->data[0] % 16;
         float actual_pos;
         float max_pos;
-        if(check == 4)
+        if(can->data[0] & 0x04) //roll left
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
             max_pos = 0xFA * 0xFF + 0x04;
             manual_msg.jointVelocity[5] = -(actual_pos / max_pos);
         }
-        else if(check == 0) 
+        else if(can->data[0] & 0x10) //roll right
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
             max_pos = 0xFA * 0xFF + 0x10;
             manual_msg.jointVelocity[5] = actual_pos / max_pos;
         }
         else
-        {
             manual_msg.jointVelocity[5] = 0;
-        }
+
         break;
     }
     case 0x8CFDD734: //left joystick, extended message
     {
-        int check = can->data[0] % 16;
         float actual_pos;
         float max_pos;
-        if(check == 4)
+        if(can->data[0] & 0x04) //roll left
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
             max_pos = 0xFA * 0xFF + 0x04;
             manual_msg.jointVelocity[3] = -(actual_pos / max_pos);
         }
-        else if(check == 0) 
+        else if(can->data[0] & 0x10)  //roll right
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
             max_pos = 0xFA * 0xFF + 0x10;
             manual_msg.jointVelocity[3] = actual_pos / max_pos;
         }
         else
-        {
             manual_msg.jointVelocity[3] = 0;
-        }
+
         break;
     }
     default:
@@ -278,21 +304,20 @@ void canCallback(const bitten::canopen_msg::ConstPtr& can)
 /* ----------------------------------------------------------------------
  *                -------  Feedback Callback function   -------
  * ----------------------------------------------------------------------- */
-void fbCallbackManual(const bitten::feedback_msg::ConstPtr& feedbackManual)
+void fbCallback(const bitten::feedback_msg::ConstPtr& feedback)
 {
-    if (feedbackManual->recID == MANUAL_ID)
+    if (feedback->recID == MANUAL_ID)
     {
-        if (feedbackManual->flags & PING)
+        if (feedback->flags & PING)
         {
             manual_msg.flags |= PONG;
             transmitManualRdy = true;
         }
 
-        if (connectionEstablished == false && feedbackManual->flags & ACK)
+        if (connectionEstablished == false && feedback->flags & ACK)
             connectionEstablished = true;            
 
-        else if (connectionEstablished == false && feedbackManual->flags == DENIED)
+        else if (connectionEstablished == false && feedback->flags == DENIED)
             ROS_INFO("Connection denied");
-
     }
 }
