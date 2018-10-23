@@ -1,7 +1,5 @@
 <launch>  
-    <node pkg="bitten" type="can_driver_node" name="can_driver_node"/>
-    
-    <node pkg="bitten" type="manual_node" name="manual_node"/>
+    <node pkg="bitten" type="wp_node" name="wp_node"/>
 
     <node pkg="bitten" type="commander_node" name="commander_node"/>
 
