@@ -40,6 +40,9 @@ bool robotInitialized       = false;
 bool goalExists             = false;
 bool jointTransmitReady     = true;
 bool feedbackTransmitReady  = false;
+
+int OPERATING_MODE = 0;
+int ManPubTimer = LOOP_RATE_INT / 5;
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -90,37 +93,96 @@ int main (int argc , char **argv)
     ------------------------------------------------- */
     while(ros::ok())
     {
-        if (goalExists == true && robotInitialized)
+        switch(OPERATING_MODE)
         {
-            jointPathMsg.joint_names.clear();
-            jointPathMsg.points.clear();
-            jointPathPointMsg.positions.clear();
-            jointPathPointMsg.velocities.clear();
+            case WP_ID:
+                if (goalExists == true)
+                {
+                    // ROS_INFO("Goal true in superloop");
+                    jointPathMsg.joint_names.clear();
+                    jointPathMsg.points.clear();
+                    jointPathPointMsg.positions.clear();
+                    jointPathPointMsg.velocities.clear();
 
-            for (int i = 0; i < 6; i++)
-            {
-                jointPathMsg.joint_names.push_back(TX90.jointNames[i]);
-                jointPathPointMsg.positions.push_back(TX90.goalPosition[i]);
-                jointPathPointMsg.velocities.push_back(TX90.currVelocity*TX90.maxVelocity[i]);
-            }
-            jointPathMsg.points.push_back(jointPathPointMsg);
-        }
+                    for (int i = 0; i < 6; i++)
+                    {
+                        jointPathMsg.joint_names.push_back(TX90.jointNames[i]);
+                        jointPathPointMsg.positions.push_back(TX90.goalPosition[i]);
+                        jointPathPointMsg.velocities.push_back(TX90.currVelocity*TX90.maxVelocity[i]);
+                    }
 
-        if (jointTransmitReady)
-        {
-            movement_pub.publish(jointPathMsg);
-            jointTransmitReady = false;
-        }
+                    jointPathMsg.points.push_back(jointPathPointMsg);
+                    // movement_pub.publish(jointPathMsg);
 
-        if (feedbackTransmitReady)
-        {
-            feedback_pub.publish(movementFeedbackMsg);
+                }   
+
+                if (jointTransmitReady)
+                {
+                    ROS_INFO("Publishing to bot");
+                    movement_pub.publish(jointPathMsg);
+                    jointTransmitReady = false;
+                }
             
-            movementFeedbackMsg.flags = 0;
-            feedbackTransmitReady = false;
-        }
 
-        ros::spinOnce();
+                if (feedbackTransmitReady)
+                {
+                    ROS_INFO("Publishing to feedback");;
+                    feedback_pub.publish(movementFeedbackMsg);
+                    
+                    movementFeedbackMsg.flags = 0;
+                    feedbackTransmitReady = false;
+                }
+                break;
+
+            case MANUAL_ID:
+
+                if (goalExists == true || goalExists == false)
+                {
+                    // ROS_INFO("Goal true in superloop");
+                    jointPathMsg.joint_names.clear();
+                    jointPathMsg.points.clear();
+                    jointPathPointMsg.positions.clear();
+                    jointPathPointMsg.velocities.clear();
+
+                    for (int i = 0; i < 6; i++)
+                    {
+                        jointPathMsg.joint_names.push_back(TX90.jointNames[i]);
+                        jointPathPointMsg.positions.push_back(TX90.goalPosition[i]);
+                        jointPathPointMsg.velocities.push_back(TX90.currVelocity*TX90.maxVelocity[i]);
+                    }
+
+                    jointPathMsg.points.push_back(jointPathPointMsg);
+
+                    if (! --ManPubTimer)
+                    {
+                        // ROS_INFO("Publishing to bot");
+                        movement_pub.publish(jointPathMsg);
+                        ManPubTimer = LOOP_RATE_INT / 6;
+                    }
+
+                }
+
+                if (jointTransmitReady)
+                {
+                    
+                    movement_pub.publish(jointPathMsg);
+                    jointTransmitReady = false;
+                }
+        
+
+                if (feedbackTransmitReady)
+                {
+                    ROS_INFO("Publishing to feedback");;
+                    feedback_pub.publish(movementFeedbackMsg);
+                    
+                    movementFeedbackMsg.flags = 0;
+                    feedbackTransmitReady = false;
+                }
+            break;
+        }
+        
+        for (int i = 0; i < 3; i++)
+            ros::spinOnce();
         loop_rate.sleep();
     }
 }
@@ -134,7 +196,7 @@ void InitRobot()
     TX90.maxLink    = 6;
     TX90.resetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
 
-    TX90.currVelocity   = 0.05;
+    TX90.currVelocity   = 1;
 
     TX90.maxRotation = {    3.14,               /* joint_1  */
                             2.57,               /* joint_2  */
@@ -185,14 +247,23 @@ void commanderCallback  (const bitten::control_msg::ConstPtr&                   
         switch(commander->id)
         {
             case MANUAL_ID:
-            // ROS_INFO("Entered manual ID callback");
+                if (OPERATING_MODE != MANUAL_ID)
+                {
+                    OPERATING_MODE = MANUAL_ID;
+                    ROS_INFO("Set OpMode to ManMode");
+                }
+
                 for (int i = 0; i < 6; i++)
                 {
-                    if (commander->jointVelocity[i] >= 0)        /* If goalposition is in positive rotational direction */
+                    if (commander->jointVelocity[i] == 0)
                     {
-                        if (TX90.goalPosition[i] +  (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) < TX90.maxRotation[i])
+
+                    }
+
+                    else if (commander->jointVelocity[i] > 0)        /* If goalposition is in positive rotational direction */
+                    {
+                        if (TX90.currPos[i] +  (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) < TX90.maxRotation[i])
                         {
-                            // ROS_INFO("Adjusted goalposition on joint (+) %i",i);
                             TX90.goalPosition[i] += (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
                         }
                     }
@@ -201,19 +272,20 @@ void commanderCallback  (const bitten::control_msg::ConstPtr&                   
                     {
                         if (TX90.currPos[i] -  (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) > TX90.minRotation[i])
                         {
-                            // ROS_INFO("Adjusted goalposition on joint (-) %i",i);
-                            TX90.goalPosition[i] += (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);                            
+                            TX90.goalPosition[i] += (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
                         }
                     }   
                 }
-                goalExists = true;
-                jointTransmitReady = true;
 
-                
             break;
 
             case WP_ID:
-            
+                if (OPERATING_MODE != WP_ID)
+                {
+                    OPERATING_MODE = WP_ID;
+                    ROS_INFO("Set OpMode to WPMode");
+                }
+
                 for (int i = 0; i < 6; i++)
                     TX90.goalPosition[i] = commander->jointPosition[i];
                     
@@ -251,37 +323,40 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
         for (int i = 0; i < 6; i++)
             TX90.currPos[i] = RobotState->actual.positions[i];
     }
-        robotInitialized = true;
+
     for (int i = 0; i < 6; i++)
     {
         if (TX90.goalPosition[i] >= 0)
         {
-            ROS_INFO("Checking Goalposition on joint %i",i);
-
             if (((TX90.currPos[i]) > 0.999 * TX90.goalPosition[i]) && ((TX90.currPos[i]) < 1.001 * TX90.goalPosition[i]) && goalExists == true && robotInitialized == true)
+            {    
                 jointAtGoalCounter++;
+            }
             else
+            {
                 TX90.currPos[i] = RobotState->actual.positions[i];
+            }
         }
 
         else if (TX90.goalPosition[i] < 0)
         {
-            ROS_INFO("Checking Goalposition on joint %i",i);
             if (((TX90.currPos[i]) < 0.999 * TX90.goalPosition[i]) && ((TX90.currPos[i]) > 1.001 * TX90.goalPosition[i]) && goalExists == true && robotInitialized == true)
+            {
                 jointAtGoalCounter++;
+            }
+                
             else
+            {
                 TX90.currPos[i] = RobotState->actual.positions[i];
+            }  
         }
     }
 
-    if (robotInitialized && jointAtGoalCounter == 6)
+    if (jointAtGoalCounter == 6)
     {
+        ManPubTimer = 0;
         movementFeedbackMsg.flags |= GOAL_REACHED;
         goalExists  = false;
         feedbackTransmitReady = true;
     }
-        
-    /* Set an 'initialized' flag    */
-    if (!robotInitialized)
-        robotInitialized = true;
 }

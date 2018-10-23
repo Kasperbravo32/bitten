@@ -86,15 +86,14 @@ int main(int argc , char **argv)
     ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>  ("manual_topic"   , 3*LOOP_RATE_INT , &manualCallback);
     ros::Subscriber wp_sub          = n.subscribe<bitten::control_msg>  ("wp_topic"       , 3*LOOP_RATE_INT , &wpCallback);
     ros::Subscriber movement_feedback = n.subscribe<bitten::feedback_msg>("movement_feedback",3*LOOP_RATE_INT, &movementFeedbackCallback);
-    // ros::Subscriber terminal_sub    = n.subscribe<bitten::control_msg>("terminal_topic" , 3*LOOP_RATE_INT , &terminalCallback);
     
     ros::Publisher commander_pub    = n.advertise<bitten::control_msg>  ("movement_topic" , 3*LOOP_RATE_INT);
     ros::Publisher commander_fb_pub = n.advertise<bitten::feedback_msg> ("feedback_topic" , 3*LOOP_RATE_INT);
 
-    // ros::Publisher test_pub = n.advertise<trajectory_msgs::JointTrajectory>("test0_topic", 3*LOOP_RATE_INT);
-
     ros::Rate loop_rate(LOOP_RATE_INT);
     INPUT_MODE = POLL_MODE;
+
+    passOnMsg.nodeName = nodeNames[COMMANDER_NODE];
 
     sleep(1);
     if (manual_sub && wp_sub && commander_pub && commander_fb_pub)
@@ -102,6 +101,7 @@ int main(int argc , char **argv)
     else
         ROS_INFO("Didn't initiate %s",nodeNames[COMMANDER_NODE].c_str());
 
+    int ManPubTimer = LOOP_RATE_INT / 5;
 
 /*  -------------------------------------------------
          SUPERLOOP
@@ -111,8 +111,12 @@ int main(int argc , char **argv)
         switch(INPUT_MODE)
         {
             case MANUAL_MODE:
-                msg.points.push_back(point_msg);
-                jointStatesTransmitReady = true;
+                if (! --ManPubTimer)
+                {
+                    // ROS_INFO("ManPubTimer done");
+                    ManPubTimer = LOOP_RATE_INT / 5;
+                    jointStatesTransmitReady = true;
+                }
 
             break;
 
@@ -209,7 +213,6 @@ int main(int argc , char **argv)
  * ----------------------------------------------------------------------- */       
 void manualCallback (const bitten::control_msg::ConstPtr& manual)
 {
-
     if (manual->flags & PONG)
         ping = true;
 
@@ -228,16 +231,15 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
 
     if (INPUT_MODE == MANUAL_MODE)
     {
-        if (robotOccupied == false)
+        if (robotOccupied == false || robotOccupied == true)
         {
-            robotOccupied = true;
-
-            for (int i = 0; i < 6; i++)
-                passOnMsg.jointVelocity[i] = manual->jointVelocity[i];
+            // ROS_INFO("Entered robotOccupied == false");
+            // robotOccupied = true;
 
             passOnMsg.buttons = manual->buttons;
+            passOnMsg.jointVelocity = manual->jointVelocity;
             passOnMsg.id = MANUAL_ID;
-            jointStatesTransmitReady = true; 
+            // jointStatesTransmitReady = true; 
         }
     }
 }
@@ -280,9 +282,8 @@ void wpCallback     (const bitten::control_msg::ConstPtr& wp)
                     passOnMsg.programName = wp->programName;
                     ROS_INFO("Setting new goal to: %s",wp->programName.c_str());
                     robotOccupied = true;
-                    for (int i = 0; i < 6; i++)
-                        passOnMsg.jointPosition[i] = wp->jointPosition[i];
 
+                    passOnMsg.jointPosition = wp->jointPosition;
                     passOnMsg.id = WP_ID;
                     jointStatesTransmitReady = true;       
                 }   
@@ -314,11 +315,10 @@ void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedb
     ROS_INFO("GOT SOME FEEDBACK");
     if (moveFeedback->flags & GOAL_REACHED)
     {
-        ROS_INFO("ENTERED GOAL_REACHED IF");
         switch(INPUT_MODE)
         {
             case WP_MODE:
-                ROS_INFO("ENTERED WP_MODE SWITCH");
+                // ROS_INFO("ENTERED WP_MODE SWITCH");
                 commanderFeedbackMsg.recID = WP_ID;
                 commanderFeedbackMsg.flags |= GOAL_REACHED;
                 fbTransmitReady = true;
@@ -326,10 +326,10 @@ void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedb
             break;
 
             case MANUAL_MODE:
-                ROS_INFO("Entered MANUAL_MODE in movementFeedback");
-                commanderFeedbackMsg.recID = MANUAL_ID;
-                commanderFeedbackMsg.flags |= GOAL_REACHED;
-                fbTransmitReady = true;
+                // ROS_INFO("Entered MANUAL_MODE in movementFeedback");
+                // commanderFeedbackMsg.recID = MANUAL_ID;
+                // commanderFeedbackMsg.flags |= GOAL_REACHED;
+                // fbTransmitReady = true;
                 robotOccupied = false;
             break;
 
