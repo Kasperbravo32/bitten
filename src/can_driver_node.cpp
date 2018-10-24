@@ -40,22 +40,17 @@ int main(int argc, char** argv)
 {   
     using namespace std::chrono_literals;
 
-    // Options
-    const char* interface = "can0";
-
-    // Service variables
-    int rc;
-
     // CAN connection variables
     struct sockaddr_can addr;
     struct ifreq ifr;
-    int sockfd;
-
-    struct canfd_frame frame;
+    struct can_frame frame;
+    const char* interface = "can0";
+    int sock;
+    int rc;
 
     // Open the CAN network interface
-    sockfd = ::socket(PF_CAN, SOCK_RAW, CAN_RAW);
-    if (sockfd == -1)
+    sock = ::socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    if (sock == -1)
     {
         ROS_ERROR("socket: %s", strerror(errno));
         return errno;
@@ -74,7 +69,7 @@ int main(int argc, char** argv)
         filter[3].can_mask = CAN_SFF_MASK;
 
         rc = ::setsockopt(
-            sockfd,
+            sock,
             SOL_CAN_RAW,
             CAN_RAW_FILTER,
             &filter,
@@ -83,51 +78,32 @@ int main(int argc, char** argv)
         if (rc == -1)
         {
             ROS_ERROR("setsockopt filter: %s", strerror(errno));
-            ::close(sockfd);
-            return errno;
-        }
-    }
-
-    // Enable reception of CAN FD frames
-    {
-        int enable = 1;
-
-        rc = ::setsockopt(
-            sockfd,
-            SOL_CAN_RAW,
-            CAN_RAW_FD_FRAMES,
-            &enable,
-            sizeof(enable)
-        );
-        if (rc == -1)
-        {
-            ROS_ERROR("setsockopt CAN FD: %s", strerror(errno));
-            ::close(sockfd);
+            ::close(sock);
             return errno;
         }
     }
 
     // Get the index of the network interface
     std::strncpy(ifr.ifr_name, interface, IFNAMSIZ);
-    if (::ioctl(sockfd, SIOCGIFINDEX, &ifr) == -1)
+    if (::ioctl(sock, SIOCGIFINDEX, &ifr) == -1)
     {
         ROS_ERROR("ioctl: %s", strerror(errno));
-        ::close(sockfd);
+        ::close(sock);
         return errno;
     }
     
     // Bind the socket to the network interface
-    addr.can_family = AF_CAN;
+    addr.can_family = PF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
     rc = ::bind(
-        sockfd,
+        sock,
         reinterpret_cast<struct sockaddr*>(&addr),
         sizeof(addr)
     );
     if (rc == -1)
     {
         ROS_ERROR("bind: %s", strerror(errno));
-        ::close(sockfd);
+        ::close(sock);
         return errno;
     }
 
@@ -146,26 +122,19 @@ int main(int argc, char** argv)
     /* -------------------------------------------------
     *     SUPERLOOP
     * ------------------------------------------------- */
-    while ( /*( 0 == signalValue ) && */ros::ok() )
+    while ( ros::ok() )
     {
         // Read in a CAN frame
-        auto numBytes = ::read(sockfd, &frame, CANFD_MTU);
+        auto numBytes = ::read(sock, &frame, CAN_MTU);
         switch (numBytes)
         {
             case CAN_MTU:
             {
                 processFrame(frame);
                 canPub.publish(can_msg);
+                break;
             }
-                break;
-            case CANFD_MTU:
-                break;
             case -1:
-                // Check the signal value on interrupt
-                if (EINTR == errno)
-                    continue;
-
-                // Delay before continuing
                 ROS_ERROR("read: %s", strerror(errno));
                 return errno;
             default:
@@ -174,7 +143,7 @@ int main(int argc, char** argv)
     }
 
     // Cleanup
-    if (::close(sockfd) == -1)
+    if (::close(sock) == -1)
     {
         ROS_ERROR("close: %s", strerror(errno));
         return errno;
@@ -182,10 +151,10 @@ int main(int argc, char** argv)
     return 0;
 }
 
-void processFrame(const struct canfd_frame& frame)
+void processFrame(const struct can_frame& frame)
 {
     can_msg.can_id = frame.can_id;
-    can_msg.lenth = frame.len; //payload is 8 bytes in length
+    can_msg.lenth = frame.can_dlc; //payload is 8 bytes in length
     for(int i = 0; i < 8; i++)
         can_msg.data[i] = frame.data[i];
 }
