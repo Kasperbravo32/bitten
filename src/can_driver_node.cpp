@@ -3,33 +3,20 @@
  * Author: Kasper Jørgensen
  * Purpose: Create the 'can_driver' node in the Leica Robot system
  * Date of dev.: September 2018 - January 2019
- * 
  * -----------------------------------------------------------------------
  *                      -------  Libraries   -------
  * ----------------------------------------------------------------------- */
 #include <linux/can.h>
 #include <linux/can/raw.h>
-
-#include <endian.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-
 #include <chrono>
-#include <iomanip>
-#include <iostream>
-#include <thread>
-
-#include <cerrno>
-#include <csignal>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
 
 #include "ros/ros.h"
-#include <bitten/canopen_msg.h>
+#include <bitten/can_msg.h>
 #include <global_node_definitions.h>
 #include <can_driver_node.h>
  
@@ -107,17 +94,19 @@ int main(int argc, char** argv)
         return errno;
     }
 
-    ROS_INFO("Initiating node");
+    ROS_INFO("Initiating CAN_node");
     ros::init(argc, argv, "can_driver_node");
     ros::NodeHandle n;
 
-    ROS_INFO("Publishing to can_topic");
-    ros::Publisher canPub = n.advertise<bitten::canopen_msg>("can_topic", 1000);
+    ros::Publisher canPub = n.advertise<bitten::can_msg>("can_topic", LOOP_RATE_INT);
 
     ros::Rate loop_rate(LOOP_RATE_INT);
-    sleep(1);
 
-    ROS_INFO("CAN read started");
+    sleep(1);
+    if (canPub)
+        ROS_INFO("Initiated CAN_node");
+    else
+        ROS_INFO("Didn't initiate CAN_node");
     
     /* -------------------------------------------------
     *     SUPERLOOP

@@ -10,4 +10,4 @@ void processFrame(const struct can_frame& frame);
 /* ----------------------------------------------------------------------
  *                       -------  Global variables   -------
  * ----------------------------------------------------------------------- */
-bitten::canopen_msg can_msg;
+bitten::can_msg can_msg;

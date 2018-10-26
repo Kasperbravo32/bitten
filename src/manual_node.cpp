@@ -9,7 +9,7 @@
  * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
 #include <bitten/control_msg.h>
-#include <bitten/canopen_msg.h>
+#include <bitten/can_msg.h>
 #include <bitten/feedback_msg.h>
 #include <global_node_definitions.h>
 #include <manual_node.h>
@@ -19,31 +19,30 @@
  * ----------------------------------------------------------------------- */        
 int main(int argc, char **argv)
 {
-    ROS_INFO("Initiating node");
+    bool newConnection = true;
+
+    ROS_INFO("Initiating manual_node");
     ros::init(argc, argv, "manual_node");
     ros::NodeHandle n;
 
-    ROS_INFO("Subscribing to \"%s\"", topicNames[JOY_TOPIC].c_str());
-    ros::Subscriber joySub = n.subscribe<sensor_msgs::Joy>("joy", 1000, &joyCallback);
+    // ROS_INFO("Subscribing to \"%s\"", topicNames[JOY_TOPIC].c_str());
+    // ros::Subscriber joySub = n.subscribe<sensor_msgs::Joy>("joy", LOOP_RATE_INT, &joyCallback);
     
-    ROS_INFO("Subscribing to \"can_topic\"");
-    ros::Subscriber canSub = n.subscribe<bitten::canopen_msg>("can_topic", 1000, &canCallback);
+    ros::Subscriber canSub = n.subscribe<bitten::can_msg>("can_topic", LOOP_RATE_INT, &canCallback);
+    ros::Subscriber feedbackSub = n.subscribe<bitten::feedback_msg>(topicNames[FEEDBACK_TOPIC], LOOP_RATE_INT, &fbCallback);
 
-    ROS_INFO("Subscribing to \"%s\"",topicNames[FEEDBACK_TOPIC].c_str());
-    ros::Subscriber feedbackSub = n.subscribe<bitten::feedback_msg>(topicNames[FEEDBACK_TOPIC], 3*LOOP_RATE_INT, &fbCallback);
-    if (feedbackSub)
-        ROS_INFO("Subscribed to \"%s\"!", topicNames[FEEDBACK_TOPIC].c_str());
-    else
-        ROS_INFO("Couldn't subscribe to \"%s\".",topicNames[FEEDBACK_TOPIC].c_str());
-
-    ROS_INFO("Publishing to \"%s\"", topicNames[MANUAL_TOPIC].c_str());
-    ros::Publisher manualPub = n.advertise<bitten::control_msg>("manual_topic", 1000);
+    ros::Publisher manualPub = n.advertise<bitten::control_msg>("manual_topic", LOOP_RATE_INT);
 
     manual_msg.nodeName = "manual node";
     manual_msg.id = MANUAL_ID;
     
     ros::Rate loop_rate(LOOP_RATE_INT);
-    bool newConnection = true;
+
+    sleep(1);
+    if (canSub && feedbackSub && manualPub)
+        ROS_INFO("Initiated manual_node");
+    else
+        ROS_INFO("Didn't initiate manual_node");
 
     /* -------------------------------------------------
     *     SUPERLOOP
@@ -87,36 +86,36 @@ int main(int argc, char **argv)
 /* ----------------------------------------------------------------------
  *                -------  Joy Callback function   -------
  * ----------------------------------------------------------------------- */ 
-void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
-{
-    //joint 1
-    manual_msg.jointVelocity[0] = joy->axes[0];
-    //joint 2
-    manual_msg.jointVelocity[1] = joy->axes[4];
-    //joint 3
-    manual_msg.jointVelocity[2] = joy->axes[1];
-    //joint 4
-    if(joy->buttons[15])
-        manual_msg.jointVelocity[3] = -1;
-    else if(joy->buttons[16])
-        manual_msg.jointVelocity[3] = 1;
-    else
-        manual_msg.jointVelocity[3] = 0;
-    //joint 5
-    manual_msg.jointVelocity[4] = joy->axes[3];
-    //joint 6
-    if(joy->buttons[1])
-        manual_msg.jointVelocity[5] = 1;
-    else if(joy->buttons[3])
-        manual_msg.jointVelocity[5] = -1;
-    else
-        manual_msg.jointVelocity[5] = 0;
-}
+// void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
+// {
+//     //joint 1
+//     manual_msg.jointVelocity[0] = joy->axes[0];
+//     //joint 2
+//     manual_msg.jointVelocity[1] = joy->axes[4];
+//     //joint 3
+//     manual_msg.jointVelocity[2] = joy->axes[1];
+//     //joint 4
+//     if(joy->buttons[15])
+//         manual_msg.jointVelocity[3] = -1;
+//     else if(joy->buttons[16])
+//         manual_msg.jointVelocity[3] = 1;
+//     else
+//         manual_msg.jointVelocity[3] = 0;
+//     //joint 5
+//     manual_msg.jointVelocity[4] = joy->axes[3];
+//     //joint 6
+//     if(joy->buttons[1])
+//         manual_msg.jointVelocity[5] = 1;
+//     else if(joy->buttons[3])
+//         manual_msg.jointVelocity[5] = -1;
+//     else
+//         manual_msg.jointVelocity[5] = 0;
+// }
 
 /* ----------------------------------------------------------------------
  *                -------  Feedback Callback function   -------
  * ----------------------------------------------------------------------- */
-void canCallback(const bitten::canopen_msg::ConstPtr& can)
+void canCallback(const bitten::can_msg::ConstPtr& can)
 {
     switch(can->can_id)
     {
