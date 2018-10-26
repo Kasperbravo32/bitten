@@ -83,12 +83,12 @@ int main(int argc , char **argv)
     ros::NodeHandle n;
     commanderFeedbackMsg.senderID = COMMANDER_ID;   
 
-    ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>  ("manual_topic"   , 3*LOOP_RATE_INT , &manualCallback);
-    ros::Subscriber wp_sub          = n.subscribe<bitten::control_msg>  ("wp_topic"       , 3*LOOP_RATE_INT , &wpCallback);
-    ros::Subscriber movement_feedback = n.subscribe<bitten::feedback_msg>("movement_feedback",3*LOOP_RATE_INT, &movementFeedbackCallback);
+    ros::Subscriber manual_sub      = n.subscribe<bitten::control_msg>  ("manual_topic"   , 5 , &manualCallback);
+    ros::Subscriber wp_sub          = n.subscribe<bitten::control_msg>  ("wp_topic"       , 10 , &wpCallback);
+    ros::Subscriber movement_feedback = n.subscribe<bitten::feedback_msg>("movement_feedback",10, &movementFeedbackCallback);
     
-    ros::Publisher commander_pub    = n.advertise<bitten::control_msg>  ("movement_topic" , 3*LOOP_RATE_INT);
-    ros::Publisher commander_fb_pub = n.advertise<bitten::feedback_msg> ("feedback_topic" , 3*LOOP_RATE_INT);
+    ros::Publisher commander_pub    = n.advertise<bitten::control_msg>  ("movement_topic" , LOOP_RATE_INT);
+    ros::Publisher commander_fb_pub = n.advertise<bitten::feedback_msg> ("feedback_topic" , LOOP_RATE_INT);
 
     ros::Rate loop_rate(LOOP_RATE_INT);
     INPUT_MODE = POLL_MODE;
@@ -96,7 +96,7 @@ int main(int argc , char **argv)
     passOnMsg.nodeName = nodeNames[COMMANDER_NODE];
 
     sleep(1);
-    if (manual_sub && wp_sub && commander_pub && commander_fb_pub)
+    if (manual_sub && wp_sub && commander_pub && commander_fb_pub && movement_feedback)
         ROS_INFO("Initiated %s",nodeNames[COMMANDER_NODE].c_str());
     else
         ROS_INFO("Didn't initiate %s",nodeNames[COMMANDER_NODE].c_str());
@@ -111,12 +111,6 @@ int main(int argc , char **argv)
         switch(INPUT_MODE)
         {
             case MANUAL_MODE:
-                if (! --ManPubTimer)
-                {
-                    // ROS_INFO("ManPubTimer done");
-                    ManPubTimer = LOOP_RATE_INT / 5;
-                    jointStatesTransmitReady = true;
-                }
 
             break;
 
@@ -231,16 +225,10 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
 
     if (INPUT_MODE == MANUAL_MODE)
     {
-        if (robotOccupied == false || robotOccupied == true)
-        {
-            // ROS_INFO("Entered robotOccupied == false");
-            // robotOccupied = true;
-
-            passOnMsg.buttons = manual->buttons;
-            passOnMsg.jointVelocity = manual->jointVelocity;
-            passOnMsg.id = MANUAL_ID;
-            // jointStatesTransmitReady = true; 
-        }
+        passOnMsg.buttons = manual->buttons;
+        passOnMsg.jointVelocity = manual->jointVelocity;
+        passOnMsg.id = MANUAL_ID;
+        jointStatesTransmitReady = true; 
     }
 }
 
