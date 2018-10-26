@@ -52,7 +52,7 @@ add_message_files(
   FILES
   feedback_msg.msg
   control_msg.msg
-  canopen_msg.msg
+  can_msg.msg
 )
 
 ## Generate services in the 'srv' folder
