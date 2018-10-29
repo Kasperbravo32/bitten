@@ -12,13 +12,13 @@
     </include>
 
 
-    <!-- <node pkg="bitten" type="can_driver_node" name="can_driver_node"/> -->
+    <node pkg="bitten" type="can_driver_node" name="can_driver_node"/>
     
     <node pkg="bitten" type="movement_node" name="movement_node" output="screen"/>
 
-    <node pkg="bitten" type="wp_node" name="waypoint_node"/>
+    <!-- <node pkg="bitten" type="wp_node" name="waypoint_node"/> -->
 
-    <!-- <node pkg="bitten" type="manual_node" name="manual_node"/> -->
+    <node pkg="bitten" type="manual_node" name="manual_node"/>
 
     <node pkg="bitten" type="commander_node" name="commander_node"/>
 

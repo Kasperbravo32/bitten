@@ -1,19 +1,17 @@
 ---------------- TO DO ----------------
 Manual node:
-- Bruge sorte knapper på højre joy til at modificere currVelocity op/ned
-- Tilføj Deadman på begge joys, uafhængigt af hinanden
+
+
 - Pretty
 - Tilføje frame-mode (Lav Priotitet)
 - Fix Publish frekvens, evt. tag højde tag højde for om der er oprettet forbindel (connectionEstablished == true || connectionEstablished == false)
 
 
 Commander node:
-- Læs currPos fra /feedback_states
-- Ændre currVelocity på pil op og ned.
+
 
 Movement node:
-- Skal skrives
-- Være simpel.
+
 - 
 
 Terminal node
@@ -26,12 +24,12 @@ Waypoint node:
 
 
 Sikkerhed:
-- dødmandsknap
+
 - Robotten kan ikke ramme sig selv
 - Robotten kan ikke ramme palle/gulv
 
 Generelt:
-- Lave en launch fil der kører alle noderne.
+
 - Lave en GUI til valg af inputs og visualisering.
 - Skrive dataprotokol (acknowledge, start/stop transmission)
 - Lave holder/stativ til joystickene.
@@ -42,19 +40,28 @@ Generelt:
 ---------------- NOT TO DO ----------------
 
 Manual node:
+- Tilføj Deadman på begge joys, uafhængigt af hinanden
+- Bruge sorte knapper på højre joy til at modificere currVelocity op/ned
 - Handshake til oprettelse af forbindelse (ligesom wp_node) 
 - Skal pong'e iflg. feedback node
 
 Controller node:
 
 Commander node:
+- Læs currPos fra /feedback_states
+- Ændre currVelocity på pil op og ned.
 
 Waypoint node:
 - Skal skrives.
 - Callback funktioner til waypoint og test
 
-Test node:
+Movement node
+- Skal skrives
+- Være simpel.
 
 Sikkerhed:
+- dødmandsknap
+
 
 Generelt:
+- Lave en launch fil der kører alle noderne.
