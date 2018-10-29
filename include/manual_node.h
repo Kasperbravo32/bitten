@@ -1,7 +1,7 @@
  /* -----------------------------------------------------------------------
  *                      -------  Libraries   -------
  * ----------------------------------------------------------------------- */
-#include <sensor_msgs/Joy.h>
+// #include <sensor_msgs/Joy.h>
 
  /* ----------------------------------------------------------------------
  *                      -------  Initializing   -------
@@ -10,10 +10,3 @@
 void canCallback(const bitten::can_msg::ConstPtr& can);
 void fbCallback(const bitten::feedback_msg::ConstPtr& feedback);
 
-/* ----------------------------------------------------------------------
- *                       -------  Global variables   -------
- * ----------------------------------------------------------------------- */
-bitten::control_msg manual_msg;
-
-bool connectionEstablished = false;
-bool transmitManualRdy = false;
