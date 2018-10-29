@@ -62,68 +62,136 @@ int main(int argc, char **argv)
     Waypoint_0.waypointName = "Waypoint_0";
     
 
+/* --------------------------------------------------------
+    Demo Waypoints
+    Set NumberofWaypoints = 7
+   -------------------------------------------------------- */
+    // Waypoint_s WaypointBank[NumberofWaypoints];
+
+    // /* Define joints for WP#1 */
+    // WaypointBank[0].jointPosition[0] = (2/180.0)*3.14;
+    // WaypointBank[0].jointPosition[1] = (0.1/180.0)*3.14;
+    // WaypointBank[0].jointPosition[2] = (0.1/180.0)*3.14;
+    // WaypointBank[0].jointPosition[3] = (0.1/180.0)*3.14;
+    // WaypointBank[0].jointPosition[4] = (0.1/180.0)*3.14;
+    // WaypointBank[0].jointPosition[5] = (0.1/180.0)*3.14;
+    // WaypointBank[0].waypointName = "Waypoint 0";
+
+    // WaypointBank[1].jointPosition[0] = (95.0/180.0)*3.14;
+    // WaypointBank[1].jointPosition[1] = -(45.0/180.0)*3.14;
+    // WaypointBank[1].jointPosition[2] = -(83.0/180.0)*3.14;
+    // WaypointBank[1].jointPosition[3] = (3.0/180.0)*3.14;
+    // WaypointBank[1].jointPosition[4] = -(55.0/180.0)*3.14;
+    // WaypointBank[1].jointPosition[5] = (10.0/180.0)*3.14;
+    // WaypointBank[1].waypointName = "Waypoint 1";
+
+    // /* Define joints for WP#2 */
+    // WaypointBank[2].jointPosition[0] = (128.0/180.0)*3.14;
+    // WaypointBank[2].jointPosition[1] = -(90.0/180.0)*3.14;
+    // WaypointBank[2].jointPosition[2] = -(33.0/180)*3.14;
+    // WaypointBank[2].jointPosition[3] = (6.0/180)*3.14;
+    // WaypointBank[2].jointPosition[4] = -(50.0/180)*3.14;
+    // WaypointBank[2].jointPosition[5] = (1.0/180)*3.14;
+    // WaypointBank[2].waypointName = "Waypoint 2";
+
+    // /* Define joints for WP#3 */
+    // WaypointBank[3].jointPosition[0] = (95.0/180)*3.14;;
+    // WaypointBank[3].jointPosition[1] = -(45.0/180)*3.14;
+    // WaypointBank[3].jointPosition[2] = -(83.0/180)*3.14;
+    // WaypointBank[3].jointPosition[3] = (3.0/180)*3.14;
+    // WaypointBank[3].jointPosition[4] = -(55.0/180)*3.14;
+    // WaypointBank[3].jointPosition[5] = (1.0/180)*3.14;
+    // WaypointBank[3].waypointName = "Waypoint 3";
+
+    // /* Define joints for WP#4 */
+    // WaypointBank[4].jointPosition[0] = (63.0/180)*3.14;
+    // WaypointBank[4].jointPosition[1] = -(87.0/180)*3.14;
+    // WaypointBank[4].jointPosition[2] = -(40.0/180)*3.14;
+    // WaypointBank[4].jointPosition[3] = (1.0/180)*3.14;
+    // WaypointBank[4].jointPosition[4] = -(48.0/180)*3.14;
+    // WaypointBank[4].jointPosition[5] = (1.0/180)*3.14;
+    // WaypointBank[4].waypointName = "Waypoint 4";
+
+    // /* Define joints for WP#5 */
+    // WaypointBank[5].jointPosition[0] = (95.0/180)*3.14;;
+    // WaypointBank[5].jointPosition[1] = -(45.0/180)*3.14;   
+    // WaypointBank[5].jointPosition[2] = -(83.0/180)*3.14;
+    // WaypointBank[5].jointPosition[3] = (3.0/180)*3.14;
+    // WaypointBank[5].jointPosition[4] = -(55.0/180)*3.14;
+    // WaypointBank[5].jointPosition[5] = (1.0/180)*3.14;
+    // WaypointBank[5].waypointName = "Waypoint 5";
+
+    // WaypointBank[6].jointPosition[0] = (0.1/180.0)*3.14;
+    // WaypointBank[6].jointPosition[1] = (0.1/180.0)*3.14;   
+    // WaypointBank[6].jointPosition[2] = (0.1/180.0)*3.14;
+    // WaypointBank[6].jointPosition[3] = (0.1/180.0)*3.14;
+    // WaypointBank[6].jointPosition[4] = (0.1/180.0)*3.14;
+    // WaypointBank[6].jointPosition[5] = (0.1/180.0)*3.14;
+    // WaypointBank[6].waypointName = "Waypoint 6";
+
+
+/* --------------------------------------------------------
+    Beer Waypoints
+    Set NumberofWaypoints = 4
+   -------------------------------------------------------- */
     Waypoint_s WaypointBank[NumberofWaypoints];
 
-    /* Define joints for WP#1 */
-    WaypointBank[0].jointPosition[0] = (2/180.0)*3.14;
-    WaypointBank[0].jointPosition[1] = (0.1/180.0)*3.14;
-    WaypointBank[0].jointPosition[2] = (0.1/180.0)*3.14;
-    WaypointBank[0].jointPosition[3] = (0.1/180.0)*3.14;
-    WaypointBank[0].jointPosition[4] = (0.1/180.0)*3.14;
-    WaypointBank[0].jointPosition[5] = (0.1/180.0)*3.14;
-    WaypointBank[0].waypointName = "Waypoint 0";
+    WaypointBank[0].jointPosition[0] = (1/180.0)*3.14;
+    WaypointBank[0].jointPosition[1] = (1/180.0)*3.14;
+    WaypointBank[0].jointPosition[2] = (1/180.0)*3.14;
+    WaypointBank[0].jointPosition[3] = (1/180.0)*3.14;
+    WaypointBank[0].jointPosition[4] = (1/180.0)*3.14;
+    WaypointBank[0].jointPosition[5] = (1/180.0)*3.14;
+    WaypointBank[0].waypointName = "Beer Point 0";
 
-    WaypointBank[1].jointPosition[0] = (95.0/180.0)*3.14;
-    WaypointBank[1].jointPosition[1] = -(45.0/180.0)*3.14;
-    WaypointBank[1].jointPosition[2] = -(83.0/180.0)*3.14;
-    WaypointBank[1].jointPosition[3] = (3.0/180.0)*3.14;
-    WaypointBank[1].jointPosition[4] = -(55.0/180.0)*3.14;
-    WaypointBank[1].jointPosition[5] = (10.0/180.0)*3.14;
-    WaypointBank[1].waypointName = "Waypoint 1";
+    WaypointBank[1].jointPosition[0] = (-102.78/180.0)*3.14;
+    WaypointBank[1].jointPosition[1] = (54.25/180.0)*3.14;
+    WaypointBank[1].jointPosition[2] = (145.0/180.0)*3.14;
+    WaypointBank[1].jointPosition[3] = (-13.86/180.0)*3.14;
+    WaypointBank[1].jointPosition[4] = (-85.47/180.0)*3.14;
+    WaypointBank[1].jointPosition[5] = (61.39/180.0)*3.14;
+    WaypointBank[1].waypointName = "Beer Point 1";
 
-    /* Define joints for WP#2 */
-    WaypointBank[2].jointPosition[0] = (128.0/180.0)*3.14;
-    WaypointBank[2].jointPosition[1] = -(90.0/180.0)*3.14;
-    WaypointBank[2].jointPosition[2] = -(33.0/180)*3.14;
-    WaypointBank[2].jointPosition[3] = (6.0/180)*3.14;
-    WaypointBank[2].jointPosition[4] = -(50.0/180)*3.14;
-    WaypointBank[2].jointPosition[5] = (1.0/180)*3.14;
-    WaypointBank[2].waypointName = "Waypoint 2";
 
-    /* Define joints for WP#3 */
-    WaypointBank[3].jointPosition[0] = (95.0/180)*3.14;;
-    WaypointBank[3].jointPosition[1] = -(45.0/180)*3.14;
-    WaypointBank[3].jointPosition[2] = -(83.0/180)*3.14;
-    WaypointBank[3].jointPosition[3] = (3.0/180)*3.14;
-    WaypointBank[3].jointPosition[4] = -(55.0/180)*3.14;
-    WaypointBank[3].jointPosition[5] = (1.0/180)*3.14;
-    WaypointBank[3].waypointName = "Waypoint 3";
+    WaypointBank[2].jointPosition[0] = (-101.79/180.0)*3.14;
+    WaypointBank[2].jointPosition[1] = (84.51/180.0)*3.14;
+    WaypointBank[2].jointPosition[2] = (126.58/180.0)*3.14;
+    WaypointBank[2].jointPosition[3] = (-13.01/180.0)*3.14;
+    WaypointBank[2].jointPosition[4] = (-96.97/180.0)*3.14;
+    WaypointBank[2].jointPosition[5] = (59.07/180.0)*3.14;
+    WaypointBank[2].waypointName = "Beer Point 2";
 
-    /* Define joints for WP#4 */
-    WaypointBank[4].jointPosition[0] = (63.0/180)*3.14;
-    WaypointBank[4].jointPosition[1] = -(87.0/180)*3.14;
-    WaypointBank[4].jointPosition[2] = -(40.0/180)*3.14;
-    WaypointBank[4].jointPosition[3] = (1.0/180)*3.14;
-    WaypointBank[4].jointPosition[4] = -(48.0/180)*3.14;
-    WaypointBank[4].jointPosition[5] = (1.0/180)*3.14;
-    WaypointBank[4].waypointName = "Waypoint 4";
+    WaypointBank[3].jointPosition[0] = (-99.23/180.0)*3.14;
+    WaypointBank[3].jointPosition[1] = (85.45/180.0)*3.14;
+    WaypointBank[3].jointPosition[2] = (108.73/180.0)*3.14;
+    WaypointBank[3].jointPosition[3] = (-11.26/180.0)*3.14;
+    WaypointBank[3].jointPosition[4] = (-112.76/180.0)*3.14;
+    WaypointBank[3].jointPosition[5] = (62.61/180.0)*3.14;
+    WaypointBank[3].waypointName = "Beer Point 3";
 
-    /* Define joints for WP#5 */
-    WaypointBank[5].jointPosition[0] = (95.0/180)*3.14;;
-    WaypointBank[5].jointPosition[1] = -(45.0/180)*3.14;   
-    WaypointBank[5].jointPosition[2] = -(83.0/180)*3.14;
-    WaypointBank[5].jointPosition[3] = (3.0/180)*3.14;
-    WaypointBank[5].jointPosition[4] = -(55.0/180)*3.14;
-    WaypointBank[5].jointPosition[5] = (1.0/180)*3.14;
-    WaypointBank[5].waypointName = "Waypoint 5";
+    WaypointBank[4].jointPosition[0] = (-99.08/180.0)*3.14;
+    WaypointBank[4].jointPosition[1] = (77.79/180.0)*3.14;
+    WaypointBank[4].jointPosition[2] = (114.39/180.0)*3.14;
+    WaypointBank[4].jointPosition[3] = (-9.81/180.0)*3.14;
+    WaypointBank[4].jointPosition[4] = (-79.99/180.0)*3.14;
+    WaypointBank[4].jointPosition[5] = (63.86/180.0)*3.14;
+    WaypointBank[4].waypointName = "Beer Point 4";
+
+    WaypointBank[5].jointPosition[0] = (-80/180.0)*3.14;
+    WaypointBank[5].jointPosition[1] = (77.79/180.0)*3.14;
+    WaypointBank[5].jointPosition[2] = (114.39/180.0)*3.14;
+    WaypointBank[5].jointPosition[3] = (-9.81/180.0)*3.14;
+    WaypointBank[5].jointPosition[4] = (-79.99/180.0)*3.14;
+    WaypointBank[5].jointPosition[5] = (63.86/180.0)*3.14;
+    WaypointBank[5].waypointName = "Beer Point 5";
 
     WaypointBank[6].jointPosition[0] = (0.1/180.0)*3.14;
-    WaypointBank[6].jointPosition[1] = (0.1/180.0)*3.14;   
+    WaypointBank[6].jointPosition[1] = (0.1/180.0)*3.14;
     WaypointBank[6].jointPosition[2] = (0.1/180.0)*3.14;
     WaypointBank[6].jointPosition[3] = (0.1/180.0)*3.14;
     WaypointBank[6].jointPosition[4] = (0.1/180.0)*3.14;
     WaypointBank[6].jointPosition[5] = (0.1/180.0)*3.14;
-    WaypointBank[6].waypointName = "Waypoint 6";
+    WaypointBank[6].waypointName = "Beer Point 6";
 
     static int connectionTimer = 10*LOOP_RATE_INT;
     bool newConnection = true;
