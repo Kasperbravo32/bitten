@@ -47,9 +47,9 @@ int main(int argc, char **argv)
 
     sleep(1);
     if (canSub && feedbackSub && manualPub)
-        ROS_INFO("Initiated manual_node");
+        ROS_INFO("Initiated manual node");
     else
-        ROS_INFO("Didn't initiate manual_node");
+        ROS_INFO("Didn't initiate manual node");
 
     /* -------------------------------------------------
     *     SUPERLOOP

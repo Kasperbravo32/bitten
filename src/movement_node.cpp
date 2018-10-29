@@ -9,7 +9,7 @@
  * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-#include <sensor_msgs/Joy.h>
+// #include <sensor_msgs/Joy.h>
 #include <bitten/control_msg.h>
 #include <bitten/feedback_msg.h>
 #include <global_node_definitions.h>

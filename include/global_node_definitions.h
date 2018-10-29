@@ -1,6 +1,6 @@
 #include <array>
 #include <string.h>
-
+#include "ros/ros.h"
 
 void DEBUG_INFO();
 
