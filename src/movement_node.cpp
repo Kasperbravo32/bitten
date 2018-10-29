@@ -31,6 +31,10 @@ void InitRobot();
  * ----------------------------------------------------------------------- */
 trajectory_msgs::JointTrajectory        jointPathMsg;               /* Message used to transmit wanted position to motion_streaming_interface           */
 trajectory_msgs::JointTrajectoryPoint   jointPathPointMsg;          /* Message used to contain specific points of wanted position, part of jointPathMsg */
+
+// trajectory_msgs::JointTrajectory        empty_traj_msg;
+// trajectory_msgs::JointTrajectoryPoint   empty_traj_msg_point;
+
 bitten::feedback_msg                    movementFeedbackMsg;        /* Message used to report back when wanted position is reached, e.g. waypoint-mode  */
 
 /* ----------------------------------------------------------------------
@@ -43,6 +47,12 @@ bool feedbackTransmitReady  = false;
 
 int OPERATING_MODE = 0;
 int ManPubTimer = LOOP_RATE_INT / 5;
+
+
+int temp_looper = 2;
+int TEMP_LOOPER = 3;
+
+double TIME_FROM_START_TIMER = 0;
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -56,10 +66,10 @@ int main (int argc , char **argv)
     ros::init(argc , argv , "movement_node");
     ros::NodeHandle n;
 
-    ros::Subscriber movement_sub = n.subscribe<bitten::control_msg>                         ("movement_topic"       , 3 , commanderCallback);
-    ros::Subscriber feedback_sub = n.subscribe<control_msgs::FollowJointTrajectoryFeedback> ("feedback_states"      , 5 , robotStateCallback);
+    ros::Subscriber movement_sub = n.subscribe<bitten::control_msg>                         ("movement_topic"       , 2 , commanderCallback);
+    ros::Subscriber feedback_sub = n.subscribe<control_msgs::FollowJointTrajectoryFeedback> ("feedback_states"      , 2 , robotStateCallback);
     
-    ros::Publisher  movement_pub = n.advertise<trajectory_msgs::JointTrajectory>            ("joint_path_command"   , LOOP_RATE_INT);
+    ros::Publisher  movement_pub = n.advertise<trajectory_msgs::JointTrajectory>            ("joint_path_command"   , 2);
     ros::Publisher  feedback_pub = n.advertise<bitten::feedback_msg>                        ("movement_feedback"    , LOOP_RATE_INT);
 
 
@@ -68,13 +78,16 @@ int main (int argc , char **argv)
     jointPathPointMsg.accelerations.resize(6);
     jointPathPointMsg.effort.resize(1);
 
-    ros::Rate loop_rate(LOOP_RATE_INT);
+
+    ros::Rate loop_rate(TEMP_LOOPER);
     sleep(1);
 
     if (movement_sub && feedback_sub && movement_pub && feedback_pub)
         ROS_INFO("Initiated %s",nodeNames[MOVEMENT_NODE].c_str());
     else
         ROS_INFO("Failed to to initiate %s",nodeNames[MOVEMENT_NODE].c_str());
+
+    static int PubTimer = LOOP_RATE_INT / 1;
 
 /*  -------------------------------------------------
          SUPERLOOP
@@ -124,36 +137,32 @@ int main (int argc , char **argv)
 
             case MANUAL_ID:
 
-                // ROS_INFO("Goal true in superloop");
                 jointPathMsg.joint_names.clear();
                 jointPathMsg.points.clear();
                 jointPathPointMsg.positions.clear();
-                // jointPathPointMsg.velocities.clear();
 
                 for (int i = 0; i < 6; i++)
                 {
                     jointPathMsg.joint_names.push_back(TX90.jointNames[i]);
                     jointPathPointMsg.positions.push_back(TX90.goalPosition[i]);
-                    // jointPathPointMsg.velocities.push_back(TX90.currVelocity*TX90.maxVelocity[i]);
                 }
 
+                jointPathPointMsg.time_from_start = ros::Duration(-1);
                 jointPathMsg.points.push_back(jointPathPointMsg);
                 jointTransmitReady = true;
 
-                // if (! --ManPubTimer)
-                // {
-                //     // ROS_INFO("Publishing to bot");
-                //     movement_pub.publish(jointPathMsg);
-                //     ManPubTimer = LOOP_RATE_INT / 6;
-                // }
+
+
+
+
+
+
 
                 if (jointTransmitReady)
                 {
-                    
                     movement_pub.publish(jointPathMsg);
                     jointTransmitReady = false;
                 }
-        
 
                 if (feedbackTransmitReady)
                 {
@@ -165,9 +174,10 @@ int main (int argc , char **argv)
                 }
             break;
         }
-        
-        for (int i = 0; i < 3; i++)
-            ros::spinOnce();
+
+        TIME_FROM_START_TIMER += 1/TEMP_LOOPER;
+
+        ros::spinOnce();
         loop_rate.sleep();
     }
 }
@@ -242,48 +252,31 @@ void commanderCallback  (const bitten::control_msg::ConstPtr&                   
                     OPERATING_MODE = MANUAL_ID;
                     ROS_INFO("Set OpMode to ManMode");
                 }
-
-                for (int i = 0; i < 6; i++)
+                if (commander->buttons[0] == 1 || commander->buttons[1] == 1)
                 {
-                    if (commander->jointVelocity[i] == 0)
+                    TX90.goalPosition = TX90.currPos;
+                }
+
+                else
+                {
+
+                    for (int i = 0; i < 6; i++)
                     {
-                        TX90.goalPosition[i] = TX90.currPos[i];
+                        if (commander->jointVelocity[i] == 0)
+                        {
+                            // TX90.goalPosition[i] = TX90.currPos[i];
+                        }
+                        else if (commander->jointVelocity[i] > 0)
+                        {
+                            if (TX90.currPos[i] +  (2/TEMP_LOOPER * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) < TX90.maxRotation[i])
+                                TX90.goalPosition[i] = TX90.currPos[i] + (2/temp_looper * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
+                        }
+                        else if (commander->jointVelocity[i] < 0)
+                        {
+                            if (TX90.currPos[i] +  (2/TEMP_LOOPER * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) > TX90.minRotation[i])
+                                TX90.goalPosition[i] = TX90.currPos[i] + (2/temp_looper * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
+                        }
                     }
-                    else if (commander->jointVelocity[i] > 0)
-                    {
-                        if (TX90.currPos[i] +  (2/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) < TX90.maxRotation[i])
-                            TX90.goalPosition[i] = TX90.currPos[i] + (2/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
-                    }
-                    else if (commander->jointVelocity[i] < 0)
-                    {
-                        if (TX90.currPos[i] +  (2/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) > TX90.minRotation[i])
-                            TX90.goalPosition[i] = TX90.currPos[i] + (2/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
-                    }
-
-
-
-
-
-                    // if (commander->jointVelocity[i] == 0)
-                    // {
-
-                    // }
-
-                    // else if (commander->jointVelocity[i] > 0)        /* If goalposition is in positive rotational direction */
-                    // {
-                    //     if (TX90.currPos[i] +  (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) < TX90.maxRotation[i])
-                    //     {
-                    //         TX90.goalPosition[i] += (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
-                    //     }
-                    // }
-                    
-                    // else if (commander->jointVelocity[i] < 0)   /* if goalposition is in negative rotational direction */
-                    // {
-                    //     if (TX90.currPos[i] -  (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity) > TX90.minRotation[i])
-                    //     {
-                    //         TX90.goalPosition[i] += (1/LOOP_RATE_INT * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
-                    //     }
-                    // }   
                 }
 
             break;
@@ -311,12 +304,6 @@ void commanderCallback  (const bitten::control_msg::ConstPtr&                   
     {
         /* Received data, but is currently occupied */
     }
-
-    // if (commander->buttons[0] == 1 && TX90.currVelocity >=0.05)     /* Check for Reduce speed input     */
-    //     TX90.currVelocity -= 0.05;
-
-    // if (commander->buttons[1] == 1 && TX90.currVelocity <= 0.95)    /* Check for increase speed input   */
-    //     TX90.currVelocity += 0.05;
 }
 /* ----------------------------------------------------------------------
  *              -------  robot_state Callback function   -------
@@ -330,7 +317,11 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
     {
         robotInitialized = true;
         for (int i = 0; i < 6; i++)
+        {
             TX90.currPos[i] = RobotState->actual.positions[i];
+            TX90.goalPosition[i] = TX90.currPos[i];
+        }
+
     }
 
     for (int i = 0; i < 6; i++)
@@ -339,17 +330,15 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
         {
             if (((TX90.currPos[i]) >= 0.999 * TX90.goalPosition[i]) && ((TX90.currPos[i]) <= 1.001 * TX90.goalPosition[i]) && goalExists == true && robotInitialized == true) 
                 jointAtGoalCounter++;
-
-            TX90.currPos[i] = RobotState->actual.positions[i];
         }
 
         else if (TX90.goalPosition[i] < 0)
         {
             if (((TX90.currPos[i]) <= 0.999 * TX90.goalPosition[i]) && ((TX90.currPos[i]) >= 1.001 * TX90.goalPosition[i]) && goalExists == true && robotInitialized == true)
-                jointAtGoalCounter++;
-
-            TX90.currPos[i] = RobotState->actual.positions[i];  
+                jointAtGoalCounter++; 
         }
+
+        TX90.currPos[i] = RobotState->actual.positions[i];
     }
 
     if (jointAtGoalCounter == 6)

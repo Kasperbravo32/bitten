@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     ros::Subscriber canSub = n.subscribe<bitten::can_msg>("can_topic", LOOP_RATE_INT, &canCallback);
     ros::Subscriber feedbackSub = n.subscribe<bitten::feedback_msg>(topicNames[FEEDBACK_TOPIC], LOOP_RATE_INT, &fbCallback);
 
-    ros::Publisher manualPub = n.advertise<bitten::control_msg>("manual_topic", LOOP_RATE_INT);
+    ros::Publisher manualPub = n.advertise<bitten::control_msg>("manual_topic", 1);
 
     manual_msg.nodeName = "manual node";
     manual_msg.id = MANUAL_ID;
