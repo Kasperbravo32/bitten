@@ -19,9 +19,8 @@ std::array<int,6>    jointsAtGoal;
 
 std::array<std::string,6> jointNames;
 
-
-bool    tool;
+bool tool;
 };
 
 /* Defining robots      */
-Robot_s TX90;                             /* Staubli TX90 Robot                                                                     */
+Robot_s TX90; /* Staubli TX90 Robot          */
