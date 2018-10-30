@@ -16,6 +16,10 @@ Movement node:
 Terminal node
 - skal skrives
 - Skal acceptere brugerinputs, og spytte videre til commander_node
+- Funktion til at styre currVelocity
+- Funktion til at returnere til resetStatePosition
+- Funktion til ølåbning
+- 
 
 
 Waypoint node:
