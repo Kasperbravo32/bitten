@@ -219,3 +219,7 @@ add_dependencies(can_driver_node bitten_generate_messages_cpp)
 add_executable(movement_node src/movement_node.cpp src/global_node_definitions.cpp)
 target_link_libraries(movement_node ${catkin_LIBRARIES})
 add_dependencies(movement_node bitten_generate_messages_cpp)
+
+add_executable(terminal_node src/terminal_node.cpp src/global_node_definitions.cpp)
+target_link_libraries(terminal_node ${catkin_LIBRARIES})
+add_dependencies(terminal_node bitten_generate_messages_cpp)

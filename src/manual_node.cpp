@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------------
  * Filename: manual_node.cpp
- * Author: Kasper Jørgensen
+ * Author: Frederik Snedevind & Kasper Banke Jørgensen
  * Purpose: Create the 'manual' node in the Leica Robot system
  * Date of dev.: September 2018 - January 2019
  * 
