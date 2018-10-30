@@ -15,6 +15,7 @@ enum NODE_IDS {
     MANUAL_ID,
     JOY_ID,
     MOVEMENT_ID,
+    TERMINAL_ID,
 
     NUMBER_OF_IDS
 };
@@ -27,6 +28,7 @@ enum NODE_INDICES {
     COMMANDER_NODE,
     CONTROLLER_NODE,
     MOVEMENT_NODE,
+    TERMINAL_NODE,
 
     NUMBER_OF_NODES
 };
@@ -38,7 +40,8 @@ std::string nodeNames[NUMBER_OF_NODES] = {
     "Waypoint_Node",
     "Commander Node",
     "Controller Node",
-    "Movement Node"
+    "Movement Node",
+    "Terminal Node"
 };
 
 
@@ -50,6 +53,7 @@ enum TOPIC_INDICES {
     FEEDBACK_TOPIC,
     JOINT_PATH_COMMAND_TOPIC,
     MOVEMENT_TOPIC,
+    TERMINAL_TOPIC,
 
     NUMBER_OF_TOPICS
 };
@@ -62,18 +66,8 @@ std::string topicNames[NUMBER_OF_TOPICS] = {
     "joint_states",
     "feedback_topic",
     "joint_path_command",
-    "movement_topic"
-};
-
-
-enum JOINT_FLUT {
-    POSITIONS,
-    VELOCITIES,
-    ACCELERATIONS,
-    EFFORT,
-    TIME,
-
-    NUMBER_OF_FLUT
+    "movement_topic",
+    "terminal_topic"
 };
 
 

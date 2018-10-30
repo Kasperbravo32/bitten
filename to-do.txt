@@ -4,7 +4,6 @@ Manual node:
 
 - Pretty
 - Tilføje frame-mode (Lav Priotitet)
-- Fix Publish frekvens, evt. tag højde tag højde for om der er oprettet forbindel (connectionEstablished == true || connectionEstablished == false)
 
 
 Commander node:
@@ -15,6 +14,7 @@ Movement node:
 - 
 
 Terminal node
+- skal skrives
 - Skal acceptere brugerinputs, og spytte videre til commander_node
 
 
@@ -32,8 +32,7 @@ Generelt:
 
 - Lave en GUI til valg af inputs og visualisering.
 - Skrive dataprotokol (acknowledge, start/stop transmission)
-- Lave holder/stativ til joystickene.
-- Lave CAN-til-USB til joystickene koblende til computeren.
+
 
 
 
@@ -65,3 +64,6 @@ Sikkerhed:
 
 Generelt:
 - Lave en launch fil der kører alle noderne.
+- Lave holder/stativ til joystickene.
+- Lave CAN-til-USB til joystickene koblende til computeren.
+
