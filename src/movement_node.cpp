@@ -26,6 +26,7 @@
 void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr&   RobotState);
 void commanderCallback  (const bitten::control_msg::ConstPtr&                           commander);
 void InitRobot();
+
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
@@ -48,11 +49,11 @@ bool feedbackTransmitReady  = false;
 int OPERATING_MODE = 0;
 int ManPubTimer = LOOP_RATE_INT / 5;
 
-
 int temp_looper = 2;
 int TEMP_LOOPER = 3;
 
 double TIME_FROM_START_TIMER = 0;
+
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -72,12 +73,10 @@ int main (int argc , char **argv)
     ros::Publisher  movement_pub = n.advertise<trajectory_msgs::JointTrajectory>            ("joint_path_command"   , 2);
     ros::Publisher  feedback_pub = n.advertise<bitten::feedback_msg>                        ("movement_feedback"    , LOOP_RATE_INT);
 
-
     jointPathPointMsg.positions.resize(6);
     jointPathPointMsg.velocities.resize(6);
     jointPathPointMsg.accelerations.resize(6);
     jointPathPointMsg.effort.resize(1);
-
 
     ros::Rate loop_rate(TEMP_LOOPER);
     sleep(1);
@@ -114,7 +113,6 @@ int main (int argc , char **argv)
 
                     jointPathMsg.points.push_back(jointPathPointMsg);
                     // movement_pub.publish(jointPathMsg);
-
                 }   
 
                 if (jointTransmitReady)
@@ -124,7 +122,6 @@ int main (int argc , char **argv)
                     jointTransmitReady = false;
                 }
             
-
                 if (feedbackTransmitReady)
                 {
                     ROS_INFO("Publishing to feedback");;
@@ -150,13 +147,6 @@ int main (int argc , char **argv)
                 jointPathPointMsg.time_from_start = ros::Duration(-1);
                 jointPathMsg.points.push_back(jointPathPointMsg);
                 jointTransmitReady = true;
-
-
-
-
-
-
-
 
                 if (jointTransmitReady)
                 {
@@ -189,9 +179,9 @@ void InitRobot()
 {
     TX90.minLink    = 1;
     TX90.maxLink    = 6;
-    TX90.resetStatePosition = {0 , 0 , 0 , 0 , 0 , 0};
+    TX90.resetStatePosition = {0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0};
 
-    TX90.currVelocity   = 1;
+    TX90.currVelocity   = 1.0;
 
     TX90.maxRotation = {    3.14,                   /* joint_1  */
                             2.57,                   /* joint_2  */
@@ -214,12 +204,12 @@ void InitRobot()
                             (475.0/180.0)*3.14,     /* joint_5  */
                             (760.0/180.0)*3.14};    /* joint_6  */                   
 
-    TX90.maxEffort   =  {   318,                    /* joint_1  */
-                            166,                    /* joint_2  */
-                            76,                     /* joint_3  */
-                            34,                     /* joint_4  */
-                            29,                     /* joint_5  */
-                            11};                    /* joint_6  */
+    TX90.maxEffort   =  {   318.0,                    /* joint_1  */
+                            166.0,                    /* joint_2  */
+                            76.0,                     /* joint_3  */
+                            34.0,                     /* joint_4  */
+                            29.0,                     /* joint_5  */
+                            11.0};                    /* joint_6  */
                             
     TX90.currPos     =  {   0.0 , 
                             0.0 , 
@@ -252,11 +242,11 @@ void commanderCallback  (const bitten::control_msg::ConstPtr&                   
                     OPERATING_MODE = MANUAL_ID;
                     ROS_INFO("Set OpMode to ManMode");
                 }
+
                 if (commander->buttons[0] == 1 || commander->buttons[1] == 1)
                 {
                     TX90.goalPosition = TX90.currPos;
                 }
-
                 else
                 {
 
@@ -321,7 +311,6 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
             TX90.currPos[i] = RobotState->actual.positions[i];
             TX90.goalPosition[i] = TX90.currPos[i];
         }
-
     }
 
     for (int i = 0; i < 6; i++)
@@ -331,13 +320,11 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
             if (((TX90.currPos[i]) >= 0.999 * TX90.goalPosition[i]) && ((TX90.currPos[i]) <= 1.001 * TX90.goalPosition[i]) && goalExists == true && robotInitialized == true) 
                 jointAtGoalCounter++;
         }
-
         else if (TX90.goalPosition[i] < 0)
         {
             if (((TX90.currPos[i]) <= 0.999 * TX90.goalPosition[i]) && ((TX90.currPos[i]) >= 1.001 * TX90.goalPosition[i]) && goalExists == true && robotInitialized == true)
                 jointAtGoalCounter++; 
         }
-
         TX90.currPos[i] = RobotState->actual.positions[i];
     }
 
