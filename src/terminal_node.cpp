@@ -9,43 +9,31 @@
  * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-#include <global_node_definitions.h>
 
 #include <iostream>
+#include <fstream>
 #include "string.h"
 
+#include "global_node_definitions.h"
 #include "bitten/feedback_msg.h"
 #include "bitten/control_msg.h"
 #include "terminal_node.h"
 
-/* -----------------------------------------------------------------------
- *                     -------  Initializers  -------
- * ----------------------------------------------------------------------- */
-void commanderFeedbackCallback (const bitten::feedback_msg::ConstPtr& commanderFeedbackMsg);
-
-std::string KeywordStrings[NUMBER_OF_KEYWORDS] = {  "help",
-                                                    "func1",
-                                                    "func2" };
-
-void (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_function,
-                                                            function_1,
-                                                            function_2      };
+using namespace std;
 
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
 bitten::control_msg terminalMsg;
 
-/* ----------------------------------------------------------------------
- *                    -------  Global Variables   -------
+ /* ----------------------------------------------------------------------
+ *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
-bool terminalTxRdy = false;
+string ExistingFiles[10];
 
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */
-
-using namespace std;
 int main (int argc , char **argv) 
 {
     ROS_INFO("Initiating %s", nodeNames[TERMINAL_NODE].c_str());
@@ -53,39 +41,40 @@ int main (int argc , char **argv)
     ros::init(argc , argv , "terminal_node");
     ros::NodeHandle n;
 
-    ros::Subscriber feedback_sub    = n.subscribe<bitten::feedback_msg>("feedback_topic" , 5 , commanderFeedbackCallback);
-    ros::Publisher terminal_pub     = n.advertise<bitten::control_msg>("terminal_topic" , 5);
+    ros::Subscriber feedback_sub    = n.subscribe<bitten::feedback_msg> ("feedback_topic" , 5 , commanderFeedbackCallback);
+    ros::Publisher  terminal_pub    = n.advertise<bitten::control_msg>  ("terminal_topic" , 5);
 
     ros::Rate loop_rate(LOOP_RATE_INT);
     sleep(1);
 
     if (feedback_sub && terminal_pub)
-    {
         ROS_INFO("Initiated %s", nodeNames[TERMINAL_NODE].c_str());
-        for (int i = 0; i < 100; i++)
-            cout << endl;
-
-        cout << "Welcome to the Nice FB Terminal!" << endl;
-    }
-        
     else
         ROS_INFO("Failed to initiate %s",nodeNames[TERMINAL_NODE].c_str());
+    
+    string input;
 
-    std::string input;
+    terminalMsg.nodeName = nodeNames[TERMINAL_NODE];
+    terminalMsg.id = TERMINAL_ID;
+
 /*  -------------------------------------------------
          SUPERLOOP
     ------------------------------------------------- */
     while(ros::ok())
     {
-        cout << endl << "<< ";
+        cout << endl << ">> ";
         cin >> input;
 
         for (int i = 0; i < NUMBER_OF_KEYWORDS; i++)
         {
             if (input == KeywordStrings[i])
             {
-                KeywordFunctions[i]();
-
+                if (KeywordFunctions[i]())
+                {
+                    terminal_pub.publish(terminalMsg);
+                    terminalMsg.programName.clear();
+                    terminalMsg.flags = 0;
+                }
             }
         }
 
@@ -100,22 +89,187 @@ int main (int argc , char **argv)
 void commanderFeedbackCallback (const bitten::feedback_msg::ConstPtr& commanderFeedbackMsg)
 {
 
+}
 
+bool clearScreen()
+{
+    for (int i = 0; i < 100; i++)
+        cout << endl;
 }
 
 
-void help_function() {
+bool help_func() 
+{
     cout << endl << "You can enter the following functions: " << endl;
-
     for (int i = 0; i < NUMBER_OF_KEYWORDS; i++)
         cout << "- " << KeywordStrings[i] << endl;
 }
 
-void function_1() {
-    cout << "function1 called";
+bool mode_func() {
+    
+    static int input;
+    input = 0;
+
+    cout << "Change mode to one of the following:" << endl;
+    cout << "____________________________________" << endl;
+    cout << "1: Manual control" << endl;
+    cout << "2: Waypoint control" << endl;
+    cout << "3: No control (safe mode)" << endl;
+    cout << "Input: ";
+    cin >> input;
+
+    while (input != 1 && input != 2 && input != 3)
+    {
+        cout << "Choose a mode [1:3]: ";
+        cin >> input;
+    }
+    cout << "Changing mode to: ";
+    terminalMsg.flags = 0;
+    switch(input)
+    {
+        case 1:
+            cout << "Manual Control..." << endl;
+            terminalMsg.flags |= MODE_MANUAL_F;
+        break;
+
+        case 2:
+            cout << "Waypoint Control..." << endl;
+            terminalMsg.flags |= MODE_WAYPOINT_F;
+        break;
+
+        case 3:
+            cout << "No Control..." << endl;
+            terminalMsg.flags |= MODE_NONE_F;
+        break;
+    }
+    
+    return true;
 }
 
-void function_2() {
-    cout << "function 2 called";
+bool play_test_func() {
+    cout << "You can play the following tests: " << endl;
+    readExistingTests();
+
 }
 
+bool delete_test_func()
+{
+    int fileToDelete;
+    string fileToDeleteString;
+    readExistingTests();
+    
+    cout << "File to delete: ";
+    cin >> fileToDelete;
+    cout << "Deleting: " << ExistingFiles[fileToDelete];
+    fileToDeleteString = "/home/frederik/catkin_ws/src/bitten/tests/";
+    fileToDeleteString += ExistingFiles[fileToDelete];
+    remove(fileToDeleteString.c_str());
+}
+
+    
+
+
+bool record_func()
+{
+    static int a;
+    static string filename;
+    
+    a = getNumberOfTests();
+
+    filename = "/home/frederik/catkin_ws/src/bitten/tests/test_";
+    filename += a + '0';
+    filename += ".txt";
+
+    ofstream fileToCreate(filename);
+
+    if (fileToCreate.is_open())
+    {
+        cout << "Created file: test_" << a << ".txt" << endl;
+        fileToCreate.close();
+    }
+
+    /* Open the TEST_INFO file, get current number of tests */
+    a = getNumberOfTests();
+    a++;    
+
+    ofstream configfile_out("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt", ios_base::trunc | ios_base::out);
+    configfile_out << a;
+    configfile_out.close();
+
+    /* Set the controlling mode to manual, and tell commander to start recording. Also pass along the filename, path is always the same */
+    terminalMsg.flags |= MODE_MANUAL_F;
+    terminalMsg.flags |= START_RECORD;  
+    terminalMsg.programName = "test_";
+    terminalMsg.programName += a - 1 + '0';
+    terminalMsg.programName += ".txt";
+
+    return true;
+}
+
+
+bool get_func()
+{
+
+}
+
+int getNumberOfTests()
+{
+    /* Reads the TEST_INFO.txt file, and returns the amount of test files created, e.g. the total amount of tests */
+
+    ifstream configfile("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt");
+    ofstream configfile_out;
+
+    int a;
+
+    if (configfile.is_open())
+    {
+        configfile >> a;
+        configfile.close();
+        return a;
+    }
+    else
+        cout << "Couldn't open file TEST_INFO.txt" << endl;
+
+}
+
+
+void readExistingTests()
+{
+    /* Reads out the existing test files */
+    static int a , o;
+    bool FirstFileFound = false;
+    a = getNumberOfTests();
+    o = 0;
+
+    fstream FileChecker;
+    string filename = "/home/frederik/catkin_ws/src/bitten/tests/test_";
+    string temp_filename;
+    
+    for (int i = 0; i < a; i++)
+    {
+        temp_filename = filename;
+        temp_filename += i + '0';
+        temp_filename += ".txt";
+
+        FileChecker.open(temp_filename);
+
+        if (FileChecker.is_open())
+        {
+            if (FirstFileFound == false)
+            {
+                cout << "Existing Files are: " << endl;
+                FirstFileFound = true;
+            }
+
+            cout << o++ << ": - test_" << i << ".txt" << endl;
+            ExistingFiles[o-1] = "test_";
+            ExistingFiles[o-1] += i + '0';
+            ExistingFiles[o-1] += ".txt";
+
+            FileChecker.close();
+        }
+    }
+
+    if (FirstFileFound == false)
+        cout << "No file exists.";
+}
