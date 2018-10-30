@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------------
- * Filename: pubnode3.cpp
- * Author: Frederik Snedevind
+ * Filename: commander_node.cpp
+ * Author: Frederik Snedevind & Kasper Banke Jørgensen
  * Purpose: Create the 'Commander' node in the Leica Robot system
  * Date of dev.: September 2018 - January 2019
  * 

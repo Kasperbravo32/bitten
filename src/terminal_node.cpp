@@ -1,7 +1,7 @@
 /* -----------------------------------------------------------------------
- * Filename: movement_node.cpp
- * Author: Frederik Snedevind
- * Purpose: Create the 'movement' node in the Leica Robot system
+ * Filename: terminal_node.cpp
+ * Author: Frederik Snedevind & Kasper Banke Jørgensen
+ * Purpose: Create the 'terminal' node in the Leica Robot system
  * Date of dev.: September 2018 - January 2019
  * 
  * -----------------------------------------------------------------------
@@ -9,54 +9,43 @@
  * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-// #include <sensor_msgs/Joy.h>
-#include <bitten/control_msg.h>
-#include <bitten/feedback_msg.h>
 #include <global_node_definitions.h>
 
-#include "control_msgs/FollowJointTrajectoryFeedback.h"
-#include "trajectory_msgs/JointTrajectory.h"
+#include <iostream>
+#include "string.h"
+
 #include "bitten/feedback_msg.h"
 #include "bitten/control_msg.h"
-#include "movement_node.h"
+#include "terminal_node.h"
 
 /* -----------------------------------------------------------------------
  *                     -------  Initializers  -------
  * ----------------------------------------------------------------------- */
-void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr&   RobotState);
-void commanderCallback  (const bitten::control_msg::ConstPtr&                           commander);
-void InitRobot();
+void commanderFeedbackCallback (const bitten::feedback_msg::ConstPtr& commanderFeedbackMsg);
+
+std::string KeywordStrings[NUMBER_OF_KEYWORDS] = {  "help",
+                                                    "func1",
+                                                    "func2" };
+
+void (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_function,
+                                                            function_1,
+                                                            function_2      };
+
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
-trajectory_msgs::JointTrajectory        jointPathMsg;               /* Message used to transmit wanted position to motion_streaming_interface           */
-trajectory_msgs::JointTrajectoryPoint   jointPathPointMsg;          /* Message used to contain specific points of wanted position, part of jointPathMsg */
-
-// trajectory_msgs::JointTrajectory        empty_traj_msg;
-// trajectory_msgs::JointTrajectoryPoint   empty_traj_msg_point;
-
-bitten::feedback_msg                    movementFeedbackMsg;        /* Message used to report back when wanted position is reached, e.g. waypoint-mode  */
+bitten::control_msg terminalMsg;
 
 /* ----------------------------------------------------------------------
  *                    -------  Global Variables   -------
  * ----------------------------------------------------------------------- */
-bool robotInitialized       = false;
-bool goalExists             = false;
-bool jointTransmitReady     = true;
-bool feedbackTransmitReady  = false;
-bool DirtyBit               = false;
+bool terminalTxRdy = false;
 
-int OPERATING_MODE = 0;
-int ManPubTimer = LOOP_RATE_INT / 5;
-
-
-int temp_looper = 2;
-int TEMP_LOOPER = 3;
-
-double TIME_FROM_START_TIMER = 0;
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
- * ----------------------------------------------------------------------- */        
+ * ----------------------------------------------------------------------- */
+
+using namespace std;
 int main (int argc , char **argv) 
 {
     ROS_INFO("Initiating %s", nodeNames[TERMINAL_NODE].c_str());
@@ -64,24 +53,69 @@ int main (int argc , char **argv)
     ros::init(argc , argv , "terminal_node");
     ros::NodeHandle n;
 
-    ros::Subscriber movement_sub = n.subscribe<bitten::control_msg>                         ("movement_topic"       , 2 , commanderCallback);
-    ros::Subscriber feedback_sub = n.subscribe<control_msgs::FollowJointTrajectoryFeedback> ("feedback_states"      , 2 , robotStateCallback);
-    
-    ros::Publisher  movement_pub = n.advertise<trajectory_msgs::JointTrajectory>            ("joint_path_command"   , 2);
-    ros::Publisher  feedback_pub = n.advertise<bitten::feedback_msg>                        ("movement_feedback"    , LOOP_RATE_INT);
+    ros::Subscriber feedback_sub    = n.subscribe<bitten::feedback_msg>("feedback_topic" , 5 , commanderFeedbackCallback);
+    ros::Publisher terminal_pub     = n.advertise<bitten::control_msg>("terminal_topic" , 5);
 
     ros::Rate loop_rate(LOOP_RATE_INT);
     sleep(1);
 
-    if (movement_sub && feedback_sub && movement_pub && feedback_pub)
-        ROS_INFO("Initiated %s",nodeNames[MOVEMENT_NODE].c_str());
-    else
-        ROS_INFO("Failed to to initiate %s",nodeNames[MOVEMENT_NODE].c_str());
+    if (feedback_sub && terminal_pub)
+    {
+        ROS_INFO("Initiated %s", nodeNames[TERMINAL_NODE].c_str());
+        for (int i = 0; i < 100; i++)
+            cout << endl;
 
+        cout << "Welcome to the Nice FB Terminal!" << endl;
+    }
+        
+    else
+        ROS_INFO("Failed to initiate %s",nodeNames[TERMINAL_NODE].c_str());
+
+    std::string input;
 /*  -------------------------------------------------
          SUPERLOOP
     ------------------------------------------------- */
     while(ros::ok())
     {
+        cout << endl << "<< ";
+        cin >> input;
+
+        for (int i = 0; i < NUMBER_OF_KEYWORDS; i++)
+        {
+            if (input == KeywordStrings[i])
+            {
+                KeywordFunctions[i]();
+
+            }
+        }
+
+        ros::spinOnce();
+        loop_rate.sleep();
     }
 }
+
+/* ----------------------------------------------------------------------
+ *             -------   commander Feedback Callback   -------
+ * ----------------------------------------------------------------------- */
+void commanderFeedbackCallback (const bitten::feedback_msg::ConstPtr& commanderFeedbackMsg)
+{
+
+
+}
+
+
+void help_function() {
+    cout << endl << "You can enter the following functions: " << endl;
+
+    for (int i = 0; i < NUMBER_OF_KEYWORDS; i++)
+        cout << "- " << KeywordStrings[i] << endl;
+}
+
+void function_1() {
+    cout << "function1 called";
+}
+
+void function_2() {
+    cout << "function 2 called";
+}
+
