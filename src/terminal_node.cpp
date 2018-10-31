@@ -165,12 +165,24 @@ bool play_test_func() {
     readExistingTests();
     cout << endl << "Your choice: ";
     cin >> chosenTest;
-    cout << "Requesting to play: " << ExistingFiles[chosenTest] << " ..." << endl;
     
-    terminalMsg.flags = 0;
-    terminalMsg.flags |= MODE_WAYPOINT_F;
-    terminalMsg.flags |= PLAY_TEST_F;
-    terminalMsg.programName = ExistingFiles[chosenTest];
+    if (chosenTest != 1337)
+    {
+        terminalMsg.flags = 0;
+        terminalMsg.flags |= MODE_WAYPOINT_F;
+        terminalMsg.flags |= PLAY_TEST_F;
+        terminalMsg.programName = ExistingFiles[chosenTest];
+        cout << "Requesting to play: " << ExistingFiles[chosenTest] << " ..." << endl;
+    }
+    else
+    {
+        terminalMsg.flags = MODE_WAYPOINT_F;
+        terminalMsg.flags |= PLAY_TEST_F;
+        terminalMsg.programName = "open_a_beer.txt";
+        cout << "Øl på vej!" << endl;
+    }
+    
+
 
     return true;
 }
