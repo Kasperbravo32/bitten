@@ -1,21 +1,6 @@
 /* -----------------------------------------------------------------------
  *                     -------  Functions  -------
  * ----------------------------------------------------------------------- */
-void commanderFeedbackCallback (const bitten::feedback_msg::ConstPtr& commanderFeedbackMsg);
-
-
-
-bool help_func();
-bool mode_func();
-bool play_test_func();
-bool delete_test_func();
-bool record_func();
-bool get_func();
-bool clearScreen();
-
-int getNumberOfTests();
-void readExistingTests();
-
 
 /* -----------------------------------------------------------------------
  *                    -------  Enumerations  -------
@@ -28,6 +13,7 @@ enum KEYWORD_INDICES {
     RECORD,
     GET,
     CLEAR,
+    CLEAR_FOLDER,
 
     
 
@@ -79,14 +65,22 @@ std::string KeywordStrings[NUMBER_OF_KEYWORDS] = {  "help",
                                                     "record",
                                                     "get",
                                                     "clear",
+                                                    "purge",
                                                      };
 
-bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
-                                                            mode_func,
-                                                            play_test_func,
-                                                            delete_test_func,
-                                                            record_func,
-                                                            get_func,
-                                                            clearScreen      };
+bool help_func();
+bool mode_func();
+bool play_test_func();
+bool delete_test_func();
+bool record_func();
+bool get_func();
+bool clearScreen();
+bool clearTestFolder();
+
+int getNumberOfTests();
+void readExistingTests();
+
+
+
 
 

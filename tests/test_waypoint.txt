@@ -1,0 +1,7 @@
+test_test
+waypoint_0	0	0	0	0	0	0
+waypoint_1	10	10	10	10	5	5
+waypoint_2	1	1	1	1	1	1
+waypoint_3	7	7	7	7	7	7
+waypoint_4	15	15	15	15	15	15
+waypoint_5	9	9	9	9	9	9

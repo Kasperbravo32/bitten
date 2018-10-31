@@ -9,17 +9,21 @@
  * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-
+#include "bitten/feedback_msg.h"
 #include <iostream>
 #include <fstream>
 #include "string.h"
 
 #include "global_node_definitions.h"
-#include "bitten/feedback_msg.h"
+
 #include "bitten/control_msg.h"
 #include "terminal_node.h"
 
 using namespace std;
+ /* ----------------------------------------------------------------------
+ *                 -------  Forward Declarations   -------
+ * ----------------------------------------------------------------------- */
+void commanderFeedbackCallback (const bitten::feedback_msg::ConstPtr& commanderFeedbackMsg);
 
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
@@ -31,13 +35,21 @@ bitten::control_msg terminalMsg;
  * ----------------------------------------------------------------------- */
 string ExistingFiles[10];
 
+bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
+                                                            mode_func,
+                                                            play_test_func,
+                                                            delete_test_func,
+                                                            record_func,
+                                                            get_func,
+                                                            clearScreen,
+                                                            clearTestFolder      };
+
+
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */
 int main (int argc , char **argv) 
 {
-    ROS_INFO("Initiating %s", nodeNames[TERMINAL_NODE].c_str());
-
     ros::init(argc , argv , "terminal_node");
     ros::NodeHandle n;
 
@@ -147,15 +159,27 @@ bool mode_func() {
 }
 
 bool play_test_func() {
-    cout << "You can play the following tests: " << endl;
+    
+    static int chosenTest;
+    cout << "Choose a file to play: " << endl << "_______________________" << endl;
     readExistingTests();
+    cout << endl << "Your choice: ";
+    cin >> chosenTest;
+    cout << "Requesting to play: " << ExistingFiles[chosenTest] << " ..." << endl;
+    
+    terminalMsg.flags = 0;
+    terminalMsg.flags |= MODE_WAYPOINT_F;
+    terminalMsg.flags |= PLAY_TEST_F;
+    terminalMsg.programName = ExistingFiles[chosenTest];
 
+    return true;
 }
 
 bool delete_test_func()
 {
     int fileToDelete;
     string fileToDeleteString;
+
     readExistingTests();
     
     cout << "File to delete: ";
@@ -165,8 +189,6 @@ bool delete_test_func()
     fileToDeleteString += ExistingFiles[fileToDelete];
     remove(fileToDeleteString.c_str());
 }
-
-    
 
 
 bool record_func()
@@ -272,4 +294,42 @@ void readExistingTests()
 
     if (FirstFileFound == false)
         cout << "No file exists.";
+}
+
+
+bool clearTestFolder()
+{
+    string filePath = "/home/frederik/catkin_ws/src/bitten/tests/";
+    string fileName = "test_";
+    string fileExtension = ".txt";
+
+    string fileToDelete;
+    int filesDeletedCounter = 0;
+    
+    for (int i = 0; i < getNumberOfTests(); i++)
+    {
+        fileToDelete = filePath;
+        fileToDelete +=fileName;
+        fileToDelete += i + '0';
+        fileToDelete += fileExtension;
+
+        fstream FileChecker(fileToDelete);
+
+        if (FileChecker.is_open())
+        {
+            FileChecker.close();
+            remove(fileToDelete.c_str());
+            filesDeletedCounter++;
+        }
+    }
+        ofstream testCounterFile("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt" , ios_base::trunc | ios_base::out);
+        
+        if (testCounterFile.is_open())
+        {
+            testCounterFile << 0;
+            testCounterFile.close();
+            cout << "Deleted: " << filesDeletedCounter << " files." << endl;
+        }
+        else
+            cout << "Couldn't open config file" << endl;
 }
