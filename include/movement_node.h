@@ -14,6 +14,7 @@ std::array<double,6> maxVelocity;
 std::array<double,6> maxEffort;
 std::array<double,6> currPos;
 std::array<double,6> goalPosition;
+std::array<double,6> lastGoalPosition;
 
 std::array<int,6>    jointsAtGoal;
 
