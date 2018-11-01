@@ -415,13 +415,11 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
             // ROS_INFO("Curr Pos %d: %f", i, TX90.getCurrPos(i));
             // ROS_INFO("Curr goal %d: %f",i,TX90.getGoalPos(i));
         }
-            
 
         if (goalExists == true)
         {
-            if ((TX90.getGoalPos(i) >= 0) && (TX90.getCurrPos(i) >= (0.999 * TX90.getGoalPos(i))) && (TX90.getCurrPos(i) <= (1.001 * TX90.getGoalPos(i))))
-                jointAtGoalCounter++;
-            else if ((TX90.getGoalPos(i) < 0) && (TX90.getCurrPos(i) <= (0.999 * TX90.getGoalPos(i))) && (TX90.getCurrPos(i) >= (1.001 * TX90.getGoalPos(i))))
+            static float posBoundary = 0.001 * TX90.getMaxRotation(i);
+            if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundary)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundary)))
                 jointAtGoalCounter++;
         }
     }
