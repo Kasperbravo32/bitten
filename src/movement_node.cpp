@@ -391,3 +391,9 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
         feedbackTransmitReady = true;
     }
 }
+
+std::array<double,6> *getCurrPos()
+{
+
+    return TX90.currPos;
+}
