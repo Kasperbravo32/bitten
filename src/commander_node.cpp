@@ -202,14 +202,13 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
         {
             if (recording == true)
             {
-                std::cout << "Record button hit. Adding waypoint_" << waypointsRecorded << std::endl;
-                RecordFile << "\nwaypoint_" << waypointsRecorded;
-
                 if (gotPositions == true)
                 {
                     NewWaypoint = true;
+                    RecordFile << "\nwaypoint_" << waypointsRecorded;
                     for (int i = 0; i < 6; i++)
                     {
+                        std::cout << "Record button hit. Adding waypoint_" << waypointsRecorded << std::endl;
                         RecordFile << "\t" << tempCurrPos[i];
                         std::cout << tempCurrPos[i] << "\t";  
                     }
@@ -220,7 +219,6 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
                     passOnMsg.flags |= GET_CURR_POS;
                     jointStatesTransmitReady = true;
                 }
-                    
             }
             waypointsRecorded++;
         }

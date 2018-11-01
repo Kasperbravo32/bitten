@@ -1,14 +1,6 @@
 test_test
-waypoint_0
-waypoint_1
-waypoint_2
-waypoint_3
-waypoint_4
-waypoint_5
-waypoint_6
-waypoint_7
-waypoint_8
-waypoint_9
-waypoint_10
-waypoint_11
-waypoint_12
+waypoint_1	0	0	0	0	0	0
+waypoint_2	-0.550996	0.432966	0.501511	0	-0.453882	0
+waypoint_3	-0.550996	0.432966	1.23596	0	-0.453882	0
+waypoint_4	-1.9614	0.557138	1.22862	0	-0.453882	0
+waypoint_5	-1.9614	1.15017	1.46427	0	-0.453882	0
