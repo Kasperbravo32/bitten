@@ -200,15 +200,14 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
                 cout << "Record button hit. Adding waypoint_" << waypointsRecorded << endl;
                 RecordFile << "\nwaypoint_" << waypointsRecorded;
                 
-                std::array<double> *tempCurrPos = getCurrPos();
+                // std::array<double, 6> *tempCurrPos = getCurrPos();
                 // double *tempCurrPos = getCurrPos();
                 
                 for (int i = 0; i < 6; i++)
                 {
-                    // RecordFile << "\t" << tempCurrPos[i];
-                    // cout << tempCurrPos[i] << "\t";
+                    RecordFile << "\t" << TX90.getCurrPos(i);
+                    cout << TX90.getCurrPos(i) << "\t";
                 }
-                    
             }
             waypointsRecorded++;
         }

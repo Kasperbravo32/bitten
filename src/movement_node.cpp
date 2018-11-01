@@ -55,7 +55,7 @@ int TEMP_LOOPER = 3;
 
 double TIME_FROM_START_TIMER = 0;
 
-Robot_s TX90;
+// TX90_c TX90;
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -185,55 +185,55 @@ int main (int argc , char **argv)
  * ----------------------------------------------------------------------- */       
 void InitRobot()
 {
-    TX90.minLink    = 1;
-    TX90.maxLink    = 6;
-    TX90.resetStatePosition = {0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0};
+    // TX90.minLink    = 1;
+    // TX90.maxLink    = 6;
+    // TX90.resetStatePosition = {0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0};
 
-    TX90.currVelocity   = 0.4;
+    // TX90.currVelocity   = 0.4;
 
-    TX90.maxRotation = {    3.14,                   /* joint_1  */
-                            2.57,                   /* joint_2  */
-                            2.53,                   /* joint_3  */
-                            4.71,                   /* joint_4  */
-                            2.44,                   /* joint_5  */
-                            4.71};                  /* joint_6  */
+    // TX90.maxRotation = {    3.14,                   /* joint_1  */
+    //                         2.57,                   /* joint_2  */
+    //                         2.53,                   /* joint_3  */
+    //                         4.71,                   /* joint_4  */
+    //                         2.44,                   /* joint_5  */
+    //                         4.71};                  /* joint_6  */
 
-    TX90.minRotation = {    -3.14,                  /* joint_1  */
-                            -2.27,                  /* joint_2  */
-                            -2.53,                  /* joint_3  */
-                            -4.71,                  /* joint_4  */
-                            -2.01,                  /* joint_5  */
-                            -4.71};                 /* joint_6  */ 
+    // TX90.minRotation = {    -3.14,                  /* joint_1  */
+    //                         -2.27,                  /* joint_2  */
+    //                         -2.53,                  /* joint_3  */
+    //                         -4.71,                  /* joint_4  */
+    //                         -2.01,                  /* joint_5  */
+    //                         -4.71};                 /* joint_6  */ 
 
-    TX90.maxVelocity = {    (400.0/180.0)*3.14,     /* joint_1  */
-                            (400.0/180.0)*3.14,     /* joint_2  */
-                            (430.0/180.0)*3.14,     /* joint_3  */
-                            (540.0/180.0)*3.14,     /* joint_4  */
-                            (475.0/180.0)*3.14,     /* joint_5  */
-                            (760.0/180.0)*3.14};    /* joint_6  */                   
+    // TX90.maxVelocity = {    (400.0/180.0)*3.14,     /* joint_1  */
+    //                         (400.0/180.0)*3.14,     /* joint_2  */
+    //                         (430.0/180.0)*3.14,     /* joint_3  */
+    //                         (540.0/180.0)*3.14,     /* joint_4  */
+    //                         (475.0/180.0)*3.14,     /* joint_5  */
+    //                         (760.0/180.0)*3.14};    /* joint_6  */                   
 
-    TX90.maxEffort   =  {   318.0,                    /* joint_1  */
-                            166.0,                    /* joint_2  */
-                            76.0,                     /* joint_3  */
-                            34.0,                     /* joint_4  */
-                            29.0,                     /* joint_5  */
-                            11.0};                    /* joint_6  */
+    // TX90.maxEffort   =  {   318.0,                    /* joint_1  */
+    //                         166.0,                    /* joint_2  */
+    //                         76.0,                     /* joint_3  */
+    //                         34.0,                     /* joint_4  */
+    //                         29.0,                     /* joint_5  */
+    //                         11.0};                    /* joint_6  */
                             
-    TX90.currPos     =  {   0.0 , 
-                            0.0 , 
-                            0.0 , 
-                            0.0 , 
-                            0.0 , 
-                            0.0 };
+    // TX90.currPos     =  {   0.0 , 
+    //                         0.0 , 
+    //                         0.0 , 
+    //                         0.0 , 
+    //                         0.0 , 
+    //                         0.0 };
 
-    TX90.jointNames = { "joint_1", 
-                        "joint_2", 
-                        "joint_3", 
-                        "joint_4", 
-                        "joint_5", 
-                        "joint_6"};
+    // TX90.jointNames = { "joint_1", 
+    //                     "joint_2", 
+    //                     "joint_3", 
+    //                     "joint_4", 
+    //                     "joint_5", 
+    //                     "joint_6"};
 
-    TX90.tool = false;
+    // TX90.tool = false;
 }
 /* ----------------------------------------------------------------------
  *             -------  commander_node Callback function   -------
