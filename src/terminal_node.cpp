@@ -9,17 +9,21 @@
  * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-
+#include "bitten/feedback_msg.h"
 #include <iostream>
 #include <fstream>
 #include "string.h"
 
 #include "global_node_definitions.h"
-#include "bitten/feedback_msg.h"
+
 #include "bitten/control_msg.h"
 #include "terminal_node.h"
 
 using namespace std;
+ /* ----------------------------------------------------------------------
+ *                 -------  Forward Declarations   -------
+ * ----------------------------------------------------------------------- */
+void commanderFeedbackCallback (const bitten::feedback_msg::ConstPtr& commanderFeedbackMsg);
 
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
@@ -27,17 +31,26 @@ using namespace std;
 bitten::control_msg terminalMsg;
 
  /* ----------------------------------------------------------------------
- *                    -------  Message objects   -------
+ *             -------  Variables, Constants & Objects  -------
  * ----------------------------------------------------------------------- */
 string ExistingFiles[10];
+
+bool recording = false;
+bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
+                                                            mode_func,
+                                                            play_test_func,
+                                                            delete_test_func,
+                                                            record_func,
+                                                            get_func,
+                                                            clearScreen,
+                                                            clearTestFolder      };
+
 
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */
 int main (int argc , char **argv) 
 {
-    ROS_INFO("Initiating %s", nodeNames[TERMINAL_NODE].c_str());
-
     ros::init(argc , argv , "terminal_node");
     ros::NodeHandle n;
 
@@ -147,15 +160,39 @@ bool mode_func() {
 }
 
 bool play_test_func() {
-    cout << "You can play the following tests: " << endl;
+    
+    static int chosenTest;
+    cout << "Choose a file to play: " << endl << "_______________________" << endl;
     readExistingTests();
+    cout << endl << "Your choice: ";
+    cin >> chosenTest;
+    
+    if (chosenTest != 1337)
+    {
+        terminalMsg.flags = 0;
+        terminalMsg.flags |= MODE_WAYPOINT_F;
+        terminalMsg.flags |= PLAY_TEST_F;
+        terminalMsg.programName = ExistingFiles[chosenTest];
+        cout << "Requesting to play: " << ExistingFiles[chosenTest] << " ..." << endl;
+    }
+    else
+    {
+        terminalMsg.flags = MODE_WAYPOINT_F;
+        terminalMsg.flags |= PLAY_TEST_F;
+        terminalMsg.programName = "open_a_beer.txt";
+        cout << "Øl på vej!" << endl;
+    }
+    
 
+
+    return true;
 }
 
 bool delete_test_func()
 {
     int fileToDelete;
     string fileToDeleteString;
+
     readExistingTests();
     
     cout << "File to delete: ";
@@ -166,44 +203,55 @@ bool delete_test_func()
     remove(fileToDeleteString.c_str());
 }
 
-    
-
 
 bool record_func()
 {
     static int a;
     static string filename;
     
-    a = getNumberOfTests();
 
-    filename = "/home/frederik/catkin_ws/src/bitten/tests/test_";
-    filename += a + '0';
-    filename += ".txt";
-
-    ofstream fileToCreate(filename);
-
-    if (fileToCreate.is_open())
+    if (recording == false)
     {
-        cout << "Created file: test_" << a << ".txt" << endl;
-        fileToCreate.close();
+        recording = true;
+        a = getNumberOfTests();
+
+        filename = "/home/frederik/catkin_ws/src/bitten/tests/test_";
+        filename += a + '0';
+        filename += ".txt";
+
+        ofstream fileToCreate(filename);
+
+        if (fileToCreate.is_open())
+        {
+            cout << "Started recording to: test_" << a << ".txt" << endl;
+            fileToCreate.close();
+        }
+
+        /* Open the TEST_INFO file, get current number of tests */
+        a = getNumberOfTests();
+        a++;    
+
+        ofstream configfile_out("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt", ios_base::trunc | ios_base::out);
+        configfile_out << a;
+        configfile_out.close();
+
+        /* Set the controlling mode to manual, and tell commander to start recording. Also pass along the filename, path is always the same */
+        terminalMsg.flags |= MODE_MANUAL_F;
+        terminalMsg.flags |= START_RECORD;  
+        terminalMsg.programName = "test_";
+        terminalMsg.programName += a - 1 + '0';
+        terminalMsg.programName += ".txt";
+
+        return true;
     }
+    else
+    {
+        cout << "Stopped recording to: " << "test_" << (a - 1) << ".txt" << endl;
+        recording = false;
+        terminalMsg.flags = STOP_RECORD;  
 
-    /* Open the TEST_INFO file, get current number of tests */
-    a = getNumberOfTests();
-    a++;    
-
-    ofstream configfile_out("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt", ios_base::trunc | ios_base::out);
-    configfile_out << a;
-    configfile_out.close();
-
-    /* Set the controlling mode to manual, and tell commander to start recording. Also pass along the filename, path is always the same */
-    terminalMsg.flags |= MODE_MANUAL_F;
-    terminalMsg.flags |= START_RECORD;  
-    terminalMsg.programName = "test_";
-    terminalMsg.programName += a - 1 + '0';
-    terminalMsg.programName += ".txt";
-
-    return true;
+        return true;
+    }
 }
 
 
@@ -272,4 +320,49 @@ void readExistingTests()
 
     if (FirstFileFound == false)
         cout << "No file exists.";
+}
+
+
+bool clearTestFolder()
+{
+    if (recording == false)
+    {
+    string filePath = "/home/frederik/catkin_ws/src/bitten/tests/";
+    string fileName = "test_";
+    string fileExtension = ".txt";
+
+    string fileToDelete;
+    int filesDeletedCounter = 0;
+    
+    for (int i = 0; i < getNumberOfTests(); i++)
+    {
+        fileToDelete = filePath;
+        fileToDelete +=fileName;
+        fileToDelete += i + '0';
+        fileToDelete += fileExtension;
+
+        fstream FileChecker(fileToDelete);
+
+        if (FileChecker.is_open())
+        {
+            FileChecker.close();
+            remove(fileToDelete.c_str());
+            filesDeletedCounter++;
+        }
+    }
+        ofstream testCounterFile("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt" , ios_base::trunc | ios_base::out);
+        
+        if (testCounterFile.is_open())
+        {
+            testCounterFile << 0;
+            testCounterFile.close();
+            cout << "Deleted: " << filesDeletedCounter << " files." << endl;
+        }
+        else
+            cout << "Couldn't open config file" << endl;
+    }
+    else
+    {
+        cout << "Currently recording. stop recording before purging" << endl;
+    }
 }

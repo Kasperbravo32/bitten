@@ -9,15 +9,21 @@
  * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>     /* atof */
 #include <sensor_msgs/Joy.h>
 #include <bitten/control_msg.h>
 #include <bitten/feedback_msg.h>
 #include <global_node_definitions.h>
 #include "wp_node.h"
 
+using namespace std;
 
-int NumberofWaypoints = 7;                                  /* Number of waypoints excluding waypoint_0.                                                    */
-int RemainingWaypoints = NumberofWaypoints;
+int NumberofWaypoints;                  /* Number of waypoints excluding waypoint_0.                    */
+int RemainingWaypoints;                 /* Number of remaining waypoints to perform.                    */
+Waypoint_s WaypointBank[16];            /* Create an empty bank of waypoints, to contain future tests   */
 
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
@@ -30,26 +36,18 @@ int main(int argc, char **argv)
     wp_msg.nodeName = nodeNames[WP_TOPIC].c_str();
     wp_msg.id       = WP_ID;
 
-    ROS_INFO("Started %s",nodeNames[WP_NODE].c_str());
-
     ros::Publisher wpPub = n.advertise<bitten::control_msg>(topicNames[WP_TOPIC],3*LOOP_RATE_INT);
-    if (wpPub)
-        ROS_INFO("Publishing on %s",topicNames[WP_TOPIC].c_str());
-    else
-        ROS_INFO("Couldn't publish on %s",topicNames[WP_TOPIC].c_str());
-
-    
-    ROS_INFO("Subscribing to %s",topicNames[FEEDBACK_TOPIC].c_str());
     ros::Subscriber feedbackSub = n.subscribe<bitten::feedback_msg>(topicNames[FEEDBACK_TOPIC], 3*LOOP_RATE_INT, &fbCallback);
-    if (feedbackSub)
-        ROS_INFO("Subscribed to \"%s\"!", topicNames[FEEDBACK_TOPIC].c_str());
-    else
-        ROS_INFO("Couldn't subscribe to \"%s\".",topicNames[FEEDBACK_TOPIC].c_str());
 
-    wp_msg.nodeName = "Waypoint Node";
+    // wp_msg.nodeName = "Waypoint Node";
     ros::Rate loop_rate(LOOP_RATE_INT);
 
-    ROS_INFO("Loading Waypoints...");    
+    if (wpPub && feedbackSub)
+        ROS_INFO("Initiated %s", nodeNames[WP_NODE].c_str());
+    else
+        ROS_INFO("Failed to initiate %s",nodeNames[WP_NODE].c_str());
+
+    // ROS_INFO("Loading Waypoints...");    
 
 
 
@@ -59,7 +57,7 @@ int main(int argc, char **argv)
     Waypoint_0.jointPosition[3] = (0.1/180)*3.14;
     Waypoint_0.jointPosition[4] = (0.1/180)*3.14;
     Waypoint_0.jointPosition[5] = (0.1/180)*3.14;
-    Waypoint_0.waypointName = "Waypoint_0";
+    Waypoint_0.waypointName = "Waypoint_0"; 
     
 
 /* --------------------------------------------------------
@@ -134,64 +132,6 @@ int main(int argc, char **argv)
     Beer Waypoints
     Set NumberofWaypoints = 4
    -------------------------------------------------------- */
-    Waypoint_s WaypointBank[NumberofWaypoints];
-
-    WaypointBank[0].jointPosition[0] = (1/180.0)*3.14;
-    WaypointBank[0].jointPosition[1] = (1/180.0)*3.14;
-    WaypointBank[0].jointPosition[2] = (1/180.0)*3.14;
-    WaypointBank[0].jointPosition[3] = (1/180.0)*3.14;
-    WaypointBank[0].jointPosition[4] = (1/180.0)*3.14;
-    WaypointBank[0].jointPosition[5] = (1/180.0)*3.14;
-    WaypointBank[0].waypointName = "Beer Point 0";
-
-    WaypointBank[1].jointPosition[0] = (-102.78/180.0)*3.14;
-    WaypointBank[1].jointPosition[1] = (54.25/180.0)*3.14;
-    WaypointBank[1].jointPosition[2] = (145.0/180.0)*3.14;
-    WaypointBank[1].jointPosition[3] = (-13.86/180.0)*3.14;
-    WaypointBank[1].jointPosition[4] = (-85.47/180.0)*3.14;
-    WaypointBank[1].jointPosition[5] = (61.39/180.0)*3.14;
-    WaypointBank[1].waypointName = "Beer Point 1";
-
-
-    WaypointBank[2].jointPosition[0] = (-101.79/180.0)*3.14;
-    WaypointBank[2].jointPosition[1] = (84.51/180.0)*3.14;
-    WaypointBank[2].jointPosition[2] = (126.58/180.0)*3.14;
-    WaypointBank[2].jointPosition[3] = (-13.01/180.0)*3.14;
-    WaypointBank[2].jointPosition[4] = (-96.97/180.0)*3.14;
-    WaypointBank[2].jointPosition[5] = (59.07/180.0)*3.14;
-    WaypointBank[2].waypointName = "Beer Point 2";
-
-    WaypointBank[3].jointPosition[0] = (-99.23/180.0)*3.14;
-    WaypointBank[3].jointPosition[1] = (85.45/180.0)*3.14;
-    WaypointBank[3].jointPosition[2] = (108.73/180.0)*3.14;
-    WaypointBank[3].jointPosition[3] = (-11.26/180.0)*3.14;
-    WaypointBank[3].jointPosition[4] = (-112.76/180.0)*3.14;
-    WaypointBank[3].jointPosition[5] = (62.61/180.0)*3.14;
-    WaypointBank[3].waypointName = "Beer Point 3";
-
-    WaypointBank[4].jointPosition[0] = (-99.08/180.0)*3.14;
-    WaypointBank[4].jointPosition[1] = (77.79/180.0)*3.14;
-    WaypointBank[4].jointPosition[2] = (114.39/180.0)*3.14;
-    WaypointBank[4].jointPosition[3] = (-9.81/180.0)*3.14;
-    WaypointBank[4].jointPosition[4] = (-79.99/180.0)*3.14;
-    WaypointBank[4].jointPosition[5] = (63.86/180.0)*3.14;
-    WaypointBank[4].waypointName = "Beer Point 4";
-
-    WaypointBank[5].jointPosition[0] = (-80/180.0)*3.14;
-    WaypointBank[5].jointPosition[1] = (77.79/180.0)*3.14;
-    WaypointBank[5].jointPosition[2] = (114.39/180.0)*3.14;
-    WaypointBank[5].jointPosition[3] = (-9.81/180.0)*3.14;
-    WaypointBank[5].jointPosition[4] = (-79.99/180.0)*3.14;
-    WaypointBank[5].jointPosition[5] = (63.86/180.0)*3.14;
-    WaypointBank[5].waypointName = "Beer Point 5";
-
-    WaypointBank[6].jointPosition[0] = (0.1/180.0)*3.14;
-    WaypointBank[6].jointPosition[1] = (0.1/180.0)*3.14;
-    WaypointBank[6].jointPosition[2] = (0.1/180.0)*3.14;
-    WaypointBank[6].jointPosition[3] = (0.1/180.0)*3.14;
-    WaypointBank[6].jointPosition[4] = (0.1/180.0)*3.14;
-    WaypointBank[6].jointPosition[5] = (0.1/180.0)*3.14;
-    WaypointBank[6].waypointName = "Beer Point 6";
 
     static int connectionTimer = 10*LOOP_RATE_INT;
     bool newConnection = true;
@@ -202,13 +142,13 @@ int main(int argc, char **argv)
         {
             if (newConnection)
             {
-                ROS_INFO("Connected!");
                 newConnection = false;
-                readyForNextWp = true;
             }
 
             if (readyForNextWp == true)
             {
+
+
                 ROS_INFO("Sending wp: %s", WaypointBank[NumberofWaypoints - RemainingWaypoints].waypointName.c_str());
                 wp_msg.flags = NEW_WAYPOINT;
                 wp_msg.programName = WaypointBank[NumberofWaypoints - RemainingWaypoints].waypointName;
@@ -264,6 +204,8 @@ void fbCallback(const bitten::feedback_msg::ConstPtr& feedback)
         else if (connectionEstablished == false && feedback->flags == DENIED)
             ROS_INFO("Connection denied");
 
+
+
         if (feedback->flags & GOAL_REACHED)
         {
             ROS_INFO("Received WAYPOINT_REACHED");
@@ -279,5 +221,50 @@ void fbCallback(const bitten::feedback_msg::ConstPtr& feedback)
                 transmitWpReady = true;
             }
         }
+
+        if (feedback->flags & START_TEST)
+        {
+            string inputString;
+            string inputFilePath = "/home/frederik/catkin_ws/src/bitten/tests/";
+            inputFilePath += feedback->programName;
+            ifstream inputFile(inputFilePath);
+
+            if (inputFile.is_open())
+            {
+
+                bool FirstRead = true;
+                int waypointCounter = 1;
+                int jointCounter;
+                string::size_type sz;
+                string testName;
+
+                inputFile >> testName;
+
+                for (int i = 0; inputFile >> WaypointBank[i].waypointName; i++, waypointCounter++)
+                {
+                    cout << endl << WaypointBank[i].waypointName << ": ";
+                    for (int n = 0; n < 6; n++)
+                    {
+                        inputFile >> WaypointBank[i].jointPosition[n];
+                        cout << WaypointBank[i].jointPosition[n] << "\t";
+                    }
+                        
+                    NumberofWaypoints = waypointCounter;
+                    RemainingWaypoints = NumberofWaypoints;
+                }
+
+                cout << "\nTest name: " << testName << endl;
+                cout << "Total number of waypoints: " << NumberofWaypoints << endl;
+                
+                inputFile.close();
+
+                readyForNextWp = true;
+            }
+            else
+            {
+                cout << "Couldn't open: " << inputFilePath << endl;
+            }
+        }
+
     }
 }

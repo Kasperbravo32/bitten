@@ -1,3 +1,5 @@
+#pragma once
+
 #include <array>
 #include <string.h>
 #include "ros/ros.h"
@@ -115,5 +117,6 @@ enum FLAGS {
     STOP_OPERATION          = 32786,
     NEW_WAYPOINT            = 65536,
     GOAL_REACHED            = 131072,
+    START_TEST              = 262144,
     
 };

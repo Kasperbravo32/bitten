@@ -7,68 +7,64 @@
  * -----------------------------------------------------------------------
  *                      -------  Libraries   -------
  * ----------------------------------------------------------------------- */
-// #include <sensor_msgs/JointState.h>
 #include <trajectory_msgs/JointTrajectory.h>
 
 #include <array>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+#include "movement_node.h"
+#include "terminal_node.h"
 #include "commander_node.h"
 #include "global_node_definitions.h"
 
 #include "bitten/feedback_msg.h"
 #include "bitten/control_msg.h"
 
+using namespace std;
  /* ----------------------------------------------------------------------
  *                      -------  Initializing   -------
  * ----------------------------------------------------------------------- */
-// void InitRobot();
-
-void manualCallback             (const bitten::control_msg::ConstPtr& manual);
-void wpCallback                 (const bitten::control_msg::ConstPtr& wp);
-// void testCallback               (const bitten::control_msg::ConstPtr& test);
-void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedback);
+void manualCallback             (const bitten::control_msg::ConstPtr& manual        );
+void wpCallback                 (const bitten::control_msg::ConstPtr& wp            );
+void terminalCallback           (const bitten::control_msg::ConstPtr& terminal      );
+void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedback );
 
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
-// MsgType_s manualInputMsg;               /* Used to collect data from:       manual node                                         */
-// MsgType_s wpInputMsg;                   /* Used to collect data from:       waypoint node                                       */
-// MsgType_s testInputMsg;                 /* Used to collect data from:       test node                                           */
-
-// feedbackMsg_s fbMsg;
-
-//sensor_msgs::JointState msg;
-// trajectory_msgs::JointTrajectory msg;
-// trajectory_msgs::JointTrajectoryPoint point_msg;
-
 bitten::feedback_msg commanderFeedbackMsg;     /* Used to send feedback to various nodes */
 bitten::control_msg passOnMsg;
-
  /* ----------------------------------------------------------------------
  *                    -------  Global Variables   -------
  * ----------------------------------------------------------------------- */
-bool goalExists = false;
-bool waiting = false;
-bool ping = true;
-bool fbTransmitReady = false;
-bool jointStatesTransmitReady = false;
-bool not_run = true;
-bool robotOccupied = false;
+bool goalExists                 = false;
+bool waiting                    = false;
+bool fbTransmitReady            = false;
+bool jointStatesTransmitReady   = false;
+bool robotOccupied              = false;
+bool recording                  = false;
+
+bool not_run                    = true;
+bool ping                       = true;
 
 const   int PING_RATE = LOOP_RATE_INT / 2;
         int poll_timer = LOOP_RATE_INT*2;
         int ping_timer = PING_RATE;
         int ping_timeout = PING_RATE;
         int pub_counter = LOOP_RATE_INT / 10;
-
+        int waypointsRecorded = 0;
 double goalArray[6];
+
 uint8_t jointsdone = 0;
 
+string currentRecordFile;
+
+fstream RecordFile;
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -80,12 +76,13 @@ int main(int argc , char **argv)
     ros::NodeHandle n;
     commanderFeedbackMsg.senderID = COMMANDER_ID;   
 
-    ros::Subscriber manual_sub        = n.subscribe<bitten::control_msg> ("manual_topic"     , 5 , &manualCallback);
-    ros::Subscriber wp_sub            = n.subscribe<bitten::control_msg> ("wp_topic"         , 10, &wpCallback);
-    ros::Subscriber movement_feedback = n.subscribe<bitten::feedback_msg>("movement_feedback", 10, &movementFeedbackCallback);
-    
-    ros::Publisher commander_pub      = n.advertise<bitten::control_msg> ("movement_topic", LOOP_RATE_INT);
-    ros::Publisher commander_fb_pub   = n.advertise<bitten::feedback_msg>("feedback_topic", LOOP_RATE_INT);
+    ros::Subscriber manual_sub          = n.subscribe<bitten::control_msg>  ("manual_topic"     , 5 , &manualCallback);
+    ros::Subscriber wp_sub              = n.subscribe<bitten::control_msg>  ("wp_topic"         , 10, &wpCallback);
+    ros::Subscriber movement_feedback   = n.subscribe<bitten::feedback_msg> ("movement_feedback", 10, &movementFeedbackCallback);
+    ros::Subscriber terminal_sub        = n.subscribe<bitten::control_msg>  ("terminal_topic"   , 5 , &terminalCallback);
+
+    ros::Publisher commander_pub        = n.advertise<bitten::control_msg>  ("movement_topic"   , LOOP_RATE_INT);
+    ros::Publisher commander_fb_pub     = n.advertise<bitten::feedback_msg> ("feedback_topic"   , LOOP_RATE_INT);
 
     ros::Rate loop_rate(LOOP_RATE_INT);
     INPUT_MODE = POLL_MODE;
@@ -97,8 +94,6 @@ int main(int argc , char **argv)
         ROS_INFO("Initiated %s",nodeNames[COMMANDER_NODE].c_str());
     else
         ROS_INFO("Didn't initiate %s",nodeNames[COMMANDER_NODE].c_str());
-
-    // int ManPubTimer = LOOP_RATE_INT / 5;
 
 /*  -------------------------------------------------
          SUPERLOOP
@@ -112,33 +107,8 @@ int main(int argc , char **argv)
             break;
 
             case WP_MODE:
-                // msg.joint_names.clear();
-                // point_msg.positions.clear();
 
             break;
-
-            // case TEST_MODE:
-            // if (not_run)
-            // {
-            //     for(int i = 0; i < 6; i++)
-            //     {
-            //         // msg.joint_names.push_back(TX90.jointNames[i]);
-            //         if (i != 0)
-            //             point_msg.positions.push_back(0);
-            //         else
-            //             point_msg.positions.push_back(0);
-                    
-            //         point_msg.velocities.push_back(1);
-            //         point_msg.accelerations.push_back(0);
-            //     }
-
-            //     point_msg.effort.push_back(0);
-            //     point_msg.time_from_start = ros::Duration(0.5);
-            //     msg.points.push_back(point_msg);
-            //     jointStatesTransmitReady = true;
-            //     not_run = false;
-            // }
-            // break;
 
             case POLL_MODE:
 
@@ -198,6 +168,11 @@ int main(int argc , char **argv)
  * ----------------------------------------------------------------------- */       
 void manualCallback (const bitten::control_msg::ConstPtr& manual)
 {
+    // extern Robot_s TX90;
+
+    static int debounceCounter = 0;
+    static bool buttonClicked = false;
+
     if (manual->flags & PONG)
         ping = true;
 
@@ -214,6 +189,33 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
         }
     }
 
+    if (manual->buttons[0] == 1)
+    {
+        debounceCounter++;
+
+        if (debounceCounter == 5)
+        {
+            if (recording == true)
+            {
+                cout << "Record button hit. Adding waypoint_" << waypointsRecorded << endl;
+                RecordFile << "\nwaypoint_" << waypointsRecorded;
+                
+                std::array<double> *tempCurrPos = getCurrPos();
+                // double *tempCurrPos = getCurrPos();
+                
+                for (int i = 0; i < 6; i++)
+                {
+                    // RecordFile << "\t" << tempCurrPos[i];
+                    // cout << tempCurrPos[i] << "\t";
+                }
+                    
+            }
+            waypointsRecorded++;
+        }
+    }
+    else if (manual->buttons[0] == 0)
+        debounceCounter = 0;
+
     if (INPUT_MODE == MANUAL_MODE)
     {
         passOnMsg.buttons = manual->buttons;
@@ -224,7 +226,7 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
 }
 
  /* ----------------------------------------------------------------------
- *                -------  Waypoint Callback function   -------
+ *              -------  Waypoint Callback function   -------
  * ----------------------------------------------------------------------- */ 
 void wpCallback (const bitten::control_msg::ConstPtr& wp)
 {
@@ -275,18 +277,7 @@ void wpCallback (const bitten::control_msg::ConstPtr& wp)
 }
 
  /* ----------------------------------------------------------------------
- *                  -------  test Callback function   -------
- * ----------------------------------------------------------------------- */ 
-// void testCallback (const bitten::control_msg::ConstPtr& test)
-// {
-//     /*
-//      * MANDAG: Snak om hvordan TEST beskeden ser ud. én TEST besked med flere waypoints?
-//      * */
-
-// }
-
- /* ----------------------------------------------------------------------
- *                  -------  MovementFeedback Callback function   -------
+ *         -------  MovementFeedback Callback function   -------
  * ----------------------------------------------------------------------- */
 void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedback)
 {
@@ -296,7 +287,6 @@ void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedbac
         switch(INPUT_MODE)
         {
             case WP_MODE:
-                // ROS_INFO("ENTERED WP_MODE SWITCH");
                 commanderFeedbackMsg.recID = WP_ID;
                 commanderFeedbackMsg.flags |= GOAL_REACHED;
                 fbTransmitReady = true;
@@ -304,14 +294,103 @@ void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedbac
             break;
 
             case MANUAL_MODE:
-                // ROS_INFO("Entered MANUAL_MODE in movementFeedback");
-                // commanderFeedbackMsg.recID = MANUAL_ID;
-                // commanderFeedbackMsg.flags |= GOAL_REACHED;
-                // fbTransmitReady = true;
                 robotOccupied = false;
             break;
 
             
+        }
+    }
+}
+
+ /* ----------------------------------------------------------------------
+ *             -------  Terminal Callback function   -------
+ * ----------------------------------------------------------------------- */
+void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
+{
+    if (terminal->flags & MODE_MANUAL_F)
+    {
+        if (goalExists == false)
+        {
+            if (INPUT_MODE != MANUAL_MODE)
+            {
+                INPUT_MODE = MANUAL_MODE;
+                std::cout << "Operating Mode: Manual mode." << std::endl;
+            }            
+        }
+        else
+        {
+            std::cout << "Currently occupied. Finish current operation before changing modes" << std::endl;
+        }
+    }
+
+    if (terminal->flags & MODE_WAYPOINT_F)
+    {
+        if (INPUT_MODE != WP_MODE)
+        {
+            INPUT_MODE = WP_MODE;
+            std::cout << "Operating Mode: Waypoint mode." << std::endl;
+        }
+    }
+
+    if (terminal->flags & MODE_NONE_F)
+    {
+        if (goalExists == false)
+        {
+            if (INPUT_MODE != POLL_MODE)
+            {
+                INPUT_MODE == POLL_MODE;
+                std::cout << "Operating Mode: No-Control." << std::endl;
+            }
+        }
+        else
+            std::cout << "Currently occupied. Finish current operation before changing modes" << std::endl;
+    }
+
+    if (terminal->flags & PLAY_TEST_F)
+    {
+        if (INPUT_MODE == WP_MODE)
+        {
+            std::cout << "Received request to start test..." << std::endl;
+            commanderFeedbackMsg.flags = START_TEST;                        /* Reset flags, and set the START_TEST flag                 */
+            commanderFeedbackMsg.programName = terminal->programName;       /* Attach the filename of the test to the feedback message  */
+            commanderFeedbackMsg.senderID = COMMANDER_ID;                   /* Set the Sender ID                                        */
+            commanderFeedbackMsg.recID = WP_ID;                             /* Set the Receiver ID                                      */
+            fbTransmitReady = true;                                         /* We're ready to transmit the message, on feedback topic   */
+        }
+    }
+
+    if (terminal->flags & START_RECORD)
+    {
+        if (INPUT_MODE == MANUAL_MODE)
+        {
+            if (recording == false)
+            {
+                recording = true;
+                currentRecordFile = "/home/frederik/catkin_ws/src/bitten/tests/";
+                currentRecordFile += terminal->programName;
+
+                RecordFile.open(currentRecordFile, ios_base::out);
+
+                if (RecordFile.is_open())
+                {
+                    waypointsRecorded = 0;
+                    cout << "Opened recording file!" << std::endl;
+                    RecordFile << "test_test";
+                }
+                else
+                    cout << "Couldn't open recording file :( " << std::endl;
+            }
+
+        }
+    }
+    
+    if (terminal->flags & STOP_RECORD)
+    {
+        if (recording == true)
+        {
+            recording = false;
+            RecordFile.close();
+
         }
     }
 }
