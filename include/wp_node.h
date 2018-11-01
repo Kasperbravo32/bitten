@@ -5,9 +5,9 @@
 void fbCallback(const bitten::feedback_msg::ConstPtr& feedback);
 
 struct Waypoint_s {
-    double jointPosition[6];
-    double velocity[6];
-    double effort[6];
+    float jointPosition[6];
+    float velocity[6];
+    float effort[6];
     std::string waypointName;
 };
 

@@ -7,7 +7,7 @@
 void DEBUG_INFO();
 
 
-const double LOOP_RATE_INT = 50;
+const float LOOP_RATE_INT = 50;
 
 enum NODE_IDS {
     COMMANDER_ID,
@@ -118,5 +118,8 @@ enum FLAGS {
     NEW_WAYPOINT            = 65536,
     GOAL_REACHED            = 131072,
     START_TEST              = 262144,
+    GET_CURR_POS            = 524288,
+    SENT_CURR_POS           = 1048576,
+    
     
 };

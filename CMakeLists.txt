@@ -204,10 +204,6 @@ add_executable(manual_node src/manual_node.cpp src/global_node_definitions.cpp)
 target_link_libraries(manual_node ${catkin_LIBRARIES})
 add_dependencies(manual_node bitten_generate_messages_cpp)
 
-add_executable(commander_node src/commander_node.cpp src/global_node_definitions.cpp)
-target_link_libraries(commander_node ${catkin_LIBRARIES})
-add_dependencies(commander_node bitten_generate_messages_cpp)
-
 add_executable(wp_node src/wp_node.cpp src/global_node_definitions.cpp)
 target_link_libraries(wp_node ${catkin_LIBRARIES})
 add_dependencies(wp_node bitten_generate_messages_cpp)
@@ -219,6 +215,10 @@ add_dependencies(can_driver_node bitten_generate_messages_cpp)
 add_executable(movement_node src/movement_node.cpp src/global_node_definitions.cpp)
 target_link_libraries(movement_node ${catkin_LIBRARIES})
 add_dependencies(movement_node bitten_generate_messages_cpp)
+
+add_executable(commander_node src/commander_node.cpp src/global_node_definitions.cpp)
+target_link_libraries(commander_node ${catkin_LIBRARIES})
+add_dependencies(commander_node bitten_generate_messages_cpp)
 
 add_executable(terminal_node src/terminal_node.cpp src/global_node_definitions.cpp)
 target_link_libraries(terminal_node ${catkin_LIBRARIES})

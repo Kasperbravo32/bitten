@@ -21,7 +21,6 @@
  * ----------------------------------------------------------------------- */
 void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr&   RobotState);
 void commanderCallback  (const bitten::control_msg::ConstPtr&                           commander);
-void InitRobot();
 
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
@@ -40,7 +39,8 @@ bool feedbackTransmitReady  = false;
 
 int OPERATING_MODE = 0;
 
-// TX90_c TX90;
+TX90_c TX90;
+
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -49,7 +49,6 @@ int main (int argc , char **argv)
     ROS_INFO("Initiating %s", nodeNames[MOVEMENT_NODE].c_str());
     
     movementFeedbackMsg.senderID = MOVEMENT_ID;
-    InitRobot();
 
     ros::init(argc , argv , "movement_node");
     ros::NodeHandle n;
@@ -91,9 +90,9 @@ int main (int argc , char **argv)
                     jointPathPointMsg.velocities.clear();
                     for (int i = 0; i < 6; i++)
                     {
-                        jointPathMsg.joint_names.push_back(TX90.jointNames[i]);
-                        jointPathPointMsg.positions.push_back(TX90.goalPosition[i]);
-                        jointPathPointMsg.velocities.push_back(TX90.currVelocity*TX90.maxVelocity[i]);
+                        jointPathMsg.joint_names.push_back(TX90.getJointName(i));
+                        jointPathPointMsg.positions.push_back(TX90.getGoalPos(i));
+                        jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity()*TX90.getMaxVelocity(i));
                     }
                     jointPathMsg.points.push_back(jointPathPointMsg);
                 }
@@ -165,32 +164,48 @@ int main (int argc , char **argv)
                     jointPathMsg.points.clear();
                     jointPathPointMsg.positions.clear();
                     jointPathPointMsg.velocities.clear();
+
+                    float a = TX90.getCurrPos(0);
+                    a += 0.01;
+
+                    TX90.setCurrPos(0 , a);
+
+                    // std::cout << "A is: " << a << std::endl;
+
+
+
+
                     
                     for (int i = 0; i < 6; i++)
-                    {
-                        jointPathMsg.joint_names.push_back(TX90.jointNames[i]);
-                        jointPathPointMsg.positions.push_back(TX90.goalPosition[i]);
-                        jointPathPointMsg.velocities.push_back((TX90.maxVelocity[i]*TX90.currVelocity));
+                    {                  
+                        jointPathMsg.joint_names.push_back(TX90.getJointName(i));
+                        jointPathPointMsg.positions.push_back(TX90.getGoalPos(i));
+                        // jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity()*TX90.getMaxVelocity(i));
                     }
 
                     jointPathMsg.points.push_back(jointPathPointMsg);
                     jointTransmitReady = true;
                     PubTimer = LOOP_RATE_INT / 3;
                 }
+
+
                 if (jointTransmitReady)
                 {
                     movement_pub.publish(jointPathMsg);
                     jointTransmitReady = false;
                 }
+
+
+
                 if (feedbackTransmitReady)
                 {
-                    ROS_INFO("Publishing to feedback");
                     feedback_pub.publish(movementFeedbackMsg);
                     
                     movementFeedbackMsg.flags = 0;
                     feedbackTransmitReady = false;
                 }
                 break;
+
             default:
                 break;
         }
@@ -202,110 +217,6 @@ int main (int argc , char **argv)
  /* ----------------------------------------------------------------------
  *                 -------  Initialize TX90 Robot   -------
  * ----------------------------------------------------------------------- */       
-void InitRobot()
-{
-<<<<<<< HEAD
-    // TX90.minLink    = 1;
-    // TX90.maxLink    = 6;
-    // TX90.resetStatePosition = {0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0};
-
-    // TX90.currVelocity   = 0.4;
-
-    // TX90.maxRotation = {    3.14,                   /* joint_1  */
-    //                         2.57,                   /* joint_2  */
-    //                         2.53,                   /* joint_3  */
-    //                         4.71,                   /* joint_4  */
-    //                         2.44,                   /* joint_5  */
-    //                         4.71};                  /* joint_6  */
-
-    // TX90.minRotation = {    -3.14,                  /* joint_1  */
-    //                         -2.27,                  /* joint_2  */
-    //                         -2.53,                  /* joint_3  */
-    //                         -4.71,                  /* joint_4  */
-    //                         -2.01,                  /* joint_5  */
-    //                         -4.71};                 /* joint_6  */ 
-
-    // TX90.maxVelocity = {    (400.0/180.0)*3.14,     /* joint_1  */
-    //                         (400.0/180.0)*3.14,     /* joint_2  */
-    //                         (430.0/180.0)*3.14,     /* joint_3  */
-    //                         (540.0/180.0)*3.14,     /* joint_4  */
-    //                         (475.0/180.0)*3.14,     /* joint_5  */
-    //                         (760.0/180.0)*3.14};    /* joint_6  */                   
-
-    // TX90.maxEffort   =  {   318.0,                    /* joint_1  */
-    //                         166.0,                    /* joint_2  */
-    //                         76.0,                     /* joint_3  */
-    //                         34.0,                     /* joint_4  */
-    //                         29.0,                     /* joint_5  */
-    //                         11.0};                    /* joint_6  */
-                            
-    // TX90.currPos     =  {   0.0 , 
-    //                         0.0 , 
-    //                         0.0 , 
-    //                         0.0 , 
-    //                         0.0 , 
-    //                         0.0 };
-
-    // TX90.jointNames = { "joint_1", 
-    //                     "joint_2", 
-    //                     "joint_3", 
-    //                     "joint_4", 
-    //                     "joint_5", 
-    //                     "joint_6"};
-
-    // TX90.tool = false;
-=======
-    TX90.minLink    = 1;
-    TX90.maxLink    = 6;
-    TX90.resetStatePosition = {0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 0.0};
-
-    TX90.currVelocity =     0.2;
-
-    TX90.maxRotation = {    3.14,                   /* joint_1  */
-                            2.57,                   /* joint_2  */
-                            2.53,                   /* joint_3  */
-                            4.71,                   /* joint_4  */
-                            2.44,                   /* joint_5  */
-                            4.71};                  /* joint_6  */
-
-    TX90.minRotation = {    -3.14,                  /* joint_1  */
-                            -2.27,                  /* joint_2  */
-                            -2.53,                  /* joint_3  */
-                            -4.71,                  /* joint_4  */
-                            -2.01,                  /* joint_5  */
-                            -4.71};                 /* joint_6  */
-
-    TX90.maxVelocity = {    (400.0/180.0)*3.14,     /* joint_1  */
-                            (400.0/180.0)*3.14,     /* joint_2  */
-                            (430.0/180.0)*3.14,     /* joint_3  */
-                            (540.0/180.0)*3.14,     /* joint_4  */
-                            (475.0/180.0)*3.14,     /* joint_5  */
-                            (760.0/180.0)*3.14};    /* joint_6  */
-
-    TX90.maxEffort   =  {   318.0,                  /* joint_1  */
-                            166.0,                  /* joint_2  */
-                            76.0,                   /* joint_3  */
-                            34.0,                   /* joint_4  */
-                            29.0,                   /* joint_5  */
-                            11.0};                  /* joint_6  */
-
-    TX90.currPos     =  {   0.0 , 
-                            0.0 , 
-                            0.0 , 
-                            0.0 , 
-                            0.0 , 
-                            0.0 };
-
-    TX90.jointNames  =  {   "joint_1", 
-                            "joint_2", 
-                            "joint_3", 
-                            "joint_4", 
-                            "joint_5", 
-                            "joint_6"};
-
-    TX90.tool = false;
->>>>>>> 1aa0b540430c73ed87acb264aa719729e6e796c5
-}
 
 /* ----------------------------------------------------------------------
  *             -------  commander_node Callback function   -------
@@ -314,6 +225,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
 {
     static bool justMoved = false;
     static int ButtonCounter = 0;
+
     switch(commander->id)
     {
         case MANUAL_ID:
@@ -326,7 +238,10 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
 
             if (commander->buttons[1] == 1 && commander->buttons[2] == 1) //reset and deadmans button
             {
-                TX90.goalPosition = TX90.resetStatePosition;
+                for (int i = 0; i < 6; i++)
+                {
+                    TX90.setGoalPos(i , TX90.getResetStatePos(i));
+                }
             }
 
             if (commander->buttons[7] == 1) //increment current velocity
@@ -334,16 +249,16 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 ButtonCounter++;
                 if (ButtonCounter == 6)
                 {
-                    if (TX90.currVelocity < 1)
+                    if (TX90.getCurrVelocity() < 1)
                     {
-                        TX90.currVelocity += 0.05;
-                        ROS_INFO("Current Velocity: %f",TX90.currVelocity);
+                        TX90.setCurrVelocity(TX90.getCurrVelocity() + 0.05);
+                        ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                     }
                 }
                 else if (ButtonCounter == 60)
                 {
-                    TX90.currVelocity = 1;
-                    ROS_INFO("Current Velocity: %f",TX90.currVelocity);
+                    TX90.setCurrVelocity(1);
+                    ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                 }
             }
             else if (commander->buttons[6] == 1) //decrease current velocity
@@ -351,51 +266,75 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 ButtonCounter++;
                 if (ButtonCounter == 6)
                 {
-                    if (TX90.currVelocity > 0)
+                    if (TX90.getCurrVelocity() > 0)
                     {
-                        TX90.currVelocity -= 0.05;
-                        ROS_INFO("Current Velocity: %f",TX90.currVelocity);
+                        TX90.setCurrVelocity(TX90.getCurrVelocity() - 0.05);
+                        ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                     }
                 }
                 if (ButtonCounter == 60)
                 {
-                    TX90.currVelocity = 0;
-                    ROS_INFO("Current Velocity: %f",TX90.currVelocity);
+                    TX90.setCurrVelocity(0);
+                    ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                 }
             }
             else
                 ButtonCounter = 0;
 
             int jointAtGoalCounter = 0;
+
+            if (commander->flags & GET_CURR_POS)
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    movementFeedbackMsg.positions[i] = TX90.getCurrPos(i);
+                }
+                movementFeedbackMsg.flags = SENT_CURR_POS;
+                feedbackTransmitReady = true;
+            }
+            
             for (int i = 0; i < 6; i++)
             {
-                static float posBoundry = 0.05 * TX90.maxRotation[i];
-                if((TX90.currPos[i] >= (TX90.goalPosition[i] - posBoundry)) && (TX90.currPos[i] <= (TX90.goalPosition[i] + posBoundry)))
+                static float posBoundry = 0.05 * TX90.getMaxRotation(i);
+                if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundry)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundry)))
                     jointAtGoalCounter++;
             }
-            ROS_INFO("joint at goal counter: %d", jointAtGoalCounter);
+
+            // ROS_INFO("joint at goal counter: %d", jointAtGoalCounter);
             if (jointAtGoalCounter == 6)
             {
                 for (int i = 0; i < 6; i++)
                 {
-                    static double intendedGoal;
+                    static float intendedGoal;
                     if (commander->jointVelocity[i] > 0 && (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1)))
                     {
-                        intendedGoal = TX90.goalPosition[i] + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
-                        if (intendedGoal < TX90.maxRotation[i])
+                        intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity());
+                        if (intendedGoal < TX90.getMaxRotation(i))
                         {
-                            TX90.lastGoalPosition[i] = TX90.goalPosition[i];
-                            TX90.goalPosition[i] = intendedGoal;
+                            ROS_INFO("---------------------------");
+                            ROS_INFO("Curr pos j%d: %f", i, TX90.getCurrPos(i));
+                            ROS_INFO("Curr goal pos j%d: %f",i,TX90.getGoalPos(i));
+                            ROS_INFO("Max Vel j%d: %f",i,TX90.getMaxVelocity(i));
+                            ROS_INFO("Curr Vel: %f",TX90.getCurrVelocity());
+                            ROS_INFO("Curr Int. Goal: %f \n",intendedGoal);
+
+                            TX90.setGoalPos(i, intendedGoal);
                             justMoved = true;
                         }
                     }
                     else if (commander->jointVelocity[i] < 0 && (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1)))
                     {
-                        intendedGoal = TX90.goalPosition[i] + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.maxVelocity[i] * TX90.currVelocity);
-                        if (intendedGoal > TX90.minRotation[i])
+                        intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity());
+                        if (intendedGoal > TX90.getMinRotation(i))
                         {
-                            TX90.lastGoalPosition[i] = TX90.goalPosition[i];
-                            TX90.goalPosition[i] = intendedGoal;
+                            ROS_INFO("---------------------------");
+                            ROS_INFO("Curr pos j%d: %f", i, TX90.getCurrPos(i));
+                            ROS_INFO("Curr goal pos j%d: %f",i,TX90.getGoalPos(i));
+                            ROS_INFO("Max Vel j%d: %f",i,TX90.getMaxVelocity(i));
+                            ROS_INFO("Curr Vel: %f",TX90.getCurrVelocity());
+                            ROS_INFO("Curr Int. Goal: %f \n",intendedGoal);
+
+                            TX90.setGoalPos(i, intendedGoal);
                             justMoved = true;
                         }
                     }
@@ -403,12 +342,23 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                     {
                         if (justMoved == true)
                         {
-                            TX90.goalPosition[i] = TX90.currPos[i];
+                            
+                            TX90.setGoalPos(i , TX90.getCurrPos(i));
                             justMoved = false;
+
+                            ROS_INFO("---------------------------");
+                            ROS_INFO("Curr pos j%d: %f", i, TX90.getCurrPos(i));
+                            ROS_INFO("Curr goal pos j%d: %f",i,TX90.getGoalPos(i));
+                            ROS_INFO("Max Vel j%d: %f",i,TX90.getMaxVelocity(i));
+                            ROS_INFO("Curr Vel: %f",TX90.getCurrVelocity());
+                            ROS_INFO("Curr Int. Goal: %f \n",intendedGoal);
+
                         }
                     }
                 }
             }
+
+
             break;
         }
         case WP_ID:
@@ -422,7 +372,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 }
 
                 for (int i = 0; i < 6; i++)
-                    TX90.goalPosition[i] = commander->jointPosition[i];
+                    TX90.setGoalPos(i, commander->jointPosition[i]);
                     
                 goalExists = true;
                 jointTransmitReady = true;
@@ -452,19 +402,26 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
         robotInitialized = true;
         for (int i = 0; i < 6; i++)
         {
-            TX90.currPos[i] = RobotState->actual.positions[i];
-            TX90.goalPosition[i] = TX90.currPos[i];
-            TX90.lastGoalPosition[i] = TX90.goalPosition[i];
+            TX90.setCurrPos(i , RobotState->actual.positions[i]);
+            TX90.setGoalPos(i , TX90.getCurrPos(i));
+            // TX90.lastGoalPosition[i] = TX90.goalPosition[i];
         }
     }
     for (int i = 0; i < 6; i++)
     {
-        TX90.currPos[i] = RobotState->actual.positions[i];
+        TX90.setCurrPos(i, RobotState->actual.positions[i]);
+        if (OPERATING_MODE == MANUAL_ID)
+        {
+            // ROS_INFO("Curr Pos %d: %f", i, TX90.getCurrPos(i));
+            // ROS_INFO("Curr goal %d: %f",i,TX90.getGoalPos(i));
+        }
+            
+
         if (goalExists == true)
         {
-            if ((TX90.goalPosition[i] >= 0) && (TX90.currPos[i] >= (0.999 * TX90.goalPosition[i])) && (TX90.currPos[i] <= (1.001 * TX90.goalPosition[i])))
+            if ((TX90.getGoalPos(i) >= 0) && (TX90.getCurrPos(i) >= (0.999 * TX90.getGoalPos(i))) && (TX90.getCurrPos(i) <= (1.001 * TX90.getGoalPos(i))))
                 jointAtGoalCounter++;
-            else if ((TX90.goalPosition[i] < 0) && (TX90.currPos[i] <= (0.999 * TX90.goalPosition[i])) && (TX90.currPos[i] >= (1.001 * TX90.goalPosition[i])))
+            else if ((TX90.getGoalPos(i) < 0) && (TX90.getCurrPos(i) <= (0.999 * TX90.getGoalPos(i))) && (TX90.getCurrPos(i) >= (1.001 * TX90.getGoalPos(i))))
                 jointAtGoalCounter++;
         }
     }

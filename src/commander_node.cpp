@@ -25,7 +25,7 @@
 #include "bitten/feedback_msg.h"
 #include "bitten/control_msg.h"
 
-using namespace std;
+// using namespace std;
  /* ----------------------------------------------------------------------
  *                      -------  Initializing   -------
  * ----------------------------------------------------------------------- */
@@ -48,7 +48,9 @@ bool fbTransmitReady            = false;
 bool jointStatesTransmitReady   = false;
 bool robotOccupied              = false;
 bool recording                  = false;
+bool gotPositions               = false;
 
+bool NewWaypoint                = true;
 bool not_run                    = true;
 bool ping                       = true;
 
@@ -58,13 +60,17 @@ const   int PING_RATE = LOOP_RATE_INT / 2;
         int ping_timeout = PING_RATE;
         int pub_counter = LOOP_RATE_INT / 10;
         int waypointsRecorded = 0;
-double goalArray[6];
+float goalArray[6];
+
+float tempCurrPos[6];
 
 uint8_t jointsdone = 0;
 
-string currentRecordFile;
+std::string currentRecordFile;
 
-fstream RecordFile;
+std::fstream RecordFile;
+
+TX90_c TX90;
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -114,7 +120,7 @@ int main(int argc , char **argv)
 
                 if (! --poll_timer)
                 {
-                    ROS_INFO("waiting in poll_mode");
+                    // ROS_INFO("waiting in poll_mode");
                     poll_timer = 2*LOOP_RATE_INT;
                 }
             break;
@@ -168,10 +174,7 @@ int main(int argc , char **argv)
  * ----------------------------------------------------------------------- */       
 void manualCallback (const bitten::control_msg::ConstPtr& manual)
 {
-    // extern Robot_s TX90;
-
     static int debounceCounter = 0;
-    static bool buttonClicked = false;
 
     if (manual->flags & PONG)
         ping = true;
@@ -192,22 +195,32 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
     if (manual->buttons[0] == 1)
     {
         debounceCounter++;
+        
+        
 
         if (debounceCounter == 5)
         {
             if (recording == true)
             {
-                cout << "Record button hit. Adding waypoint_" << waypointsRecorded << endl;
+                std::cout << "Record button hit. Adding waypoint_" << waypointsRecorded << std::endl;
                 RecordFile << "\nwaypoint_" << waypointsRecorded;
-                
-                // std::array<double, 6> *tempCurrPos = getCurrPos();
-                // double *tempCurrPos = getCurrPos();
-                
-                for (int i = 0; i < 6; i++)
+
+                if (gotPositions == true)
                 {
-                    RecordFile << "\t" << TX90.getCurrPos(i);
-                    cout << TX90.getCurrPos(i) << "\t";
+                    NewWaypoint = true;
+                    for (int i = 0; i < 6; i++)
+                    {
+                        RecordFile << "\t" << tempCurrPos[i];
+                        std::cout << tempCurrPos[i] << "\t";  
+                    }
+                } 
+                else if (NewWaypoint == true)
+                {
+                    NewWaypoint = false;
+                    passOnMsg.flags |= GET_CURR_POS;
+                    jointStatesTransmitReady = true;
                 }
+                    
             }
             waypointsRecorded++;
         }
@@ -280,7 +293,6 @@ void wpCallback (const bitten::control_msg::ConstPtr& wp)
  * ----------------------------------------------------------------------- */
 void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedback)
 {
-    ROS_INFO("GOT SOME FEEDBACK");
     if (moveFeedback->flags & GOAL_REACHED)
     {
         switch(INPUT_MODE)
@@ -299,6 +311,15 @@ void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedbac
             
         }
     }
+
+    if (moveFeedback->flags & SENT_CURR_POS)
+    {
+        gotPositions = true;
+        for (int i = 0; i < 6; i++)
+            tempCurrPos[i] = moveFeedback->positions[i];
+    }
+    else
+        gotPositions = false;
 }
 
  /* ----------------------------------------------------------------------
@@ -368,16 +389,16 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
                 currentRecordFile = "/home/frederik/catkin_ws/src/bitten/tests/";
                 currentRecordFile += terminal->programName;
 
-                RecordFile.open(currentRecordFile, ios_base::out);
+                RecordFile.open(currentRecordFile, std::ios_base::out);
 
                 if (RecordFile.is_open())
                 {
                     waypointsRecorded = 0;
-                    cout << "Opened recording file!" << std::endl;
+                    std::cout << "Opened recording file!" << std::endl;
                     RecordFile << "test_test";
                 }
                 else
-                    cout << "Couldn't open recording file :( " << std::endl;
+                    std::cout << "Couldn't open recording file :( " << std::endl;
             }
 
         }
