@@ -6,19 +6,14 @@
  * -----------------------------------------------------------------------
  *                      -------  Libraries   -------
  * ----------------------------------------------------------------------- */
-#include <linux/can.h>
+#include "ros/ros.h"
 #include <linux/can/raw.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <chrono>
 
-#include "ros/ros.h"
+#include <can_driver_node.h>
 #include <bitten/can_msg.h>
 #include <global_node_definitions.h>
-#include <can_driver_node.h>
  
  /* ----------------------------------------------------------------------
  *                       -------  Global variables   -------
@@ -29,9 +24,7 @@ bitten::can_msg can_msg;
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */  
 int main(int argc, char** argv)
-{   
-    using namespace std::chrono_literals;
-
+{
     // CAN connection variables
     struct sockaddr_can addr;
     struct ifreq ifr;
