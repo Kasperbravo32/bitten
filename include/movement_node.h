@@ -1,3 +1,5 @@
+#pragma once
+
 /* Declare Struct to define new robots, containing various info, like amount of links, max rotation in each link, max speed etc.    */
 struct Robot_s {
 
@@ -24,4 +26,4 @@ bool tool;
 };
 
 /* Defining robots      */
-Robot_s TX90; /* Staubli TX90 Robot          */
+extern Robot_s TX90;                  /* Staubli TX90 Robot          */

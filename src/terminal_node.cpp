@@ -31,10 +31,11 @@ void commanderFeedbackCallback (const bitten::feedback_msg::ConstPtr& commanderF
 bitten::control_msg terminalMsg;
 
  /* ----------------------------------------------------------------------
- *                    -------  Message objects   -------
+ *             -------  Variables, Constants & Objects  -------
  * ----------------------------------------------------------------------- */
 string ExistingFiles[10];
 
+bool recording = false;
 bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
                                                             mode_func,
                                                             play_test_func,
@@ -208,36 +209,49 @@ bool record_func()
     static int a;
     static string filename;
     
-    a = getNumberOfTests();
 
-    filename = "/home/frederik/catkin_ws/src/bitten/tests/test_";
-    filename += a + '0';
-    filename += ".txt";
-
-    ofstream fileToCreate(filename);
-
-    if (fileToCreate.is_open())
+    if (recording == false)
     {
-        cout << "Created file: test_" << a << ".txt" << endl;
-        fileToCreate.close();
+        recording = true;
+        a = getNumberOfTests();
+
+        filename = "/home/frederik/catkin_ws/src/bitten/tests/test_";
+        filename += a + '0';
+        filename += ".txt";
+
+        ofstream fileToCreate(filename);
+
+        if (fileToCreate.is_open())
+        {
+            cout << "Started recording to: test_" << a << ".txt" << endl;
+            fileToCreate.close();
+        }
+
+        /* Open the TEST_INFO file, get current number of tests */
+        a = getNumberOfTests();
+        a++;    
+
+        ofstream configfile_out("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt", ios_base::trunc | ios_base::out);
+        configfile_out << a;
+        configfile_out.close();
+
+        /* Set the controlling mode to manual, and tell commander to start recording. Also pass along the filename, path is always the same */
+        terminalMsg.flags |= MODE_MANUAL_F;
+        terminalMsg.flags |= START_RECORD;  
+        terminalMsg.programName = "test_";
+        terminalMsg.programName += a - 1 + '0';
+        terminalMsg.programName += ".txt";
+
+        return true;
     }
+    else
+    {
+        cout << "Stopped recording to: " << "test_" << (a - 1) << ".txt" << endl;
+        recording = false;
+        terminalMsg.flags = STOP_RECORD;  
 
-    /* Open the TEST_INFO file, get current number of tests */
-    a = getNumberOfTests();
-    a++;    
-
-    ofstream configfile_out("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt", ios_base::trunc | ios_base::out);
-    configfile_out << a;
-    configfile_out.close();
-
-    /* Set the controlling mode to manual, and tell commander to start recording. Also pass along the filename, path is always the same */
-    terminalMsg.flags |= MODE_MANUAL_F;
-    terminalMsg.flags |= START_RECORD;  
-    terminalMsg.programName = "test_";
-    terminalMsg.programName += a - 1 + '0';
-    terminalMsg.programName += ".txt";
-
-    return true;
+        return true;
+    }
 }
 
 
@@ -311,6 +325,8 @@ void readExistingTests()
 
 bool clearTestFolder()
 {
+    if (recording == false)
+    {
     string filePath = "/home/frederik/catkin_ws/src/bitten/tests/";
     string fileName = "test_";
     string fileExtension = ".txt";
@@ -344,4 +360,9 @@ bool clearTestFolder()
         }
         else
             cout << "Couldn't open config file" << endl;
+    }
+    else
+    {
+        cout << "Currently recording. stop recording before purging" << endl;
+    }
 }

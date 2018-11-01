@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     * ------------------------------------------------- */
     while (ros::ok())
     {
-        if (connectionEstablished == true)
+        if (connectionEstablished == true || connectionEstablished == false)
         {
             if (newConnection)
             {

@@ -12,10 +12,12 @@
 #include <array>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
+#include "movement_node.h"
 #include "terminal_node.h"
 #include "commander_node.h"
 #include "global_node_definitions.h"
@@ -23,6 +25,7 @@
 #include "bitten/feedback_msg.h"
 #include "bitten/control_msg.h"
 
+using namespace std;
  /* ----------------------------------------------------------------------
  *                      -------  Initializing   -------
  * ----------------------------------------------------------------------- */
@@ -36,7 +39,6 @@ void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedb
  * ----------------------------------------------------------------------- */
 bitten::feedback_msg commanderFeedbackMsg;     /* Used to send feedback to various nodes */
 bitten::control_msg passOnMsg;
-
  /* ----------------------------------------------------------------------
  *                    -------  Global Variables   -------
  * ----------------------------------------------------------------------- */
@@ -45,6 +47,7 @@ bool waiting                    = false;
 bool fbTransmitReady            = false;
 bool jointStatesTransmitReady   = false;
 bool robotOccupied              = false;
+bool recording                  = false;
 
 bool not_run                    = true;
 bool ping                       = true;
@@ -54,11 +57,14 @@ const   int PING_RATE = LOOP_RATE_INT / 2;
         int ping_timer = PING_RATE;
         int ping_timeout = PING_RATE;
         int pub_counter = LOOP_RATE_INT / 10;
-
+        int waypointsRecorded = 0;
 double goalArray[6];
 
 uint8_t jointsdone = 0;
 
+string currentRecordFile;
+
+fstream RecordFile;
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -162,6 +168,11 @@ int main(int argc , char **argv)
  * ----------------------------------------------------------------------- */       
 void manualCallback (const bitten::control_msg::ConstPtr& manual)
 {
+    // extern Robot_s TX90;
+
+    static int debounceCounter = 0;
+    static bool buttonClicked = false;
+
     if (manual->flags & PONG)
         ping = true;
 
@@ -177,6 +188,30 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
             fbTransmitReady = true;
         }
     }
+
+    if (manual->buttons[0] == 1)
+    {
+        debounceCounter++;
+
+        if (debounceCounter == 5)
+        {
+            if (recording == true)
+            {
+                cout << "Record button hit. Adding waypoint_" << waypointsRecorded << endl;
+                RecordFile << "\nwaypoint_" << waypointsRecorded;
+                
+                for (int i = 0; i < 6; i++)
+                {
+                    RecordFile << "\t" << TX90.currPos[i];
+                    cout << TX90.currPos[i] << "\t";
+                }
+                    
+            }
+            waypointsRecorded++;
+        }
+    }
+    else if (manual->buttons[0] == 0)
+        debounceCounter = 0;
 
     if (INPUT_MODE == MANUAL_MODE)
     {
@@ -277,18 +312,12 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
             {
                 INPUT_MODE = MANUAL_MODE;
                 std::cout << "Operating Mode: Manual mode." << std::endl;
-            }
-            else
-                std::cout << "Operating mode already in Manual mode!" << std::endl;
-                
-            
+            }            
         }
         else
         {
             std::cout << "Currently occupied. Finish current operation before changing modes" << std::endl;
         }
-        
-        
     }
 
     if (terminal->flags & MODE_WAYPOINT_F)
@@ -298,8 +327,6 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
             INPUT_MODE = WP_MODE;
             std::cout << "Operating Mode: Waypoint mode." << std::endl;
         }
-        else
-            std::cout << "Operating mode already in Waypoint mode!" << std::endl;
     }
 
     if (terminal->flags & MODE_NONE_F)
@@ -311,8 +338,6 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
                 INPUT_MODE == POLL_MODE;
                 std::cout << "Operating Mode: No-Control." << std::endl;
             }
-            else
-                std::cout << "Operating mode already in No-Control mode!" << std::endl;
         }
         else
             std::cout << "Currently occupied. Finish current operation before changing modes" << std::endl;
@@ -328,6 +353,41 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
             commanderFeedbackMsg.senderID = COMMANDER_ID;                   /* Set the Sender ID                                        */
             commanderFeedbackMsg.recID = WP_ID;                             /* Set the Receiver ID                                      */
             fbTransmitReady = true;                                         /* We're ready to transmit the message, on feedback topic   */
+        }
+    }
+
+    if (terminal->flags & START_RECORD)
+    {
+        if (INPUT_MODE == MANUAL_MODE)
+        {
+            if (recording == false)
+            {
+                recording = true;
+                currentRecordFile = "/home/frederik/catkin_ws/src/bitten/tests/";
+                currentRecordFile += terminal->programName;
+
+                RecordFile.open(currentRecordFile, ios_base::out);
+
+                if (RecordFile.is_open())
+                {
+                    waypointsRecorded = 0;
+                    cout << "Opened recording file!" << std::endl;
+                    RecordFile << "test_test";
+                }
+                else
+                    cout << "Couldn't open recording file :( " << std::endl;
+            }
+
+        }
+    }
+    
+    if (terminal->flags & STOP_RECORD)
+    {
+        if (recording == true)
+        {
+            recording = false;
+            RecordFile.close();
+
         }
     }
 }

@@ -1,3 +1,5 @@
+#pragma once
+
 struct Waypoint_s {
     double jointPositions[6];
     double velocity[6];
