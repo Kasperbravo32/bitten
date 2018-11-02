@@ -191,7 +191,7 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
         if (INPUT_MODE == POLL_MODE)
         {
             INPUT_MODE = MANUAL_MODE;
-            ROS_INFO("Established connection to %s",nodeNames[MANUAL_NODE].c_str());
+            // ROS_INFO("Established connection to %s",nodeNames[MANUAL_NODE].c_str());
             commanderFeedbackMsg.flags = ACK;
             commanderFeedbackMsg.recID = MANUAL_ID;
 
@@ -203,8 +203,6 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
     {
         debounceCounter++;
         
-        
-
         if (debounceCounter == 5)
         {
             if (recording == true)
@@ -214,9 +212,11 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
                     NewWaypoint = true;
                     RecordFile << "\nwaypoint_" << waypointsRecorded;
                     std::cout << "Adding waypoint_" << waypointsRecorded << std::endl;
+
                     for (int i = 0; i < 6; i++)
                         RecordFile << "\t" << tempCurrPos[i];
-                } 
+                }
+
                 else if (NewWaypoint == true)
                 {
                     NewWaypoint = false;
@@ -250,7 +250,6 @@ void wpCallback (const bitten::control_msg::ConstPtr& wp)
             if (INPUT_MODE == POLL_MODE)
             {
                 INPUT_MODE = WP_MODE;
-                ROS_INFO("Established connection to %s",nodeNames[WP_NODE].c_str());
                 commanderFeedbackMsg.flags = ACK;
                 commanderFeedbackMsg.recID = WP_ID;
                 fbTransmitReady = true;
@@ -264,17 +263,18 @@ void wpCallback (const bitten::control_msg::ConstPtr& wp)
                 commanderFeedbackMsg.flags = ACK;
                 commanderFeedbackMsg.recID = WP_ID;
                 fbTransmitReady = true;
-                ROS_INFO("Terminated connection to %s", nodeNames[WP_NODE].c_str());
             }
         break;
 
         case NEW_WAYPOINT:
+        // std::cout << "Moving robot to: " << wp->programName << "...";
             if (INPUT_MODE == WP_MODE)
             {
+                
                 if (robotOccupied == false)
                 {
                     passOnMsg.programName = wp->programName;
-                    ROS_INFO("Setting new goal to: %s",wp->programName.c_str());
+                    
                     robotOccupied = true;
 
                     passOnMsg.jointPosition = wp->jointPosition;
@@ -300,6 +300,7 @@ void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedbac
         switch(INPUT_MODE)
         {
             case WP_MODE:
+                // std::cout << " OK!" << std::endl;
                 commanderFeedbackMsg.recID = WP_ID;
                 commanderFeedbackMsg.flags |= GOAL_REACHED;
                 fbTransmitReady = true;
@@ -337,10 +338,9 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
                 std::cout << "Operating Mode: Manual mode." << std::endl;
             }            
         }
+
         else
-        {
             std::cout << "Currently occupied. Finish current operation before changing modes" << std::endl;
-        }
     }
 
     if (terminal->flags & MODE_WAYPOINT_F)
@@ -370,7 +370,6 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
     {
         if (INPUT_MODE == WP_MODE)
         {
-            std::cout << "Received request to start test..." << std::endl;
             commanderFeedbackMsg.flags = START_TEST;                        /* Reset flags, and set the START_TEST flag                 */
             commanderFeedbackMsg.programName = terminal->programName;       /* Attach the filename of the test to the feedback message  */
             commanderFeedbackMsg.senderID = COMMANDER_ID;                   /* Set the Sender ID                                        */
@@ -386,8 +385,7 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
             if (recording == false)
             {
                 recording = true;
-                currentRecordFile = testsPath;
-                currentRecordFile += terminal->programName;
+                currentRecordFile = testsPath + terminal->programName;
 
                 RecordFile.open(currentRecordFile, std::ios_base::out);
 
@@ -406,7 +404,6 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
         {
             recording = false;
             RecordFile.close();
-
         }
     }
 }

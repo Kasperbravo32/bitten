@@ -68,7 +68,6 @@ int main(int argc, char **argv)
 
             if (readyForNextWp == true)
             {
-                ROS_INFO("Sending wp: %s", WaypointBank[NumberofWaypoints - RemainingWaypoints].waypointName.c_str());
                 wp_msg.flags = NEW_WAYPOINT;
                 wp_msg.programName = WaypointBank[NumberofWaypoints - RemainingWaypoints].waypointName;
 
