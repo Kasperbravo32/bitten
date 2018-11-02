@@ -144,6 +144,7 @@ bool mode_func() {
     }
     cout << "Changing mode to: ";
     terminalMsg.flags = 0;
+
     switch(input)
     {
         case 1:
@@ -214,14 +215,18 @@ bool record_func()
 {
     static int a;
     static string filename;
-    
 
     if (recording == false)
     {
         recording = true;
         a = getNumberOfTests();
 
+<<<<<<< HEAD
         filename = "/~/catkin_ws/src/bitten/tests/test_";
+=======
+        filename = path;
+        filename += "/catkin_ws/src/bitten/tests/test_";
+>>>>>>> 32375e04bc3fb5adda526389d513d45a119910da
         filename += a + '0';
         filename += ".txt";
 
@@ -295,6 +300,7 @@ void readExistingTests()
     a = getNumberOfTests();
     o = 0;
 
+
     fstream FileChecker;
     string filename = "/~/catkin_ws/src/bitten/tests/test_";
     string temp_filename;
@@ -302,6 +308,7 @@ void readExistingTests()
     for (int i = 0; i < a; i++)
     {
         temp_filename = filename;
+
         temp_filename += i + '0';
         temp_filename += ".txt";
 
@@ -326,6 +333,7 @@ void readExistingTests()
 
     if (FirstFileFound == false)
         cout << "No file exists.";
+
 }
 
 
@@ -333,30 +341,42 @@ bool clearTestFolder()
 {
     if (recording == false)
     {
+<<<<<<< HEAD
     string filePath = "/~/catkin_ws/src/bitten/tests/";
     string fileName = "test_";
     string fileExtension = ".txt";
+=======
+        string filePath = "/home/frederik/catkin_ws/src/bitten/tests/";
+        string fileName = "test_";
+        string fileExtension = ".txt";
+>>>>>>> 32375e04bc3fb5adda526389d513d45a119910da
 
-    string fileToDelete;
-    int filesDeletedCounter = 0;
+        string fileToDelete;
+        int filesDeletedCounter = 0;
     
-    for (int i = 0; i < getNumberOfTests(); i++)
-    {
-        fileToDelete = filePath;
-        fileToDelete +=fileName;
-        fileToDelete += i + '0';
-        fileToDelete += fileExtension;
-
-        fstream FileChecker(fileToDelete);
-
-        if (FileChecker.is_open())
+        for (int i = 0; i < getNumberOfTests(); i++)
         {
-            FileChecker.close();
-            remove(fileToDelete.c_str());
-            filesDeletedCounter++;
+            fileToDelete = filePath;
+            fileToDelete +=fileName;
+            fileToDelete += i + '0';
+            fileToDelete += fileExtension;
+
+            fstream FileChecker(fileToDelete);
+
+            if (FileChecker.is_open())
+            {
+                FileChecker.close();
+                remove(fileToDelete.c_str());
+                filesDeletedCounter++;
+            }
         }
+<<<<<<< HEAD
     }
         ofstream testCounterFile("/~/catkin_ws/src/bitten/tests/TEST_INFO.txt" , ios_base::trunc | ios_base::out);
+=======
+
+        ofstream testCounterFile("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt" , ios_base::trunc | ios_base::out);
+>>>>>>> 32375e04bc3fb5adda526389d513d45a119910da
         
         if (testCounterFile.is_open())
         {
@@ -368,7 +388,5 @@ bool clearTestFolder()
             cout << "Couldn't open config file" << endl;
     }
     else
-    {
         cout << "Currently recording. stop recording before purging" << endl;
-    }
 }

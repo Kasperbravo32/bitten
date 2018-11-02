@@ -88,25 +88,24 @@ int main (int argc , char **argv)
                     jointPathMsg.points.clear();
                     jointPathPointMsg.positions.clear();
                     jointPathPointMsg.velocities.clear();
+                    
                     for (int i = 0; i < 6; i++)
                     {
                         jointPathMsg.joint_names.push_back(TX90.getJointName(i));
                         jointPathPointMsg.positions.push_back(TX90.getGoalPos(i));
                         jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity()*TX90.getMaxVelocity(i));
                     }
+                    
                     jointPathMsg.points.push_back(jointPathPointMsg);
                 }
                 if (jointTransmitReady)
                 {
-                    ROS_INFO("Publishing to bot");
                     movement_pub.publish(jointPathMsg);
                     jointTransmitReady = false;
                 }
                 if (feedbackTransmitReady)
                 {
-                    ROS_INFO("Publishing to feedback");;
-                    feedback_pub.publish(movementFeedbackMsg);
-                    
+                    feedback_pub.publish(movementFeedbackMsg);   
                     movementFeedbackMsg.flags = 0;
                     feedbackTransmitReady = false;
                 }
@@ -169,18 +168,11 @@ int main (int argc , char **argv)
                     a += 0.01;
 
                     TX90.setCurrPos(0 , a);
-
-                    // std::cout << "A is: " << a << std::endl;
-
-
-
-
                     
                     for (int i = 0; i < 6; i++)
                     {                  
                         jointPathMsg.joint_names.push_back(TX90.getJointName(i));
                         jointPathPointMsg.positions.push_back(TX90.getGoalPos(i));
-                        // jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity()*TX90.getMaxVelocity(i));
                     }
 
                     jointPathMsg.points.push_back(jointPathPointMsg);
@@ -192,6 +184,7 @@ int main (int argc , char **argv)
                 if (jointTransmitReady)
                 {
                     movement_pub.publish(jointPathMsg);
+
                     jointTransmitReady = false;
                 }
 
@@ -239,9 +232,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
             if (commander->buttons[1] == 1 && commander->buttons[2] == 1) //reset and deadmans button
             {
                 for (int i = 0; i < 6; i++)
-                {
                     TX90.setGoalPos(i , TX90.getResetStatePos(i));
-                }
             }
 
             if (commander->buttons[7] == 1) //increment current velocity
@@ -261,7 +252,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                     ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                 }
             }
-            else if (commander->buttons[6] == 1) //decrease current velocity
+            else if (commander->buttons[6] == 1) /* decrease current velocity   */
             {
                 ButtonCounter++;
                 if (ButtonCounter == 6)
@@ -272,16 +263,16 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                         ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                     }
                 }
+
                 if (ButtonCounter == 60)
                 {
                     TX90.setCurrVelocity(0);
                     ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                 }
             }
+
             else
                 ButtonCounter = 0;
-
-            int jointAtGoalCounter = 0;
 
             if (commander->flags & GET_CURR_POS)
             {
@@ -293,6 +284,8 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 feedbackTransmitReady = true;
             }
             
+            int jointAtGoalCounter = 0;
+
             for (int i = 0; i < 6; i++)
             {
                 static float posBoundry = 0.05 * TX90.getMaxRotation(i);
@@ -300,7 +293,6 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                     jointAtGoalCounter++;
             }
 
-            // ROS_INFO("joint at goal counter: %d", jointAtGoalCounter);
             if (jointAtGoalCounter == 6)
             {
                 for (int i = 0; i < 6; i++)
@@ -311,48 +303,27 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                         intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity());
                         if (intendedGoal < TX90.getMaxRotation(i))
                         {
-                            ROS_INFO("---------------------------");
-                            ROS_INFO("Curr pos j%d: %f", i, TX90.getCurrPos(i));
-                            ROS_INFO("Curr goal pos j%d: %f",i,TX90.getGoalPos(i));
-                            ROS_INFO("Max Vel j%d: %f",i,TX90.getMaxVelocity(i));
-                            ROS_INFO("Curr Vel: %f",TX90.getCurrVelocity());
-                            ROS_INFO("Curr Int. Goal: %f \n",intendedGoal);
-
                             TX90.setGoalPos(i, intendedGoal);
                             justMoved = true;
                         }
                     }
+
                     else if (commander->jointVelocity[i] < 0 && (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1)))
                     {
                         intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity());
                         if (intendedGoal > TX90.getMinRotation(i))
                         {
-                            ROS_INFO("---------------------------");
-                            ROS_INFO("Curr pos j%d: %f", i, TX90.getCurrPos(i));
-                            ROS_INFO("Curr goal pos j%d: %f",i,TX90.getGoalPos(i));
-                            ROS_INFO("Max Vel j%d: %f",i,TX90.getMaxVelocity(i));
-                            ROS_INFO("Curr Vel: %f",TX90.getCurrVelocity());
-                            ROS_INFO("Curr Int. Goal: %f \n",intendedGoal);
-
                             TX90.setGoalPos(i, intendedGoal);
                             justMoved = true;
                         }
                     }
+
                     else
                     {
                         if (justMoved == true)
                         {
-                            
                             TX90.setGoalPos(i , TX90.getCurrPos(i));
                             justMoved = false;
-
-                            ROS_INFO("---------------------------");
-                            ROS_INFO("Curr pos j%d: %f", i, TX90.getCurrPos(i));
-                            ROS_INFO("Curr goal pos j%d: %f",i,TX90.getGoalPos(i));
-                            ROS_INFO("Max Vel j%d: %f",i,TX90.getMaxVelocity(i));
-                            ROS_INFO("Curr Vel: %f",TX90.getCurrVelocity());
-                            ROS_INFO("Curr Int. Goal: %f \n",intendedGoal);
-
                         }
                     }
                 }
@@ -383,11 +354,6 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
             ROS_INFO("Entered Missing ID callback");
             break;
     }
-    // }
-    // else
-    // {
-    //     /* Received data, but is currently occupied */
-    // }
 }
 
 /* ----------------------------------------------------------------------
@@ -397,6 +363,7 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
 {
     /* Update currPos from the feedback, measuring on the sensors   */
     int jointAtGoalCounter = 0;
+    
     if (!robotInitialized)
     {
         robotInitialized = true;
@@ -404,25 +371,21 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
         {
             TX90.setCurrPos(i , RobotState->actual.positions[i]);
             TX90.setGoalPos(i , TX90.getCurrPos(i));
-            // TX90.lastGoalPosition[i] = TX90.goalPosition[i];
         }
     }
+
     for (int i = 0; i < 6; i++)
     {
         TX90.setCurrPos(i, RobotState->actual.positions[i]);
-        if (OPERATING_MODE == MANUAL_ID)
-        {
-            // ROS_INFO("Curr Pos %d: %f", i, TX90.getCurrPos(i));
-            // ROS_INFO("Curr goal %d: %f",i,TX90.getGoalPos(i));
-        }
 
         if (goalExists == true)
         {
-            static float posBoundary = 0.001 * TX90.getMaxRotation(i);
+            static float posBoundary = 0.05 * TX90.getMaxRotation(i);
             if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundary)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundary)))
                 jointAtGoalCounter++;
         }
     }
+
     if (jointAtGoalCounter == 6)
     {
         movementFeedbackMsg.flags |= GOAL_REACHED;

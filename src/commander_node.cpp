@@ -155,6 +155,7 @@ int main(int argc , char **argv)
         {
             commander_pub.publish(passOnMsg);
             jointStatesTransmitReady = false;
+            passOnMsg.flags = 0;
         }
         
         if (fbTransmitReady)
@@ -206,12 +207,9 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
                 {
                     NewWaypoint = true;
                     RecordFile << "\nwaypoint_" << waypointsRecorded;
+                    std::cout << "Adding waypoint_" << waypointsRecorded << std::endl;
                     for (int i = 0; i < 6; i++)
-                    {
-                        std::cout << "Record button hit. Adding waypoint_" << waypointsRecorded << std::endl;
                         RecordFile << "\t" << tempCurrPos[i];
-                        std::cout << tempCurrPos[i] << "\t";  
-                    }
                 } 
                 else if (NewWaypoint == true)
                 {
@@ -305,8 +303,6 @@ void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedbac
             case MANUAL_MODE:
                 robotOccupied = false;
             break;
-
-            
         }
     }
 
