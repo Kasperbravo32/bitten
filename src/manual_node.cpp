@@ -28,7 +28,6 @@ int main(int argc, char **argv)
 {
     bool newConnection = true;
 
-    ROS_INFO("Initiating manual_node");
     ros::init(argc, argv, "manual_node");
     ros::NodeHandle n;
 
