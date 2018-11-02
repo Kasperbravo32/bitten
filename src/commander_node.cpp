@@ -384,7 +384,7 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
             if (recording == false)
             {
                 recording = true;
-                currentRecordFile = "/home/frederik/catkin_ws/src/bitten/tests/";
+                currentRecordFile = "~/catkin_ws/src/bitten/tests/";
                 currentRecordFile += terminal->programName;
 
                 RecordFile.open(currentRecordFile, std::ios_base::out);

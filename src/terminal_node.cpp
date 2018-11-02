@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include "string.h"
+#include <pwd.h>
 
 #include "global_node_definitions.h"
 
@@ -46,6 +47,9 @@ bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
                                                             clearTestFolder      };
 
 
+passwd* pw = getpwuid(getuid());
+std::string path(pw->pw_dir);
+
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */
@@ -53,7 +57,7 @@ int main (int argc , char **argv)
 {
     ros::init(argc , argv , "terminal_node");
     ros::NodeHandle n;
-
+    
     ros::Subscriber feedback_sub    = n.subscribe<bitten::feedback_msg> ("feedback_topic" , 5 , commanderFeedbackCallback);
     ros::Publisher  terminal_pub    = n.advertise<bitten::control_msg>  ("terminal_topic" , 5);
 
@@ -69,6 +73,8 @@ int main (int argc , char **argv)
 
     terminalMsg.nodeName = nodeNames[TERMINAL_NODE];
     terminalMsg.id = TERMINAL_ID;
+
+    std::cout << path << std::endl;
 
 /*  -------------------------------------------------
          SUPERLOOP
@@ -198,7 +204,7 @@ bool delete_test_func()
     cout << "File to delete: ";
     cin >> fileToDelete;
     cout << "Deleting: " << ExistingFiles[fileToDelete];
-    fileToDeleteString = "/home/frederik/catkin_ws/src/bitten/tests/";
+    fileToDeleteString = "/~/catkin_ws/src/bitten/tests/";
     fileToDeleteString += ExistingFiles[fileToDelete];
     remove(fileToDeleteString.c_str());
 }
@@ -215,7 +221,7 @@ bool record_func()
         recording = true;
         a = getNumberOfTests();
 
-        filename = "/home/frederik/catkin_ws/src/bitten/tests/test_";
+        filename = "/~/catkin_ws/src/bitten/tests/test_";
         filename += a + '0';
         filename += ".txt";
 
@@ -231,7 +237,7 @@ bool record_func()
         a = getNumberOfTests();
         a++;    
 
-        ofstream configfile_out("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt", ios_base::trunc | ios_base::out);
+        ofstream configfile_out("/~/catkin_ws/src/bitten/tests/TEST_INFO.txt", ios_base::trunc | ios_base::out);
         configfile_out << a;
         configfile_out.close();
 
@@ -264,7 +270,7 @@ int getNumberOfTests()
 {
     /* Reads the TEST_INFO.txt file, and returns the amount of test files created, e.g. the total amount of tests */
 
-    ifstream configfile("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt");
+    ifstream configfile("/~/catkin_ws/src/bitten/tests/TEST_INFO.txt");
     ofstream configfile_out;
 
     int a;
@@ -290,7 +296,7 @@ void readExistingTests()
     o = 0;
 
     fstream FileChecker;
-    string filename = "/home/frederik/catkin_ws/src/bitten/tests/test_";
+    string filename = "/~/catkin_ws/src/bitten/tests/test_";
     string temp_filename;
     
     for (int i = 0; i < a; i++)
@@ -327,7 +333,7 @@ bool clearTestFolder()
 {
     if (recording == false)
     {
-    string filePath = "/home/frederik/catkin_ws/src/bitten/tests/";
+    string filePath = "/~/catkin_ws/src/bitten/tests/";
     string fileName = "test_";
     string fileExtension = ".txt";
 
@@ -350,7 +356,7 @@ bool clearTestFolder()
             filesDeletedCounter++;
         }
     }
-        ofstream testCounterFile("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt" , ios_base::trunc | ios_base::out);
+        ofstream testCounterFile("/~/catkin_ws/src/bitten/tests/TEST_INFO.txt" , ios_base::trunc | ios_base::out);
         
         if (testCounterFile.is_open())
         {
