@@ -1,5 +1,5 @@
 build
 .vscode
 src/.vscode
-src/launch
-src/tests
+launch
+tests
