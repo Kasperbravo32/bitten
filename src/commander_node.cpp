@@ -333,10 +333,7 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
         if (goalExists == false)
         {
             if (INPUT_MODE != MANUAL_MODE)
-            {
                 INPUT_MODE = MANUAL_MODE;
-                std::cout << "Operating Mode: Manual mode." << std::endl;
-            }            
         }
 
         else
@@ -346,10 +343,7 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
     if (terminal->flags & MODE_WAYPOINT_F)
     {
         if (INPUT_MODE != WP_MODE)
-        {
             INPUT_MODE = WP_MODE;
-            std::cout << "Operating Mode: Waypoint mode." << std::endl;
-        }
     }
 
     if (terminal->flags & MODE_NONE_F)
@@ -357,10 +351,7 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
         if (goalExists == false)
         {
             if (INPUT_MODE != POLL_MODE)
-            {
                 INPUT_MODE == POLL_MODE;
-                std::cout << "Operating Mode: No-Control." << std::endl;
-            }
         }
         else
             std::cout << "Currently occupied. Finish current operation before changing modes" << std::endl;

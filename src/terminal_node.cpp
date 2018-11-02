@@ -12,6 +12,8 @@
 #include "bitten/feedback_msg.h"
 #include <iostream>
 #include <fstream>
+#include <string>
+
 #include "string.h"
 #include <pwd.h>
 
@@ -37,7 +39,7 @@ string ExistingFiles[10];
 string::size_type sz;
 
 bool recording = false;
-
+bool foundKeywordMatch = false;
 bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
                                                             mode_func,
                                                             play_test_func,
@@ -51,6 +53,9 @@ string path(pw->pw_dir);
 
 string configFilePath   = path + "/catkin_ws/src/bitten/tests/TEST_INFO.txt";
 string testsPath        = path + "/catkin_ws/src/bitten/tests/";
+
+int input_i;
+string input_s;
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */
@@ -69,8 +74,6 @@ int main (int argc , char **argv)
     else
         ROS_INFO("Failed to initiate %s",nodeNames[TERMINAL_NODE].c_str());
     
-    string input;
-
     terminalMsg.nodeName = nodeNames[TERMINAL_NODE];
     terminalMsg.id = TERMINAL_ID;
 /*  -------------------------------------------------
@@ -78,15 +81,20 @@ int main (int argc , char **argv)
     ------------------------------------------------- */
     while(ros::ok())
     {
-        cout << endl << ">> ";
-        cin >> input;
+        cout << ">> ";
+        
+        getline(cin , input_s);
 
-        static bool foundKeywordMatch = false;
+        stringstream input_ss(input_s);
+        foundKeywordMatch = false;
+
         for (int i = 0; i < NUMBER_OF_KEYWORDS; i++)
         {
-            if (input == KeywordStrings[i])
+            if (input_s == KeywordStrings[i])
             {
                 foundKeywordMatch = true;
+                clearScreen();
+
                 if (KeywordFunctions[i]())
                 {
                     terminal_pub.publish(terminalMsg);
@@ -94,10 +102,14 @@ int main (int argc , char **argv)
                     terminalMsg.flags = 0;
                 }
             }
-            if (!foundKeywordMatch)
-                cout << "Didn't recognize input." << endl;
         }
-
+        if (input_s == "")
+        {
+            /* Secret stuff happens in here */
+        }
+        else if (!foundKeywordMatch)
+            cout << "Didn't recognize input." << endl;
+        
         ros::spinOnce();
         loop_rate.sleep();
     }
@@ -117,11 +129,8 @@ bool help_func()
         cout << "- " << KeywordStrings[i] << endl;
 }
 
-bool mode_func() {
-    
-    string input;
-    static int input_i;
-
+bool mode_func() 
+{
     cout << "Change mode to one of the following:" << endl;
     cout << "____________________________________" << endl;
     cout << "1: Manual control" << endl;
@@ -130,16 +139,25 @@ bool mode_func() {
     
     do
     {
-        cout << "Input: ";
-        cin >> input;
-        input_i = stoi(input , &sz);
-        
-        if (input_i != 1 && input_i != 2 && input_i != 3)
-            cout << "Not a valid option." << endl;
+        cout << endl << "Input: ";
+        getline(cin , input_s);
+
+        stringstream input_ss(input_s);
+
+        if (input_ss >> input_i)
+        {
+            if (input_i == 1 || input_i == 2 || input_i == 3)
+                break;
+            else
+                cout << "Not a valid option" << endl;
+        }
+
+        else
+            cout << "Not a valid option" << endl;
 
     } while (input_i != 1 && input_i != 2 && input_i != 3);
 
-    cout << "Changing mode to: ";
+    cout << endl << "Changing mode to: ";
 
     switch(input_i)
     {
@@ -158,39 +176,45 @@ bool mode_func() {
             terminalMsg.flags |= MODE_NONE_F;
         break;
     }
+    cout << endl;
     
     return true;
 }
 
-bool play_test_func() {
-    
-    static int chosenTest;
+bool play_test_func() 
+{    
     cout << "Choose a file to play: " << endl << "_______________________" << endl;
     readExistingTests();
-    cout << endl << "Your choice: ";
-    cin >> chosenTest;
-
-    do
-    {
-        cin >> chosenTest;
-        if (ExistingFiles[chosenTest] == "" && chosenTest != 1337)
-            cout << "Not a valid option!" << endl;
-    } 
-    while (ExistingFiles[chosenTest] == "" && chosenTest != 1337);
     
-    if (chosenTest != 1337)
+    while(1)
     {
-        terminalMsg.flags = MODE_WAYPOINT_F | PLAY_TEST_F;
-        terminalMsg.programName = ExistingFiles[chosenTest];
+        cout << endl << "Your choice: " << endl;
+        getline(cin , input_s);
+        stringstream input_ss(input_s);
+        if (input_ss >> input_i)
+        {
+            if (input_i == 1337 || ExistingFiles[input_i] != "")
+                break;
+            else
+                cout << "Not a valid number." << endl;
+        }
+        else
+            cout << "Not valid input." << endl;
     }
-
+    
+    if (input_i != 1337)
+    {
+        terminalMsg.programName = ExistingFiles[input_i];
+        cout << "Playing file: " << ExistingFiles[input_i];
+    }
+        
     else
     {
-        terminalMsg.flags = MODE_WAYPOINT_F | PLAY_TEST_F;
         terminalMsg.programName = "open_a_beer.txt";
         cout << "Øl på vej!" << endl;
     }
-    
+
+    terminalMsg.flags = MODE_WAYPOINT_F | PLAY_TEST_F;
     return true;
 }
 
@@ -201,18 +225,29 @@ bool delete_test_func()
 
     readExistingTests();
     
-    cout << "File to delete: ";
-    cin >> fileToDelete;
-
-    while (ExistingFiles[fileToDelete] == "")
+    do
     {
-        cout << "Not a valid option!" << endl;
-        cin >> fileToDelete;
-    }
-    
-    cout << "Deleting: " << ExistingFiles[fileToDelete];
-    fileToDeleteString = testsPath + ExistingFiles[fileToDelete];
-    remove(fileToDeleteString.c_str());
+        cout << "File to delete: ";
+        getline(cin , input_s);
+        stringstream input_ss(input_s);
+
+        if (input_ss >> input_i)
+        {
+            if (ExistingFiles[input_i] == "")
+                cout << "Not a valid option" << endl;
+            else
+            {
+                cout << "Deleting: " << ExistingFiles[input_i] << endl;
+                fileToDeleteString = testsPath + ExistingFiles[fileToDelete];
+                remove(fileToDeleteString.c_str());            
+                break;
+            }
+        }
+        else
+        {
+            cout << "Not a valid option" << endl;
+        }
+    } while (1);   
 }
 
 
@@ -277,28 +312,27 @@ int getNumberOfTests()
     ifstream configfile(configFilePath);
     ofstream configfile_out;
 
-    int a;
+    int amountOfTests;
 
     if (configfile.is_open())
     {
-        configfile >> a;
+        configfile >> amountOfTests;
         configfile.close();
-        return a;
+        return amountOfTests;
     }
     else
         cout << "Couldn't open file TEST_INFO.txt" << endl;
-
 }
 
 
 void readExistingTests()
 {
     /* Reads out the existing test files */
-    static int a , o;
+    static int amountOfTests , index;
     bool FirstFileFound = false;
 
-    a = getNumberOfTests();
-    o = 0;
+    amountOfTests = getNumberOfTests();
+    index = 0;
 
     for (int i = 0; i < 10; i++)
         ExistingFiles[i] = "";
@@ -308,10 +342,9 @@ void readExistingTests()
     string filename = testsPath + "test_";
     string temp_filename;
     
-    for (int i = 0; i < a; i++)
+    for (int i = 0; i < amountOfTests; i++)
     {
         temp_filename = filename;
-
         temp_filename += i + '0';
         temp_filename += ".txt";
 
@@ -325,10 +358,10 @@ void readExistingTests()
                 FirstFileFound = true;
             }
 
-            cout << o++ << ": - test_" << i << ".txt" << endl;
-            ExistingFiles[o-1] = "test_";
-            ExistingFiles[o-1] += i + '0';
-            ExistingFiles[o-1] += ".txt";
+            cout << index++ << ": - test_" << i << ".txt" << endl;
+            ExistingFiles[index-1] = "test_";
+            ExistingFiles[index-1] += i + '0';
+            ExistingFiles[index-1] += ".txt";
 
             FileChecker.close();
         }
@@ -345,7 +378,6 @@ bool clearTestFolder()
     if (recording == false)
     {
         string filePath = testsPath + "test_";
-        // filePath += "/catkin_ws/src/bitten/tests/test_";
         string fileExtension = ".txt";
 
         string fileToDelete;
