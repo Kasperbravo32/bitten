@@ -34,6 +34,7 @@ bitten::control_msg terminalMsg;
  *             -------  Variables, Constants & Objects  -------
  * ----------------------------------------------------------------------- */
 string ExistingFiles[10];
+string::size_type sz;
 
 bool recording = false;
 
@@ -118,25 +119,29 @@ bool help_func()
 
 bool mode_func() {
     
-    uint8_t input = 0;
+    string input;
+    static int input_i;
 
     cout << "Change mode to one of the following:" << endl;
     cout << "____________________________________" << endl;
     cout << "1: Manual control" << endl;
     cout << "2: Waypoint control" << endl;
     cout << "3: No control (safe mode)" << endl;
-    cout << "Input: ";
-    cin >> input;
-
-    while (input != 1 && input != 2 && input != 3)
+    
+    do
     {
-        cout << "Choose a mode [1:3]: ";
+        cout << "Input: ";
         cin >> input;
-    }
+        input_i = stoi(input , &sz);
+        
+        if (input_i != 1 && input_i != 2 && input_i != 3)
+            cout << "Not a valid option." << endl;
+
+    } while (input_i != 1 && input_i != 2 && input_i != 3);
 
     cout << "Changing mode to: ";
 
-    switch(input)
+    switch(input_i)
     {
         case 1:
             cout << "Manual Control..." << endl;
