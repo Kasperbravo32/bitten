@@ -12,7 +12,6 @@ enum KEYWORD_INDICES {
     PLAY_TEST,
     DELETE_TEST,
     RECORD,
-    GET,
     CLEAR,
     CLEAR_FOLDER,
 
@@ -65,7 +64,6 @@ std::string KeywordStrings[NUMBER_OF_KEYWORDS] = {  "help",
                                                     "play_test",
                                                     "delete_test",
                                                     "record",
-                                                    "get",
                                                     "clear",
                                                     "purge",
                                                      };
@@ -75,7 +73,6 @@ bool mode_func();
 bool play_test_func();
 bool delete_test_func();
 bool record_func();
-bool get_func();
 bool clearScreen();
 bool clearTestFolder();
 

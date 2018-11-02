@@ -92,7 +92,6 @@ int main(int argc, char** argv)
         return errno;
     }
 
-    ROS_INFO("Initiating CAN_node");
     ros::init(argc, argv, "can_driver_node");
     ros::NodeHandle n;
 

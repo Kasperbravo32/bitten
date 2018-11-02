@@ -7,7 +7,7 @@
 void DEBUG_INFO();
 
 
-const float LOOP_RATE_INT = 50;
+const double LOOP_RATE_INT = 50;
 
 enum NODE_IDS {
     COMMANDER_ID,
@@ -81,8 +81,8 @@ struct MsgType_s
     uint32_t flags;                             /* Used for setting flags, initiating various processes, asking for stuff etc           */
     uint8_t id;                                 /* Used to see if controlling node is test/waypoint/manual node                         */
 
-    std::array<float    ,   6> jointPosition;   /* Contains the wanted positions of each joint. used in waypoint mode, not in manual.   */
-    std::array<float    ,   6> jointVelocity;   /* Percentage of maximum velocity to move joints with                                   */
+    std::array<double    ,   6> jointPosition;   /* Contains the wanted positions of each joint. used in waypoint mode, not in manual.   */
+    std::array<double    ,   6> jointVelocity;   /* Percentage of maximum velocity to move joints with                                   */
     std::array<uint8_t  ,   8> buttons;         /* Array to list status of the buttons (square, triangle, X, circle + arrows)           */
 };
 

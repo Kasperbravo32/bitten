@@ -42,14 +42,14 @@ bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
                                                             play_test_func,
                                                             delete_test_func,
                                                             record_func,
-                                                            get_func,
                                                             clearScreen,
                                                             clearTestFolder      };
 
-
 passwd* pw = getpwuid(getuid());
-std::string path(pw->pw_dir);
+string path(pw->pw_dir);
 
+string configFilePath   = path + "/catkin_ws/src/bitten/tests/TEST_INFO.txt";
+string testsPath        = path + "/catkin_ws/src/bitten/tests/";
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */
@@ -73,9 +73,6 @@ int main (int argc , char **argv)
 
     terminalMsg.nodeName = nodeNames[TERMINAL_NODE];
     terminalMsg.id = TERMINAL_ID;
-
-    std::cout << path << std::endl;
-
 /*  -------------------------------------------------
          SUPERLOOP
     ------------------------------------------------- */
@@ -205,7 +202,8 @@ bool delete_test_func()
     cout << "File to delete: ";
     cin >> fileToDelete;
     cout << "Deleting: " << ExistingFiles[fileToDelete];
-    fileToDeleteString = "/~/catkin_ws/src/bitten/tests/";
+    fileToDeleteString = testsPath;
+    // fileToDeleteString += "/catkin_ws/src/bitten/tests/";
     fileToDeleteString += ExistingFiles[fileToDelete];
     remove(fileToDeleteString.c_str());
 }
@@ -213,51 +211,50 @@ bool delete_test_func()
 
 bool record_func()
 {
-    static int a;
+    static int amountOfTests;
     static string filename;
 
     if (recording == false)
     {
-        recording = true;
-        a = getNumberOfTests();
+        amountOfTests = getNumberOfTests();                                                 /* Open the TEST_INFO file, get current number of tests */
 
-<<<<<<< HEAD
-        filename = "/~/catkin_ws/src/bitten/tests/test_";
-=======
-        filename = path;
-        filename += "/catkin_ws/src/bitten/tests/test_";
->>>>>>> 32375e04bc3fb5adda526389d513d45a119910da
-        filename += a + '0';
-        filename += ".txt";
-
-        ofstream fileToCreate(filename);
-
-        if (fileToCreate.is_open())
+        if (amountOfTests < 10)
         {
-            cout << "Started recording to: test_" << a << ".txt" << endl;
-            fileToCreate.close();
+            recording = true;
+            filename = testsPath + "test_";
+            filename += amountOfTests + '0';
+            filename += ".txt";
+
+            ofstream fileToCreate(filename);
+
+            if (fileToCreate.is_open())
+            {
+                cout << "Started recording to: test_" << amountOfTests << ".txt" << endl;
+                fileToCreate.close();
+            }
+
+            amountOfTests++;    
+
+            ofstream configfile_out(configFilePath, ios_base::trunc | ios_base::out);
+            configfile_out << amountOfTests;
+            configfile_out.close(); 
+
+            /* Set the controlling mode to manual, and tell commander to start recording. Also pass along the filename, path is always the same */
+            terminalMsg.flags |= MODE_MANUAL_F | START_RECORD;
+            terminalMsg.programName = "test_";
+            terminalMsg.programName += amountOfTests - 1 + '0';
+            terminalMsg.programName += ".txt";
+
+            return true;
         }
 
-        /* Open the TEST_INFO file, get current number of tests */
-        a = getNumberOfTests();
-        a++;    
-
-        ofstream configfile_out("/~/catkin_ws/src/bitten/tests/TEST_INFO.txt", ios_base::trunc | ios_base::out);
-        configfile_out << a;
-        configfile_out.close();
-
-        /* Set the controlling mode to manual, and tell commander to start recording. Also pass along the filename, path is always the same */
-        terminalMsg.flags |= MODE_MANUAL_F;
-        terminalMsg.flags |= START_RECORD;  
-        terminalMsg.programName = "test_";
-        terminalMsg.programName += a - 1 + '0';
-        terminalMsg.programName += ".txt";
-
-        return true;
+        else
+            cout << "Max test capacity reached. 'purge' before recording anymore." << endl;     
     }
+
     else
     {
-        cout << "Stopped recording to: " << "test_" << (a - 1) << ".txt" << endl;
+        cout << "Stopped recording to: " << "test_" << (getNumberOfTests() - 1) << ".txt" << endl;
         recording = false;
         terminalMsg.flags = STOP_RECORD;  
 
@@ -266,16 +263,11 @@ bool record_func()
 }
 
 
-bool get_func()
-{
-
-}
-
 int getNumberOfTests()
 {
     /* Reads the TEST_INFO.txt file, and returns the amount of test files created, e.g. the total amount of tests */
 
-    ifstream configfile("/~/catkin_ws/src/bitten/tests/TEST_INFO.txt");
+    ifstream configfile(configFilePath);
     ofstream configfile_out;
 
     int a;
@@ -302,7 +294,9 @@ void readExistingTests()
 
 
     fstream FileChecker;
-    string filename = "/~/catkin_ws/src/bitten/tests/test_";
+
+    string filename = testsPath + "test_";
+    // filename += "/catkin_ws/src/bitten/tests/test_";
     string temp_filename;
     
     for (int i = 0; i < a; i++)
@@ -341,15 +335,9 @@ bool clearTestFolder()
 {
     if (recording == false)
     {
-<<<<<<< HEAD
-    string filePath = "/~/catkin_ws/src/bitten/tests/";
-    string fileName = "test_";
-    string fileExtension = ".txt";
-=======
-        string filePath = "/home/frederik/catkin_ws/src/bitten/tests/";
-        string fileName = "test_";
+        string filePath = testsPath + "test_";
+        // filePath += "/catkin_ws/src/bitten/tests/test_";
         string fileExtension = ".txt";
->>>>>>> 32375e04bc3fb5adda526389d513d45a119910da
 
         string fileToDelete;
         int filesDeletedCounter = 0;
@@ -357,7 +345,6 @@ bool clearTestFolder()
         for (int i = 0; i < getNumberOfTests(); i++)
         {
             fileToDelete = filePath;
-            fileToDelete +=fileName;
             fileToDelete += i + '0';
             fileToDelete += fileExtension;
 
@@ -370,13 +357,9 @@ bool clearTestFolder()
                 filesDeletedCounter++;
             }
         }
-<<<<<<< HEAD
-    }
-        ofstream testCounterFile("/~/catkin_ws/src/bitten/tests/TEST_INFO.txt" , ios_base::trunc | ios_base::out);
-=======
 
-        ofstream testCounterFile("/home/frederik/catkin_ws/src/bitten/tests/TEST_INFO.txt" , ios_base::trunc | ios_base::out);
->>>>>>> 32375e04bc3fb5adda526389d513d45a119910da
+
+        ofstream testCounterFile(configFilePath , ios_base::trunc | ios_base::out);
         
         if (testCounterFile.is_open())
         {

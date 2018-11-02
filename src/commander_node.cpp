@@ -14,6 +14,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <pwd.h>
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
@@ -60,9 +61,9 @@ const   int PING_RATE = LOOP_RATE_INT / 2;
         int ping_timeout = PING_RATE;
         int pub_counter = LOOP_RATE_INT / 10;
         int waypointsRecorded = 0;
-float goalArray[6];
+double goalArray[6];
 
-float tempCurrPos[6];
+double tempCurrPos[6];
 
 uint8_t jointsdone = 0;
 
@@ -71,13 +72,18 @@ std::string currentRecordFile;
 std::fstream RecordFile;
 
 TX90_c TX90;
+
+passwd* pw = getpwuid(getuid());
+std::string path(pw->pw_dir);
+
+// std::string configFilePath   = path + "/catkin_ws/src/bitten/tests/TEST_INFO.txt";
+std::string testsPath        = path + "/catkin_ws/src/bitten/tests/";
+
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        
 int main(int argc , char **argv)
-{
-    ROS_INFO("Initiating %s",nodeNames[COMMANDER_NODE].c_str());
-    
+{    
     ros::init(argc , argv , "commander_node");
     ros::NodeHandle n;
     commanderFeedbackMsg.senderID = COMMANDER_ID;   
@@ -380,7 +386,7 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
             if (recording == false)
             {
                 recording = true;
-                currentRecordFile = "~/catkin_ws/src/bitten/tests/";
+                currentRecordFile = testsPath;
                 currentRecordFile += terminal->programName;
 
                 RecordFile.open(currentRecordFile, std::ios_base::out);
@@ -388,13 +394,9 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
                 if (RecordFile.is_open())
                 {
                     waypointsRecorded = 0;
-                    std::cout << "Opened recording file!" << std::endl;
                     RecordFile << "test_test";
                 }
-                else
-                    std::cout << "Couldn't open recording file :( " << std::endl;
             }
-
         }
     }
     

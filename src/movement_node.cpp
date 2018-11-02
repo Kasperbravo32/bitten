@@ -45,9 +45,7 @@ TX90_c TX90;
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */        
 int main (int argc , char **argv) 
-{
-    ROS_INFO("Initiating %s", nodeNames[MOVEMENT_NODE].c_str());
-    
+{    
     movementFeedbackMsg.senderID = MOVEMENT_ID;
 
     ros::init(argc , argv , "movement_node");
@@ -111,9 +109,9 @@ int main (int argc , char **argv)
                 }
                 break;
             case MANUAL_ID:
-                // float currDistance;
-                // float totalDistance;
-                // float percentDistance;
+                // double currDistance;
+                // double totalDistance;
+                // double percentDistance;
                 // int numberOfNearlyGoals = 0;
                 // for(int i = 0; i < 6; i++)
                 // {
@@ -164,7 +162,7 @@ int main (int argc , char **argv)
                     jointPathPointMsg.positions.clear();
                     jointPathPointMsg.velocities.clear();
 
-                    float a = TX90.getCurrPos(0);
+                    double a = TX90.getCurrPos(0);
                     a += 0.01;
 
                     TX90.setCurrPos(0 , a);
@@ -224,10 +222,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
         case MANUAL_ID:
         {
             if (OPERATING_MODE != MANUAL_ID)
-            {
                 OPERATING_MODE = MANUAL_ID;
-                ROS_INFO("Set OpMode to ManMode");
-            }
 
             if (commander->buttons[1] == 1 && commander->buttons[2] == 1) //reset and deadmans button
             {
@@ -288,7 +283,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
 
             for (int i = 0; i < 6; i++)
             {
-                static float posBoundry = 0.05 * TX90.getMaxRotation(i);
+                static double posBoundry = 0.05 * TX90.getMaxRotation(i);
                 if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundry)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundry)))
                     jointAtGoalCounter++;
             }
@@ -297,7 +292,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
             {
                 for (int i = 0; i < 6; i++)
                 {
-                    static float intendedGoal;
+                    static double intendedGoal;
                     if (commander->jointVelocity[i] > 0 && (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1)))
                     {
                         intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity());
@@ -337,10 +332,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
             if (goalExists == false)
             {
                 if (OPERATING_MODE != WP_ID)
-                {
                     OPERATING_MODE = WP_ID;
-                    ROS_INFO("Set OpMode to WPMode");
-                }
 
                 for (int i = 0; i < 6; i++)
                     TX90.setGoalPos(i, commander->jointPosition[i]);
@@ -363,7 +355,7 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
 {
     /* Update currPos from the feedback, measuring on the sensors   */
     int jointAtGoalCounter = 0;
-    
+
     if (!robotInitialized)
     {
         robotInitialized = true;
@@ -380,7 +372,7 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
 
         if (goalExists == true)
         {
-            static float posBoundary = 0.05 * TX90.getMaxRotation(i);
+            static double posBoundary = 0.05 * TX90.getMaxRotation(i);
             if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundary)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundary)))
                 jointAtGoalCounter++;
         }

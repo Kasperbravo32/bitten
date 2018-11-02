@@ -1,9 +1,9 @@
 #pragma once
 
 struct Waypoint_s {
-    float jointPositions[6];
-    float velocity[6];
-    float effort[6];
+    double jointPositions[6];
+    double velocity[6];
+    double effort[6];
 };
 
 enum CONTROL_MODE {                         

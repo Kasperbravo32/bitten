@@ -128,8 +128,8 @@ void canCallback(const bitten::can_msg::ConstPtr& can)
     {
     case 0x8CFDD633: //right joystick, basic message
     {
-        float actual_pos;
-        float max_pos;
+        double actual_pos;
+        double max_pos;
         if(can->data[0] & 0x04) //tilt left
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
@@ -195,8 +195,8 @@ void canCallback(const bitten::can_msg::ConstPtr& can)
     }
     case 0x8CFDD634: //left joystick, basic message
     {
-        float actual_pos;
-        float max_pos;
+        double actual_pos;
+        double max_pos;
         if(can->data[0] & 0x04) //tilt left
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
@@ -262,8 +262,8 @@ void canCallback(const bitten::can_msg::ConstPtr& can)
     }
     case 0x8CFDD733: //right joystick, extended message
     {
-        float actual_pos;
-        float max_pos;
+        double actual_pos;
+        double max_pos;
         if(can->data[0] & 0x04) //roll left
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
@@ -283,8 +283,8 @@ void canCallback(const bitten::can_msg::ConstPtr& can)
     }
     case 0x8CFDD734: //left joystick, extended message
     {
-        float actual_pos;
-        float max_pos;
+        double actual_pos;
+        double max_pos;
         if(can->data[0] & 0x04) //roll left
         {
             actual_pos = can->data[1] * 0xFF + can->data[0];
