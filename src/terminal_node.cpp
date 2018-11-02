@@ -202,9 +202,8 @@ bool delete_test_func()
     cout << "File to delete: ";
     cin >> fileToDelete;
     cout << "Deleting: " << ExistingFiles[fileToDelete];
-    fileToDeleteString = testsPath;
-    // fileToDeleteString += "/catkin_ws/src/bitten/tests/";
-    fileToDeleteString += ExistingFiles[fileToDelete];
+    fileToDeleteString = testsPath + ExistingFiles[fileToDelete];
+    // fileToDeleteString += ExistingFiles[fileToDelete];
     remove(fileToDeleteString.c_str());
 }
 
