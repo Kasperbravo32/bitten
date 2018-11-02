@@ -205,7 +205,8 @@ bool delete_test_func()
     cout << "File to delete: ";
     cin >> fileToDelete;
     cout << "Deleting: " << ExistingFiles[fileToDelete];
-    fileToDeleteString = "/~/catkin_ws/src/bitten/tests/";
+    fileToDeleteString = path;
+    fileToDeleteString += "/catkin_ws/src/bitten/tests/";
     fileToDeleteString += ExistingFiles[fileToDelete];
     remove(fileToDeleteString.c_str());
 }
@@ -221,12 +222,8 @@ bool record_func()
         recording = true;
         a = getNumberOfTests();
 
-<<<<<<< HEAD
-        filename = "/~/catkin_ws/src/bitten/tests/test_";
-=======
         filename = path;
         filename += "/catkin_ws/src/bitten/tests/test_";
->>>>>>> 32375e04bc3fb5adda526389d513d45a119910da
         filename += a + '0';
         filename += ".txt";
 
