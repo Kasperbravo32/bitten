@@ -24,7 +24,6 @@ using namespace std;
  /* ----------------------------------------------------------------------
  *                 -------  Forward Declarations   -------
  * ----------------------------------------------------------------------- */
-void commanderFeedbackCallback (const bitten::feedback_msg::ConstPtr& commanderFeedbackMsg);
 
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
@@ -37,6 +36,7 @@ bitten::control_msg terminalMsg;
 string ExistingFiles[10];
 
 bool recording = false;
+
 bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
                                                             mode_func,
                                                             play_test_func,
@@ -58,13 +58,12 @@ int main (int argc , char **argv)
     ros::init(argc , argv , "terminal_node");
     ros::NodeHandle n;
     
-    ros::Subscriber feedback_sub    = n.subscribe<bitten::feedback_msg> ("feedback_topic" , 5 , commanderFeedbackCallback);
     ros::Publisher  terminal_pub    = n.advertise<bitten::control_msg>  ("terminal_topic" , 5);
 
     ros::Rate loop_rate(LOOP_RATE_INT);
-    sleep(1);
+    sleep(2);
 
-    if (feedback_sub && terminal_pub)
+    if (terminal_pub)
         ROS_INFO("Initiated %s", nodeNames[TERMINAL_NODE].c_str());
     else
         ROS_INFO("Failed to initiate %s",nodeNames[TERMINAL_NODE].c_str());
@@ -92,19 +91,13 @@ int main (int argc , char **argv)
                     terminalMsg.flags = 0;
                 }
             }
+            else
+                cout << "Didn't recognize input." << endl;
         }
 
         ros::spinOnce();
         loop_rate.sleep();
     }
-}
-
-/* ----------------------------------------------------------------------
- *             -------   commander Feedback Callback   -------
- * ----------------------------------------------------------------------- */
-void commanderFeedbackCallback (const bitten::feedback_msg::ConstPtr& commanderFeedbackMsg)
-{
-
 }
 
 bool clearScreen()
@@ -123,8 +116,7 @@ bool help_func()
 
 bool mode_func() {
     
-    static int input;
-    input = 0;
+    uint8_t input = 0;
 
     cout << "Change mode to one of the following:" << endl;
     cout << "____________________________________" << endl;
@@ -139,8 +131,8 @@ bool mode_func() {
         cout << "Choose a mode [1:3]: ";
         cin >> input;
     }
+
     cout << "Changing mode to: ";
-    terminalMsg.flags = 0;
 
     switch(input)
     {
@@ -170,19 +162,24 @@ bool play_test_func() {
     readExistingTests();
     cout << endl << "Your choice: ";
     cin >> chosenTest;
+
+    do
+    {
+        cin >> chosenTest;
+        if (ExistingFiles[chosenTest] == "" && chosenTest != 1337)
+            cout << "Not a valid option!" << endl;
+    } 
+    while (ExistingFiles[chosenTest] == "" && chosenTest != 1337);
     
     if (chosenTest != 1337)
     {
-        terminalMsg.flags = 0;
-        terminalMsg.flags |= MODE_WAYPOINT_F;
-        terminalMsg.flags |= PLAY_TEST_F;
+        terminalMsg.flags = MODE_WAYPOINT_F | PLAY_TEST_F;
         terminalMsg.programName = ExistingFiles[chosenTest];
-        cout << "Requesting to play: " << ExistingFiles[chosenTest] << " ..." << endl;
     }
+
     else
     {
-        terminalMsg.flags = MODE_WAYPOINT_F;
-        terminalMsg.flags |= PLAY_TEST_F;
+        terminalMsg.flags = MODE_WAYPOINT_F | PLAY_TEST_F;
         terminalMsg.programName = "open_a_beer.txt";
         cout << "Øl på vej!" << endl;
     }
