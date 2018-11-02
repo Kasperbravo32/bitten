@@ -91,6 +91,7 @@ int main(int argc, char **argv)
                 timer = LOOP_RATE_INT;
             }
         }
+        
         if (transmitWpReady)
         {
             wpPub.publish(wp_msg);
