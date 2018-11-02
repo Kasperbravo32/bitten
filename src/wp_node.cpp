@@ -85,13 +85,12 @@ int main(int argc, char **argv)
             static int timer = LOOP_RATE_INT;
             if (! --timer)
             {
-                ROS_INFO("Trying to establish connection...");
                 wp_msg.flags = ESTABLISH_CONNECTION;
                 transmitWpReady = true;
                 timer = LOOP_RATE_INT;
             }
         }
-        
+
         if (transmitWpReady)
         {
             wpPub.publish(wp_msg);
