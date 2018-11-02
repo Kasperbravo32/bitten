@@ -80,10 +80,12 @@ int main (int argc , char **argv)
         cout << endl << ">> ";
         cin >> input;
 
+        static bool foundKeywordMatch = false;
         for (int i = 0; i < NUMBER_OF_KEYWORDS; i++)
         {
             if (input == KeywordStrings[i])
             {
+                foundKeywordMatch = true;
                 if (KeywordFunctions[i]())
                 {
                     terminal_pub.publish(terminalMsg);
@@ -91,7 +93,7 @@ int main (int argc , char **argv)
                     terminalMsg.flags = 0;
                 }
             }
-            else
+            if (!foundKeywordMatch)
                 cout << "Didn't recognize input." << endl;
         }
 
@@ -184,8 +186,6 @@ bool play_test_func() {
         cout << "Øl på vej!" << endl;
     }
     
-
-
     return true;
 }
 
@@ -198,9 +198,15 @@ bool delete_test_func()
     
     cout << "File to delete: ";
     cin >> fileToDelete;
+
+    while (ExistingFiles[fileToDelete] == "")
+    {
+        cout << "Not a valid option!" << endl;
+        cin >> fileToDelete;
+    }
+    
     cout << "Deleting: " << ExistingFiles[fileToDelete];
     fileToDeleteString = testsPath + ExistingFiles[fileToDelete];
-    // fileToDeleteString += ExistingFiles[fileToDelete];
     remove(fileToDeleteString.c_str());
 }
 
@@ -285,14 +291,16 @@ void readExistingTests()
     /* Reads out the existing test files */
     static int a , o;
     bool FirstFileFound = false;
+
     a = getNumberOfTests();
     o = 0;
 
+    for (int i = 0; i < 10; i++)
+        ExistingFiles[i] = "";
 
     fstream FileChecker;
 
     string filename = testsPath + "test_";
-    // filename += "/catkin_ws/src/bitten/tests/test_";
     string temp_filename;
     
     for (int i = 0; i < a; i++)
