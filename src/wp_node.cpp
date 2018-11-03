@@ -46,6 +46,8 @@ int main(int argc, char **argv)
 
     ros::Rate loop_rate(LOOP_RATE_INT);
 
+    sleep(1);
+    
     if (wpPub && feedbackSub)
         ROS_INFO("Initiated %s", nodeNames[WP_NODE].c_str());
     else

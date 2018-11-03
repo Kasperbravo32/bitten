@@ -76,7 +76,6 @@ TX90_c TX90;
 passwd* pw = getpwuid(getuid());
 std::string path(pw->pw_dir);
 
-// std::string configFilePath   = path + "/catkin_ws/src/bitten/tests/TEST_INFO.txt";
 std::string testsPath        = path + "/catkin_ws/src/bitten/tests/";
 
  /* ----------------------------------------------------------------------
@@ -102,6 +101,7 @@ int main(int argc , char **argv)
     passOnMsg.nodeName = nodeNames[COMMANDER_NODE];
 
     sleep(1);
+
     if (manual_sub && wp_sub && commander_pub && commander_fb_pub && movement_feedback)
         ROS_INFO("Initiated %s",nodeNames[COMMANDER_NODE].c_str());
     else
@@ -112,28 +112,25 @@ int main(int argc , char **argv)
     ------------------------------------------------- */
     while(ros::ok())
     {
-        switch(INPUT_MODE)
-        {
-            case MANUAL_MODE:
+        // switch(INPUT_MODE)
+        // {
+        //     case MANUAL_MODE:
+        //         break;
 
-            break;
+        //     case WP_MODE:
 
-            case WP_MODE:
+        //         break;
 
-            break;
+        //     case POLL_MODE:
 
-            case POLL_MODE:
+        //         if (! --poll_timer)
+        //             poll_timer = 2*LOOP_RATE_INT;
+        //         break;
 
-                if (! --poll_timer)
-                {
-                    // ROS_INFO("waiting in poll_mode");
-                    poll_timer = 2*LOOP_RATE_INT;
-                }
-            break;
-            default:
+        //     default:
 
-            break;
-        }
+        //         break;
+        // }
 
         if (INPUT_MODE != POLL_MODE)
         {

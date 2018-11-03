@@ -26,7 +26,7 @@ using namespace std;
  /* ----------------------------------------------------------------------
  *                 -------  Forward Declarations   -------
  * ----------------------------------------------------------------------- */
-
+void tCommCallback(const bitten::feedback_msg::ConstPtr& tFeedback);
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
@@ -413,4 +413,14 @@ bool clearTestFolder()
     }
     else
         cout << "Currently recording. stop recording before purging" << endl;
+}
+
+
+
+ /* ----------------------------------------------------------------------
+ *             -------  Commander Feedback callback   -------
+ * ----------------------------------------------------------------------- */
+void tCommCallback(const bitten::feedback_msg::ConstPtr& tFeedback)
+{
+
 }
