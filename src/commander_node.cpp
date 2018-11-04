@@ -55,6 +55,11 @@ bool NewWaypoint                = true;
 bool not_run                    = true;
 bool ping                       = true;
 
+uint8_t ping_flags              = 0;
+bool ping_bools[3]              = { false,
+                                    false,
+                                    false};
+
 const   int PING_RATE = LOOP_RATE_INT / 2;
         int poll_timer = LOOP_RATE_INT*2;
         int ping_timer = PING_RATE;
@@ -131,26 +136,52 @@ int main(int argc , char **argv)
 
         //         break;
         // }
-
-        if (INPUT_MODE != POLL_MODE)
+        if (! --ping_timer)
         {
-            if (! --ping_timer)
-            {
-                commanderFeedbackMsg.flags = PING;
-                fbTransmitReady = true;
+            /* We're using a bit bank for maintaining ping status of each node.
+                * We're tracking ping on 3 nodes:
+                *  manual_node
+                *  terminal_node
+                *  waypoint_node
+                * manual_nodes ping state is on bit 0 of ping_flags variable
+                * terminal_node ping state on bit 1
+                * waypoint_node ping state on bit 2
+                * The remaining flags are reserved for future use (there's probably no future use): */
+            commanderFeedbackMsg.flags = PING;
+            fbTransmitReady = true;
 
-                if (ping == true)
+            if (ping_flags & 0b111)
+            {
+                ping_flags = 0;
+                ping_timer = PING_RATE;
+            }
+            else
+            {
+                for (int i = 0; i < 3; i++)
                 {
-                    ping = false;
-                    ping_timer = PING_RATE;
+                    if (! ping_flags & (1 << i))
+                    {
+                        std::cout << "Ping timed out on node: ";
+                        switch(i)
+                        {
+                            case 0:
+                                std::cout << "Manual_node." << std::endl;
+                            break;
+                            
+                            case 1:
+                                std::cout << "Terminal_node." << std::endl;
+                            break;
+
+                            case 2:
+                                std::cout << "Waypoint_node." << std::endl;
+                            break;
+                        }
+                    }
                 }
-                else
-                {
-                    ROS_INFO("Ping timeout, returning to poll_mode");
-                    ping_timer = PING_RATE;
-                    INPUT_MODE = POLL_MODE;
-                    ping = true;
-                }
+                    
+                ROS_INFO("Ping timeout, returning to poll_mode");
+                ping_timer = PING_RATE;
+                ping_flags = 7;
             }
         }
         
@@ -181,7 +212,7 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
     static int debounceCounter = 0;
 
     if (manual->flags & PONG)
-        ping = true;
+        ping_flags |= (1 << 0);
 
     if (manual->flags & ESTABLISH_CONNECTION)
     {
@@ -282,7 +313,7 @@ void wpCallback (const bitten::control_msg::ConstPtr& wp)
         break;
 
         case PONG:
-            ping = true;
+            ping_flags |= (1 << 2);
         break;
     }
 }
@@ -325,6 +356,9 @@ void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedbac
  * ----------------------------------------------------------------------- */
 void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
 {
+    if (terminal-> flags & PONG)
+        ping_flags |= (1 << 1);
+
     if (terminal->flags & MODE_MANUAL_F)
     {
         if (goalExists == false)

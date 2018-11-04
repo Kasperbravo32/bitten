@@ -10,15 +10,13 @@ Commander node:
 - Lav ping funktion til at pinge 3 forskellige nodes (manual, wp, terminal), og holde styr på hver enkelt ping status.
 
 Movement node: 
-
+- ?
 
 Terminal node
 - Skal ponge til commandernode
 
-
 Waypoint node:
 - Skal ponge til commandernode
-
 
 Sikkerhed:
 - Robotten kan ikke ramme sig selv
