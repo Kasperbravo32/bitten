@@ -19,6 +19,8 @@ enum NODE_IDS {
     MOVEMENT_ID,
     TERMINAL_ID,
 
+    ALL_ID,
+
     NUMBER_OF_IDS
 };
 

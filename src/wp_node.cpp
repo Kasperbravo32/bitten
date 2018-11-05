@@ -53,43 +53,21 @@ int main(int argc, char **argv)
     else
         ROS_INFO("Failed to initiate %s",nodeNames[WP_NODE].c_str());
 
-/* --------------------------------------------------------
-    Beer Waypoints
-    Set NumberofWaypoints = 4
-   -------------------------------------------------------- */
-
-    static int connectionTimer = 10*LOOP_RATE_INT;
     bool newConnection = true;
 
     while(ros::ok())
     {
-        if (connectionEstablished)
+        if (readyForNextWp == true)
         {
-            if (newConnection)
-                newConnection = false;
+            wp_msg.flags = NEW_WAYPOINT;
+            wp_msg.programName = WaypointBank[NumberofWaypoints - RemainingWaypoints].waypointName;
+            ROS_INFO("Moving robot to: %s", wp_msg.programName.c_str());
 
-            if (readyForNextWp == true)
-            {
-                wp_msg.flags = NEW_WAYPOINT;
-                wp_msg.programName = WaypointBank[NumberofWaypoints - RemainingWaypoints].waypointName;
+            for (int i = 0; i < 6; i++)
+                wp_msg.jointPosition[i] = WaypointBank[NumberofWaypoints - RemainingWaypoints].jointPosition[i];
 
-                for (int i = 0; i < 6; i++)
-                    wp_msg.jointPosition[i] = WaypointBank[NumberofWaypoints - RemainingWaypoints].jointPosition[i];
-
-                transmitWpReady = true;
-                readyForNextWp = false;
-            }
-        }
-
-        else
-        {
-            static int timer = LOOP_RATE_INT;
-            if (! --timer)
-            {
-                wp_msg.flags = ESTABLISH_CONNECTION;
-                transmitWpReady = true;
-                timer = LOOP_RATE_INT;
-            }
+            transmitWpReady = true;
+            readyForNextWp = false;
         }
 
         if (transmitWpReady)
@@ -110,7 +88,7 @@ int main(int argc, char **argv)
  * ----------------------------------------------------------------------- */ 
 void fbCallback(const bitten::feedback_msg::ConstPtr& feedback)
 {
-    if (feedback->recID == WP_ID)
+    if (feedback->recID == WP_ID || feedback->recID == ALL_ID)
     {
         if (feedback->flags == PING)
         {
@@ -118,21 +96,16 @@ void fbCallback(const bitten::feedback_msg::ConstPtr& feedback)
             transmitWpReady = true;
         }
 
-        if (connectionEstablished == false && feedback->flags == ACK)
-            connectionEstablished = true;
-
-        else if (connectionEstablished == false && feedback->flags == DENIED)
-            ROS_INFO("Connection denied");
-
         if (feedback->flags & GOAL_REACHED)
         {            
+            ROS_INFO(" OK!");
+
             if (--RemainingWaypoints > 0)
                 readyForNextWp = true;
 
             else
             {
-                ROS_INFO("Finished all waypoints.");
-                wp_msg.flags = TERMINATE_CONNECTION;
+                wp_msg.flags = TEST_DONE_FLAG;
                 transmitWpReady = true;
             }
         }

@@ -19,7 +19,9 @@ enum INPUT_MODE {
     MANUAL_MODE,
     WP_MODE,
     TEST_MODE,
-    POLL_MODE
+    POLL_MODE,
+    NO_MODE
+    
 } INPUT_MODE;
 
 
