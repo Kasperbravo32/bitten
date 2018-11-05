@@ -1,22 +1,16 @@
 ---------------- TO DO ----------------
 Manual node:
-- Skal ponge til commandernode
-- Pretty
 - Tilføje frame-mode (Lav Priotitet)
 
 
 Commander node:
-- Fjern handshake
-- Lav ping funktion til at pinge 3 forskellige nodes (manual, wp, terminal), og holde styr på hver enkelt ping status.
 
 Movement node: 
 - ?
 
 Terminal node
-- Skal ponge til commandernode
 
 Waypoint node:
-- Skal ponge til commandernode
 
 Sikkerhed:
 - Robotten kan ikke ramme sig selv
@@ -34,16 +28,22 @@ Manual node:
 - Bruge sorte knapper på højre joy til at modificere currVelocity op/ned
 - Handshake til oprettelse af forbindelse (ligesom wp_node) 
 - Skal pong'e iflg. feedback node
+- Skal ponge til commandernode
+- Pretty
 
 Commander node:
 - Læs currPos fra /feedback_states
 - Ændre currVelocity på pil op og ned.
+- Fjern handshake
+- Lav ping funktion til at pinge 3 forskellige nodes (manual, wp, terminal), og holde styr på hver enkelt ping status.
+
 
 Waypoint node:
 - Skal skrives.
 - Callback funktioner til waypoint og test
 - Der skal være en "record" mode i waypoint node. (terminaleksempel i wp_node.h)
 - Skal læse waypoints fra fil.txt og sende dem til commander_node
+- Skal ponge til commandernode
 
 Movement node
 - Skal skrives
@@ -64,3 +64,5 @@ Terminal Node:
 - Funktion til at styre currVelocity
 - Funktion til at returnere til resetStatePosition
 - Funktion til ølåbning
+- Skal ponge til commandernode
+

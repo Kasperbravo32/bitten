@@ -35,9 +35,6 @@ bitten::control_msg terminalMsg;
  /* ----------------------------------------------------------------------
  *             -------  Variables, Constants & Objects  -------
  * ----------------------------------------------------------------------- */
-string ExistingFiles[10];
-string::size_type sz;
-
 bool terminalTxRdy = false;
 bool recording = false;
 bool foundKeywordMatch = false;
@@ -47,16 +44,20 @@ bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
                                                             delete_test_func,
                                                             record_func,
                                                             clearScreen,
-                                                            clearTestFolder      };
+                                                            clearTestFolder,
+                                                            goHome      };
 
 passwd* pw = getpwuid(getuid());
 string path(pw->pw_dir);
 
 string configFilePath   = path + "/catkin_ws/src/bitten/tests/TEST_INFO.txt";
 string testsPath        = path + "/catkin_ws/src/bitten/tests/";
+string input_s;
+string ExistingFiles[10];
+string::size_type sz;
 
 int input_i;
-string input_s;
+
  /* ----------------------------------------------------------------------
  *                         -------  Main   -------
  * ----------------------------------------------------------------------- */
@@ -69,6 +70,7 @@ int main (int argc , char **argv)
     ros::Subscriber terminal_sub    =n.subscribe<bitten::feedback_msg> ("feedback_topic" , 5 , &tCommCallback);
     
     ros::Rate loop_rate(LOOP_RATE_INT);
+
     sleep(2);
 
     if (terminal_pub && terminal_sub)
@@ -105,6 +107,7 @@ int main (int argc , char **argv)
                 }
             }
         }
+
         if (input_s == "")
         {
             /* Secret stuff happens in here */
@@ -242,20 +245,18 @@ bool delete_test_func()
 
         if (input_ss >> input_i)
         {
-            if (ExistingFiles[input_i] == "")
-                cout << "Not a valid option" << endl;
-            else
+            if (ExistingFiles[input_i] != "")
             {
                 cout << "Deleting: " << ExistingFiles[input_i] << endl;
                 fileToDeleteString = testsPath + ExistingFiles[fileToDelete];
                 remove(fileToDeleteString.c_str());            
                 break;
             }
+            else
+                cout << "Not a valid option" << endl;
         }
         else
-        {
             cout << "Not a valid option" << endl;
-        }
     } while (1);   
 }
 
@@ -422,6 +423,12 @@ bool clearTestFolder()
     }
     else
         cout << "Currently recording. stop recording before purging" << endl;
+}
+
+bool goHome()
+{
+    terminalMsg.flags |= GO_HOME_F;
+    return true;
 }
 
 

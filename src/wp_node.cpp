@@ -12,9 +12,8 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>     /* atof */
+#include <stdlib.h>
 #include <pwd.h>
-#include <sensor_msgs/Joy.h>
 #include <bitten/control_msg.h>
 #include <bitten/feedback_msg.h>
 #include <global_node_definitions.h>
@@ -53,8 +52,6 @@ int main(int argc, char **argv)
     else
         ROS_INFO("Failed to initiate %s",nodeNames[WP_NODE].c_str());
 
-    bool newConnection = true;
-
     while(ros::ok())
     {
         if (readyForNextWp == true)
@@ -81,7 +78,6 @@ int main(int argc, char **argv)
     }
     return 0;
 }
-
 
 /* ----------------------------------------------------------------------
  *                -------  Feedback Callback function   -------

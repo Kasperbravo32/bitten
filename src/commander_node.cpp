@@ -363,4 +363,16 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
             RecordFile.close();
         }
     }
+
+    if (terminal->flags & GO_HOME_F)
+    {
+        if (INPUT_MODE != WP_MODE)
+        {
+            // passOnMsg.senderID = MANUAL_ID;
+            passOnMsg.nodeName = nodeNames[MANUAL_NODE];
+            passOnMsg.programName = "terminal_input";
+            passOnMsg.jointPosition = {0,0,0,0,0,0};
+            jointStatesTransmitReady = true;
+        }
+    }
 }

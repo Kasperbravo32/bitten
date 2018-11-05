@@ -272,9 +272,8 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
             if (commander->flags & GET_CURR_POS)
             {
                 for (int i = 0; i < 6; i++)
-                {
                     movementFeedbackMsg.positions[i] = TX90.getCurrPos(i);
-                }
+
                 movementFeedbackMsg.flags = SENT_CURR_POS;
                 feedbackTransmitReady = true;
             }
@@ -283,7 +282,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
 
             for (int i = 0; i < 6; i++)
             {
-                static double posBoundry = 0.05 * TX90.getMaxRotation(i);
+                static double posBoundry = 0.02 * TX90.getMaxRotation(i);
                 if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundry)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundry)))
                     jointAtGoalCounter++;
             }
@@ -373,7 +372,7 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
 
         if (goalExists == true)
         {
-            static double posBoundary = 0.05 * TX90.getMaxRotation(i);
+            static double posBoundary = 0.02 * TX90.getMaxRotation(i);
             if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundary)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundary)))
                 jointAtGoalCounter++;
         }
@@ -385,4 +384,4 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
         goalExists = false;
         feedbackTransmitReady = true;
     }
-}
+}   

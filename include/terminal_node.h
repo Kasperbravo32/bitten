@@ -14,6 +14,7 @@ enum KEYWORD_INDICES {
     RECORD,
     CLEAR,
     CLEAR_FOLDER,
+    GO_HOME,
 
     
 
@@ -52,6 +53,8 @@ enum TERMINAL_FLAGS {
     RECORD_TEST_F       = 64,
     START_RECORD        = 128,
     STOP_RECORD         = 256,
+    GO_HOME_F           = 512,
+
 
 
 };
@@ -66,6 +69,7 @@ std::string KeywordStrings[NUMBER_OF_KEYWORDS] = {  "help",
                                                     "record",
                                                     "clear",
                                                     "purge",
+                                                    "home",
                                                      };
 
 bool help_func();
@@ -75,6 +79,7 @@ bool delete_test_func();
 bool record_func();
 bool clearScreen();
 bool clearTestFolder();
+bool goHome();
 
 int getNumberOfTests();
 void readExistingTests();
