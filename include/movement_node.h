@@ -1,107 +1,70 @@
 #pragma once
 
-/* Declare Struct to define new robots, containing various info, like amount of links, max rotation in each link, max speed etc.    */
-
-struct Robot_s {
-
-int     links;
-int     minLink;    
-int     maxLink;
-
-double currVelocity;
-
-std::array<double,6> resetStatePosition;
-std::array<double,6> maxRotation;
-std::array<double,6> minRotation;
-std::array<double,6> maxVelocity;
-std::array<double,6> maxEffort;
-std::array<double,6> currPos;
-std::array<double,6> goalPosition;
-std::array<double,6> lastGoalPosition;
-
-std::array<int,6>    jointsAtGoal;
-
-std::array<std::string,6> jointNames;
-
-bool tool;
-};
-
-/* Defining robots      */
-// extern Robot_s TX90;                  /* Staubli TX90 Robot          */
-
-// std::array<double,6> *getCurrPos();
-
-
+/* Define the robot as a class, to keep track of, and modify all values, positions, states etc. */
 class TX90_c {
 
     public:
         
-        void            setCurrPos(int n , double val);
-        void            setGoalPos(int n , double val);    /* put lastGoalPos control in here */
-        void            setJointsAtGoal(int arr[6]);
-        void            setCurrVelocity(double n);
+        void            setCurrPos(int n , double val);                 /* Function to change the current digital position of the robot                                             */
+        void            setGoalPos(int n , double val);                 /* Function to change to current digital GoalPosition of the robot                                          */
+        void            setJointsAtGoal(int arr[6]);                    /* Function to change whether or not each joint is at its intended goal position, within an error margin    */
+        void            setCurrVelocity(double n);                      /* Function to change the current velocity of the robot, 0-100% (0-1)                                       */
 
-        double          getCurrPos(int n);
-        double          getGoalPos(int n);
-        double          getCurrVelocity();
-        double          getMaxRotation(int n);
-        double          getMinRotation(int n);
-        double          getMaxVelocity(int n);
-        double          getResetStatePos(int n);
+        double          getCurrPos(int n);                              /* Function to get (return) the current position of a certain joint (joint_0 - joint_5)                                     */
+        double          getGoalPos(int n);                              /* Function to get the current goal position of a single joint (joint_0 - joint_5)                                          */
+        double          getCurrVelocity();                              /* Function to get the current velocity of the robot                                                                        */
+        double          getMaxRotation(int n);                          /* Function to get the max possible rotation of the robot in positive direction, on a single joint (joint_0 - joint_5)      */
+        double          getMinRotation(int n);                          /* Function to get the possible rotation of the robot in negative direction, on a single joint                              */
+        double          getMaxVelocity(int n);                          /* Function to get the max possible allowed speed of the robot, on a single joint                                           */
+        double          getResetStatePos(int n);                        /* Function to get the coordinate of the resetstateposition, of a single joint                                              */
 
-        
-        uint8_t         getJointsAtGoal();
-        std::string     getJointName(int n);
-
-        std::array<double,6> *getPointerFunc( void )
-        {
-            return &currPos;
-        }
+        uint8_t         getJointsAtGoal();                              /* Returns an 8-bit integer, where the first 6 bits ([bit_0:bit_5]) determines whether or not each joint is at its goal position    */
+        std::string     getJointName(int n);                            /* Returns the URDF name of a single joint                                                                                          */
 
     private:
 
-        std::array<double,6>    currPos;
-        std::array<double,6>    goalPosition;
-        std::array<int,6>       jointsAtGoal;
-        double                  currVelocity         = 0.4;
-        std::array<double,6>    lastGoalPosition; 
+        std::array<double,6>    currPos;                                /* Array of doubles, keeps track of current position of each joint. is being updated in the movement node, by the feedback_states topic, from robot_state node  */
+        std::array<double,6>    goalPosition;                           /* Array of doubles, keeps track of goalPosition. Gets transmitted when the robot is supposed to move somewhere                                                 */
+        std::array<int,6>       jointsAtGoal;                           /* Array of ints, keeps track of, whether or not a joint is at its goal position. Could be remade into an 8-bits u_integer                                      */
+        double                  currVelocity         = 0.4;             /* Double, value 0-1, controls the stepsize used when calculating new goalposition, should reset in increased or decreased speed                                */
+        std::array<double,6>    lastGoalPosition;                       /* Array to keep track of previous goalposition, used to time the exact moment of new position transmission                                                     */
 
-        static const int        links               = 6;
-        static const int        minLink             = 1;   
-        static const int        maxLink             = 6;
+        static const int        links               = 6;                /* Int to define the amount of links on the robot   */
+        static const int        minLink             = 1;                /* Int to define the value of the first link        */
+        static const int        maxLink             = 6;                /* Int to define the value of the Last link         */
 
         static const bool       tool                = false;
 
         const std::array<double,6>    resetStatePosition = {{    0,0,0,0,0,0}};
 
-        const std::array<double,6>    maxRotation        = {{    3.14,                   /* joint_1  */
-                                                                 2.57,                   /* joint_2  */
-                                                                 2.53,                   /* joint_3  */
-                                                                 4.71,                   /* joint_4  */
-                                                                 2.44,                   /* joint_5  */
-                                                                 4.71}};                  /* joint_6  */
+        const std::array<double,6>    maxRotation        = {{    3.14,                      /* joint_1  */
+                                                                 2.57,                      /* joint_2  */
+                                                                 2.53,                      /* joint_3  */
+                                                                 4.71,                      /* joint_4  */
+                                                                 2.44,                      /* joint_5  */
+                                                                 4.71}};                    /* joint_6  */
 
-        const std::array<double,6>    minRotation        = {{     -3.14,                  /* joint_1  */
-                                                                 -2.27,                  /* joint_2  */
-                                                                 -2.53,                  /* joint_3  */
-                                                                 -4.71,                  /* joint_4  */
-                                                                 -2.01,                  /* joint_5  */
-                                                                 -4.71}};                 /* joint_6  */
+        const std::array<double,6>    minRotation        = {{     -3.14,                    /* joint_1  */
+                                                                 -2.27,                     /* joint_2  */
+                                                                 -2.53,                     /* joint_3  */
+                                                                 -4.71,                     /* joint_4  */
+                                                                 -2.01,                     /* joint_5  */
+                                                                 -4.71}};                   /* joint_6  */
 
 
-        const std::array<double,6>    maxVelocity        = {{    (400.0/180.0)*3.14,     /* joint_1  */
-                                                                 (400.0/180.0)*3.14,     /* joint_2  */
-                                                                 (430.0/180.0)*3.14,     /* joint_3  */
-                                                                 (540.0/180.0)*3.14,     /* joint_4  */
-                                                                 (475.0/180.0)*3.14,     /* joint_5  */
-                                                                 (760.0/180.0)*3.14}};    /* joint_6  */
+        const std::array<double,6>    maxVelocity        = {{    (400.0/180.0)*3.14,        /* joint_1  */
+                                                                 (400.0/180.0)*3.14,        /* joint_2  */
+                                                                 (430.0/180.0)*3.14,        /* joint_3  */
+                                                                 (540.0/180.0)*3.14,        /* joint_4  */
+                                                                 (475.0/180.0)*3.14,        /* joint_5  */
+                                                                 (760.0/180.0)*3.14}};      /* joint_6  */
 
-        const std::array<double,6>    maxEffort          = {{    318.0,                  /* joint_1  */
-                                                                 166.0,                  /* joint_2  */
-                                                                 76.0,                   /* joint_3  */
-                                                                 34.0,                   /* joint_4  */
-                                                                 29.0,                   /* joint_5  */
-                                                                 11.0}};                  /* joint_6  */
+        const std::array<double,6>    maxEffort          = {{    318.0,                     /* joint_1  */
+                                                                 166.0,                     /* joint_2  */
+                                                                 76.0,                      /* joint_3  */
+                                                                 34.0,                      /* joint_4  */
+                                                                 29.0,                      /* joint_5  */
+                                                                 11.0}};                    /* joint_6  */
         
 
         const std::array<std::string,6> jointNames    = {{      "joint_1", 
@@ -128,7 +91,7 @@ void TX90_c::setGoalPos(int n , double val)
 /* Overwrites content of private member Robot_c.goalPosition[] with input
  * Along with copying existing goalPosition[] into lastGoalPosition[]   */
 
-    // TX90_c::lastGoalPosition[n] = TX90_c::goalPosition[n];
+    lastGoalPosition[n] = goalPosition[n];
     goalPosition[n] = val;
 
 }

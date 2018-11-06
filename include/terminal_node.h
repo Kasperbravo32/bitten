@@ -16,31 +16,9 @@ enum KEYWORD_INDICES {
     CLEAR_FOLDER,
     GO_HOME,
 
-    
-
     NUMBER_OF_KEYWORDS
 };
 
-//     /* 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 */
-//     /* 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304 8388608, 16777216  */
-//     ACK                     = 1,    
-//     DENIED                  = 2,
-//     WAYPOINT_REACHED        = 4,
-//     WAYPOINT_INTERRUPTED    = 8,
-//     TEST_DONE_FLAG          = 16,
-//     TEST_INTERRUPTED        = 32,
-//     ROBOT_CRASHED           = 64,
-//     DEADMAN_STATUS          = 128,
-//     ESTABLISH_CONNECTION    = 256,
-//     TERMINATE_CONNECTION    = 512,
-//     PING                    = 1024,
-//     PONG                    = 2048,
-//     PAUSE                   = 4096,
-//     RESUME                  = 8192,
-//     START_OPERATION         = 16384,
-//     STOP_OPERATION          = 32786,
-//     NEW_WAYPOINT            = 65536,
-//     GOAL_REACHED            = 131072,
 enum TERMINAL_FLAGS {
 //     /* 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768 */
 //     /* 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304 8388608, 16777216  */

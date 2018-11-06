@@ -8,11 +8,8 @@
  *                      -------  Libraries   -------
  * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
-#include "std_msgs/String.h"
 #include <string>
-#include <iostream>
 #include <fstream>
-#include <stdlib.h>
 #include <pwd.h>
 #include <bitten/control_msg.h>
 #include <bitten/feedback_msg.h>
@@ -21,14 +18,18 @@
 
 using namespace std;
 
-int NumberofWaypoints;                  /* Number of waypoints excluding waypoint_0.                    */
-int RemainingWaypoints;                 /* Number of remaining waypoints to perform.                    */
-Waypoint_s WaypointBank[16];            /* Create an empty bank of waypoints, to contain future tests   */
+int NumberofWaypoints;                                              /* Number of waypoints excluding waypoint_0.                                        */
+int RemainingWaypoints;                                             /* Number of remaining waypoints to perform.                                        */
 
-passwd* pw = getpwuid(getuid());
-string path(pw->pw_dir);
+bool readyForNextWp     = false;                                    /* Bool to determine if the node is ready to Tx a new WP                            */
+bool transmitWpReady    = false;                                    /* Bool to determine if the waypoint_node is ready to transmit on waypoint_topic    */
 
-string testsPath        = path + "/catkin_ws/src/bitten/tests/";
+Waypoint_s WaypointBank[16];                                        /* Create an empty bank of waypoints, to contain future tests                       */
+
+passwd* pw = getpwuid(getuid());                                    /* Get a password reference, to help fetch the home path of the current PC          */
+string path(pw->pw_dir);                                            /* Get the system home filepath                                                     */
+string testsPath        = path + "/catkin_ws/src/bitten/tests/";    /* Save the filepath to the tests folder, containing the files for various tests    */
+
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -40,8 +41,8 @@ int main(int argc, char **argv)
     wp_msg.nodeName = nodeNames[WP_TOPIC].c_str();
     wp_msg.id       = WP_ID;
 
-    ros::Publisher wpPub = n.advertise<bitten::control_msg>(topicNames[WP_TOPIC],3*LOOP_RATE_INT);
-    ros::Subscriber feedbackSub = n.subscribe<bitten::feedback_msg>(topicNames[FEEDBACK_TOPIC], 3*LOOP_RATE_INT, &fbCallback);
+    ros::Publisher wpPub        = n.advertise<bitten::control_msg>  (topicNames[WP_TOPIC],5);
+    ros::Subscriber feedbackSub = n.subscribe<bitten::feedback_msg> (topicNames[FEEDBACK_TOPIC], 5, &fbCallback);
 
     ros::Rate loop_rate(LOOP_RATE_INT);
 
@@ -71,6 +72,7 @@ int main(int argc, char **argv)
         {
             wpPub.publish(wp_msg);
             transmitWpReady = false;
+            wp_msg.flags = 0;
         }
 
         ros::spinOnce();
@@ -95,7 +97,6 @@ void fbCallback(const bitten::feedback_msg::ConstPtr& feedback)
         if (feedback->flags & GOAL_REACHED)
         {            
             ROS_INFO(" OK!");
-
             if (--RemainingWaypoints > 0)
                 readyForNextWp = true;
 
@@ -125,14 +126,12 @@ void fbCallback(const bitten::feedback_msg::ConstPtr& feedback)
                     NumberofWaypoints = waypointCounter;
                     RemainingWaypoints = NumberofWaypoints;
                 }
-
                 cout << "Running test: " << testName << endl;
                 cout << "Total number of waypoints: " << NumberofWaypoints << endl;
-                
-                inputFile.close();
-
                 readyForNextWp = true;
+                inputFile.close();
             }
+            
             else
                 cout << "Couldn't open: " << inputFilePath << endl;
         }

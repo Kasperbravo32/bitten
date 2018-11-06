@@ -6,15 +6,6 @@ struct Waypoint_s {
     double effort[6];
 };
 
-enum CONTROL_MODE {                         
-    RESET_MODE,
-    BREAK_STUFF_MODE,
-    WAYPOINT_MODE,
-    TEST_1_MODE,
-    TEST_2_MODE
-} CONTROL_MODE;
-
-
 enum INPUT_MODE {
     MANUAL_MODE,
     WP_MODE,
@@ -24,5 +15,13 @@ enum INPUT_MODE {
     
 } INPUT_MODE;
 
+
+ /* ----------------------------------------------------------------------
+ *                      -------  Initializing   -------
+ * ----------------------------------------------------------------------- */
+void manualCallback             (const bitten::control_msg::ConstPtr& manual        );
+void wpCallback                 (const bitten::control_msg::ConstPtr& wp            );
+void terminalCallback           (const bitten::control_msg::ConstPtr& terminal      );
+void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedback );
 
 

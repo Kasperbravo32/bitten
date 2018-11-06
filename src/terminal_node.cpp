@@ -8,25 +8,16 @@
  *                      -------  Libraries   -------
  * ----------------------------------------------------------------------- */
 #include "ros/ros.h"
-#include "std_msgs/String.h"
-#include "bitten/feedback_msg.h"
 #include <iostream>
 #include <fstream>
-#include <string>
-
-#include "string.h"
 #include <pwd.h>
 
+#include "string.h"
 #include "global_node_definitions.h"
-
 #include "bitten/control_msg.h"
 #include "terminal_node.h"
 
 using namespace std;
- /* ----------------------------------------------------------------------
- *                 -------  Forward Declarations   -------
- * ----------------------------------------------------------------------- */
-void tCommCallback(const bitten::feedback_msg::ConstPtr& tFeedback);
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
@@ -35,9 +26,10 @@ bitten::control_msg terminalMsg;
  /* ----------------------------------------------------------------------
  *             -------  Variables, Constants & Objects  -------
  * ----------------------------------------------------------------------- */
-bool terminalTxRdy = false;
-bool recording = false;
-bool foundKeywordMatch = false;
+bool terminalTxRdy      = false;
+bool recording          = false;
+bool foundKeywordMatch  = false;
+
 bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
                                                             mode_func,
                                                             play_test_func,
@@ -54,7 +46,7 @@ string configFilePath   = path + "/catkin_ws/src/bitten/tests/TEST_INFO.txt";
 string testsPath        = path + "/catkin_ws/src/bitten/tests/";
 string input_s;
 string ExistingFiles[10];
-string::size_type sz;
+// string::size_type sz;
 
 int input_i;
 
@@ -67,13 +59,12 @@ int main (int argc , char **argv)
     ros::NodeHandle n;
     
     ros::Publisher  terminal_pub    = n.advertise<bitten::control_msg>  ("terminal_topic" , 5);
-    ros::Subscriber terminal_sub    =n.subscribe<bitten::feedback_msg> ("feedback_topic" , 5 , &tCommCallback);
     
     ros::Rate loop_rate(LOOP_RATE_INT);
 
     sleep(2);
 
-    if (terminal_pub && terminal_sub)
+    if (terminal_pub)
         ROS_INFO("Initiated %s", nodeNames[TERMINAL_NODE].c_str());
     else
         ROS_INFO("Failed to initiate %s",nodeNames[TERMINAL_NODE].c_str());
@@ -125,6 +116,7 @@ int main (int argc , char **argv)
         ros::spinOnce();
         loop_rate.sleep();
     }
+    return 0;
 }
 
 bool clearScreen()
@@ -132,7 +124,6 @@ bool clearScreen()
     for (int i = 0; i < 100; i++)
         cout << endl;
 }
-
 
 bool help_func() 
 {
@@ -170,7 +161,6 @@ bool mode_func()
     } while (input_i != 1 && input_i != 2 && input_i != 3);
 
     cout << endl << "Changing mode to: ";
-
     switch(input_i)
     {
         case 1:
@@ -234,7 +224,6 @@ bool delete_test_func()
 {
     int fileToDelete;
     string fileToDeleteString;
-
     readExistingTests();
     
     do
@@ -259,7 +248,6 @@ bool delete_test_func()
             cout << "Not a valid option" << endl;
     } while (1);   
 }
-
 
 bool record_func()
 {
@@ -313,7 +301,6 @@ bool record_func()
         return true;
     }
 }
-
 
 int getNumberOfTests()
 {
@@ -379,9 +366,7 @@ void readExistingTests()
 
     if (FirstFileFound == false)
         cout << "No file exists.";
-
 }
-
 
 bool clearTestFolder()
 {
@@ -409,7 +394,6 @@ bool clearTestFolder()
             }
         }
 
-
         ofstream testCounterFile(configFilePath , ios_base::trunc | ios_base::out);
         
         if (testCounterFile.is_open())
@@ -429,21 +413,4 @@ bool goHome()
 {
     terminalMsg.flags |= GO_HOME_F;
     return true;
-}
-
-
-
- /* ----------------------------------------------------------------------
- *             -------  Commander Feedback callback   -------
- * ----------------------------------------------------------------------- */
-void tCommCallback(const bitten::feedback_msg::ConstPtr& tFeedback)
-{
-    if (tFeedback->recID == TERMINAL_ID || tFeedback->recID == ALL_ID)
-    {
-        if (tFeedback->flags & PING)
-        {
-            terminalMsg.flags |= PONG;
-            terminalTxRdy = true;
-        }
-    }
 }

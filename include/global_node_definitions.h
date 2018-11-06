@@ -4,9 +4,6 @@
 #include <string.h>
 #include "ros/ros.h"
 
-void DEBUG_INFO();
-
-
 const double LOOP_RATE_INT = 50;
 
 enum NODE_IDS {
@@ -72,29 +69,6 @@ std::string topicNames[NUMBER_OF_TOPICS] = {
     "joint_path_command",
     "movement_topic",
     "terminal_topic"
-};
-
-
-struct MsgType_s
-{
-    std::string nodeName;                       /* Used to write the name of the waypoint/manual/test-node                              */
-    std::string programName;                    /* Used to see if e.g. test 1 in test_node is running                                   */
-    
-    uint32_t flags;                             /* Used for setting flags, initiating various processes, asking for stuff etc           */
-    uint8_t id;                                 /* Used to see if controlling node is test/waypoint/manual node                         */
-
-    std::array<double    ,   6> jointPosition;   /* Contains the wanted positions of each joint. used in waypoint mode, not in manual.   */
-    std::array<double    ,   6> jointVelocity;   /* Percentage of maximum velocity to move joints with                                   */
-    std::array<uint8_t  ,   8> buttons;         /* Array to list status of the buttons (square, triangle, X, circle + arrows)           */
-};
-
-
-struct feedbackMsg_s
-{
-    uint8_t senderID;
-    uint8_t recID;
-
-    uint32_t flags;
 };
 
 

@@ -26,15 +26,6 @@
 #include "bitten/feedback_msg.h"
 #include "bitten/control_msg.h"
 
-// using namespace std;
- /* ----------------------------------------------------------------------
- *                      -------  Initializing   -------
- * ----------------------------------------------------------------------- */
-void manualCallback             (const bitten::control_msg::ConstPtr& manual        );
-void wpCallback                 (const bitten::control_msg::ConstPtr& wp            );
-void terminalCallback           (const bitten::control_msg::ConstPtr& terminal      );
-void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedback );
-
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
@@ -64,8 +55,6 @@ const   int PING_RATE = LOOP_RATE_INT / 2;
 double tempCurrPos[6];
 
 std::fstream RecordFile;
-
-TX90_c TX90;
 
 passwd* pw = getpwuid(getuid());
 std::string path(pw->pw_dir);
@@ -170,6 +159,7 @@ int main(int argc , char **argv)
         ros::spinOnce();
         loop_rate.sleep();
     }
+    return 0;
 }
 
  /* ----------------------------------------------------------------------
@@ -229,7 +219,7 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
 void wpCallback (const bitten::control_msg::ConstPtr& wp)
 {
     if (wp->flags & PONG)
-        ping_flags += 2;
+        ping_flags |= (1 << 1);
 
     if (wp->flags & NEW_WAYPOINT)
     {
@@ -245,6 +235,7 @@ void wpCallback (const bitten::control_msg::ConstPtr& wp)
             }   
         }
     }
+    
     if (wp->flags & TEST_DONE_FLAG)
     {
         std::cout << "Completed test. Returning to manual control" << std::endl;
