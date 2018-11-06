@@ -38,6 +38,7 @@ bitten::control_msg terminalMsg;
 string ExistingFiles[10];
 string::size_type sz;
 
+bool terminalTxRdy = false;
 bool recording = false;
 bool foundKeywordMatch = false;
 bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
@@ -65,11 +66,12 @@ int main (int argc , char **argv)
     ros::NodeHandle n;
     
     ros::Publisher  terminal_pub    = n.advertise<bitten::control_msg>  ("terminal_topic" , 5);
-
+    ros::Subscriber terminal_sub    =n.subscribe<bitten::feedback_msg> ("feedback_topic" , 5 , &tCommCallback);
+    
     ros::Rate loop_rate(LOOP_RATE_INT);
     sleep(2);
 
-    if (terminal_pub)
+    if (terminal_pub && terminal_sub)
         ROS_INFO("Initiated %s", nodeNames[TERMINAL_NODE].c_str());
     else
         ROS_INFO("Failed to initiate %s",nodeNames[TERMINAL_NODE].c_str());
@@ -109,6 +111,13 @@ int main (int argc , char **argv)
         }
         else if (!foundKeywordMatch)
             cout << "Didn't recognize input." << endl;
+
+        if (terminalTxRdy == true)
+        {
+            terminal_pub.publish(terminalMsg);
+            terminalTxRdy = false;
+            terminalMsg.flags = 0;
+        }
         
         ros::spinOnce();
         loop_rate.sleep();
@@ -188,7 +197,7 @@ bool play_test_func()
     
     while(1)
     {
-        cout << endl << "Your choice: " << endl;
+        cout << endl << "Your choice: ";
         getline(cin , input_s);
         stringstream input_ss(input_s);
         if (input_ss >> input_i)
@@ -422,5 +431,12 @@ bool clearTestFolder()
  * ----------------------------------------------------------------------- */
 void tCommCallback(const bitten::feedback_msg::ConstPtr& tFeedback)
 {
-
+    if (tFeedback->recID == TERMINAL_ID || tFeedback->recID == ALL_ID)
+    {
+        if (tFeedback->flags & PING)
+        {
+            terminalMsg.flags |= PONG;
+            terminalTxRdy = true;
+        }
+    }
 }

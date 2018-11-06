@@ -326,6 +326,10 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
         {
             if (goalExists == false)
             {
+<<<<<<< HEAD
+=======
+                // std::cout << "OK!" << std::endl << "Moving robot to: " << commander->programName << "...";
+>>>>>>> 2024a3b8c3a1fda3e4b72c313b344c484b2b8cfc
                 if (OPERATING_MODE != WP_ID)
                     OPERATING_MODE = WP_ID;
 

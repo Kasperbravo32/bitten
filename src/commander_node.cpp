@@ -44,35 +44,24 @@ bitten::control_msg passOnMsg;
  *                    -------  Global Variables   -------
  * ----------------------------------------------------------------------- */
 bool goalExists                 = false;
-bool waiting                    = false;
 bool fbTransmitReady            = false;
 bool jointStatesTransmitReady   = false;
 bool robotOccupied              = false;
 bool recording                  = false;
 bool gotPositions               = false;
+bool ping_bools[2]              ={false,
+                                  false};
 
 bool NewWaypoint                = true;
-bool not_run                    = true;
 bool ping                       = true;
 
 uint8_t ping_flags              = 0;
-bool ping_bools[3]              = { false,
-                                    false,
-                                    false};
 
 const   int PING_RATE = LOOP_RATE_INT / 2;
-        int poll_timer = LOOP_RATE_INT*2;
         int ping_timer = PING_RATE;
-        int ping_timeout = PING_RATE;
-        int pub_counter = LOOP_RATE_INT / 10;
         int waypointsRecorded = 0;
-double goalArray[6];
 
 double tempCurrPos[6];
-
-uint8_t jointsdone = 0;
-
-std::string currentRecordFile;
 
 std::fstream RecordFile;
 
@@ -80,9 +69,8 @@ TX90_c TX90;
 
 passwd* pw = getpwuid(getuid());
 std::string path(pw->pw_dir);
-
 std::string testsPath        = path + "/catkin_ws/src/bitten/tests/";
-
+std::string currentRecordFile;
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
  * ----------------------------------------------------------------------- */        
@@ -107,7 +95,7 @@ int main(int argc , char **argv)
 
     sleep(1);
 
-    if (manual_sub && wp_sub && commander_pub && commander_fb_pub && movement_feedback)
+    if (manual_sub && wp_sub && commander_pub && commander_fb_pub && movement_feedback && terminal_sub)
         ROS_INFO("Initiated %s",nodeNames[COMMANDER_NODE].c_str());
     else
         ROS_INFO("Didn't initiate %s",nodeNames[COMMANDER_NODE].c_str());
@@ -117,71 +105,51 @@ int main(int argc , char **argv)
     ------------------------------------------------- */
     while(ros::ok())
     {
-        // switch(INPUT_MODE)
-        // {
-        //     case MANUAL_MODE:
-        //         break;
-
-        //     case WP_MODE:
-
-        //         break;
-
-        //     case POLL_MODE:
-
-        //         if (! --poll_timer)
-        //             poll_timer = 2*LOOP_RATE_INT;
-        //         break;
-
-        //     default:
-
-        //         break;
-        // }
         if (! --ping_timer)
         {
-            /* We're using a bit bank for maintaining ping status of each node.
-                * We're tracking ping on 3 nodes:
-                *  manual_node
-                *  terminal_node
-                *  waypoint_node
-                * manual_nodes ping state is on bit 0 of ping_flags variable
-                * terminal_node ping state on bit 1
-                * waypoint_node ping state on bit 2
-                * The remaining flags are reserved for future use (there's probably no future use): */
             commanderFeedbackMsg.flags = PING;
+            commanderFeedbackMsg.recID = ALL_ID;
             fbTransmitReady = true;
 
-            if (ping_flags & 0b111)
+            if (INPUT_MODE == POLL_MODE && ping_flags & 0b10 && ping_bools[0] == true)
+                INPUT_MODE = MANUAL_MODE;
+
+            if (ping_flags == 3 && ping_bools[0] == true && ping_bools[1] == true)
             {
                 ping_flags = 0;
                 ping_timer = PING_RATE;
             }
+
             else
             {
-                for (int i = 0; i < 3; i++)
+                for (int i = 0; i < 2; i++)
                 {
-                    if (! ping_flags & (1 << i))
-                    {
-                        std::cout << "Ping timed out on node: ";
-                        switch(i)
-                        {
-                            case 0:
-                                std::cout << "Manual_node." << std::endl;
-                            break;
-                            
-                            case 1:
-                                std::cout << "Terminal_node." << std::endl;
-                            break;
+                    if (ping_flags & (1 << i))
+                        ping_bools[i] = true;
 
-                            case 2:
-                                std::cout << "Waypoint_node." << std::endl;
-                            break;
+                    else
+                    {
+                        if (ping_bools[i] != false)
+                        {
+                            std::cout << "Ping timed out on node: ";
+                            ping_bools[i] = false;
+                            switch(i)
+                            {
+                                case 0:
+                                    std::cout << "Manual_node." << std::endl;
+                                    if (INPUT_MODE == MANUAL_MODE)
+                                        INPUT_MODE = NO_MODE;
+                                break;
+
+                                case 1:
+                                    std::cout << "Waypoint_node." << std::endl;
+                                break;
+                            }
                         }
                     }
                 }
-                    
-                ROS_INFO("Ping timeout, returning to poll_mode");
+                ping_flags = 0;
                 ping_timer = PING_RATE;
-                ping_flags = 7;
             }
         }
         
@@ -212,54 +180,42 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
     static int debounceCounter = 0;
 
     if (manual->flags & PONG)
-        ping_flags |= (1 << 0);
-
-    if (manual->flags & ESTABLISH_CONNECTION)
-    {
-        if (INPUT_MODE == POLL_MODE)
-        {
-            INPUT_MODE = MANUAL_MODE;
-            // ROS_INFO("Established connection to %s",nodeNames[MANUAL_NODE].c_str());
-            commanderFeedbackMsg.flags = ACK;
-            commanderFeedbackMsg.recID = MANUAL_ID;
-
-            fbTransmitReady = true;
-        }
-    }
-
-    if (manual->buttons[0] == 1)
-    {
-        debounceCounter++;
-        
-        if (debounceCounter == 5)
-        {
-            if (recording == true)
-            {
-                if (gotPositions == true)
-                {
-                    NewWaypoint = true;
-                    RecordFile << "\nwaypoint_" << waypointsRecorded;
-                    std::cout << "Adding waypoint_" << waypointsRecorded << std::endl;
-
-                    for (int i = 0; i < 6; i++)
-                        RecordFile << "\t" << tempCurrPos[i];
-                }
-
-                else if (NewWaypoint == true)
-                {
-                    NewWaypoint = false;
-                    passOnMsg.flags |= GET_CURR_POS;
-                    jointStatesTransmitReady = true;
-                }
-            }
-            waypointsRecorded++;
-        }
-    }
-    else if (manual->buttons[0] == 0)
-        debounceCounter = 0;
+        ping_flags += 1;
 
     if (INPUT_MODE == MANUAL_MODE)
     {
+        if (manual->buttons[0] == 1)
+        {
+            debounceCounter++;
+            
+            if (debounceCounter == 5)
+            {
+                if (recording == true)
+                {
+                    if (gotPositions == true)
+                    {
+                        NewWaypoint = true;
+                        RecordFile << "\nwaypoint_" << waypointsRecorded;
+                        std::cout << "Adding waypoint_" << waypointsRecorded << std::endl;
+
+                        for (int i = 0; i < 6; i++)
+                            RecordFile << "\t" << tempCurrPos[i];
+                    }
+
+                    else if (NewWaypoint == true)
+                    {
+                        NewWaypoint = false;
+                        passOnMsg.flags |= GET_CURR_POS;
+                        jointStatesTransmitReady = true;
+                    }
+                }
+                waypointsRecorded++;
+            }
+        }
+
+        else if (manual->buttons[0] == 0)
+            debounceCounter = 0;
+
         passOnMsg.buttons = manual->buttons;
         passOnMsg.jointVelocity = manual->jointVelocity;
         passOnMsg.id = MANUAL_ID;
@@ -272,49 +228,31 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
  * ----------------------------------------------------------------------- */ 
 void wpCallback (const bitten::control_msg::ConstPtr& wp)
 {
-    switch(wp->flags)
+    if (wp->flags & PONG)
+        ping_flags += 2;
+
+    if (wp->flags & NEW_WAYPOINT)
     {
-        case ESTABLISH_CONNECTION:
-            if (INPUT_MODE == POLL_MODE)
+        if (INPUT_MODE == WP_MODE)
+        {
+            if (robotOccupied == false)
             {
-                INPUT_MODE = WP_MODE;
-                commanderFeedbackMsg.flags = ACK;
-                commanderFeedbackMsg.recID = WP_ID;
-                fbTransmitReady = true;
-            }
-        break;
-
-        case TERMINATE_CONNECTION:
-            if (INPUT_MODE == WP_MODE)
-            {
-                INPUT_MODE = POLL_MODE;
-                commanderFeedbackMsg.flags = ACK;
-                commanderFeedbackMsg.recID = WP_ID;
-                fbTransmitReady = true;
-            }
-        break;
-
-        case NEW_WAYPOINT:
-        // std::cout << "Moving robot to: " << wp->programName << "...";
-            if (INPUT_MODE == WP_MODE)
-            {
-                
-                if (robotOccupied == false)
-                {
-                    passOnMsg.programName = wp->programName;
-                    
-                    robotOccupied = true;
-
-                    passOnMsg.jointPosition = wp->jointPosition;
-                    passOnMsg.id = WP_ID;
-                    jointStatesTransmitReady = true;       
-                }   
-            }
-        break;
-
-        case PONG:
-            ping_flags |= (1 << 2);
-        break;
+                passOnMsg.programName = wp->programName;
+                robotOccupied = true;
+                passOnMsg.jointPosition = wp->jointPosition;
+                passOnMsg.id = WP_ID;
+                jointStatesTransmitReady = true;
+            }   
+        }
+    }
+    if (wp->flags & TEST_DONE_FLAG)
+    {
+        std::cout << "Completed test. Returning to manual control" << std::endl;
+        if (INPUT_MODE == WP_MODE)
+        {
+            INPUT_MODE = MANUAL_MODE;
+            robotOccupied = false;
+        }
     }
 }
 
@@ -328,7 +266,7 @@ void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedbac
         switch(INPUT_MODE)
         {
             case WP_MODE:
-                // std::cout << " OK!" << std::endl;
+                
                 commanderFeedbackMsg.recID = WP_ID;
                 commanderFeedbackMsg.flags |= GOAL_REACHED;
                 fbTransmitReady = true;
@@ -356,9 +294,6 @@ void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedbac
  * ----------------------------------------------------------------------- */
 void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
 {
-    if (terminal-> flags & PONG)
-        ping_flags |= (1 << 1);
-
     if (terminal->flags & MODE_MANUAL_F)
     {
         if (goalExists == false)
@@ -381,8 +316,8 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
     {
         if (goalExists == false)
         {
-            if (INPUT_MODE != POLL_MODE)
-                INPUT_MODE == POLL_MODE;
+            if (INPUT_MODE != NO_MODE)
+                INPUT_MODE = NO_MODE;
         }
         else
             std::cout << "Currently occupied. Finish current operation before changing modes" << std::endl;

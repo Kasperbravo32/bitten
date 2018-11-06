@@ -55,26 +55,7 @@ int main(int argc, char **argv)
     * ------------------------------------------------- */
     while (ros::ok())
     {
-        if (connectionEstablished == true || connectionEstablished == false)
-        {
-            if (newConnection)
-            {
-                ROS_INFO("Connected!");
-                newConnection = false;
-            }
-            transmitManualRdy = true;
-        }
-        else
-        {
-            static int timer = LOOP_RATE_INT;
-            if (! --timer)
-            {
-                ROS_INFO("Trying to establish connection...");
-                manual_msg.flags |= ESTABLISH_CONNECTION;
-                timer = LOOP_RATE_INT;
-                transmitManualRdy = true;
-            }
-        }
+        transmitManualRdy = true;
 
         if (transmitManualRdy == true)
         {
@@ -86,6 +67,7 @@ int main(int argc, char **argv)
         ros::spinOnce();
         loop_rate.sleep();
     }
+
     return 0;
 }
 
@@ -311,18 +293,12 @@ void canCallback(const bitten::can_msg::ConstPtr& can)
  * ----------------------------------------------------------------------- */
 void fbCallback(const bitten::feedback_msg::ConstPtr& feedback)
 {
-    if (feedback->recID == MANUAL_ID)
+    if (feedback->recID == MANUAL_ID || feedback->recID == ALL_ID)
     {
         if (feedback->flags & PING)
         {
             manual_msg.flags |= PONG;
             transmitManualRdy = true;
         }
-
-        if (connectionEstablished == false && feedback->flags & ACK)
-            connectionEstablished = true;            
-
-        else if (connectionEstablished == false && feedback->flags == DENIED)
-            ROS_INFO("Connection denied");
     }
 }
