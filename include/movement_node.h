@@ -38,18 +38,19 @@ class TX90_c {
         
         void            setCurrPos(int n , double val);
         void            setGoalPos(int n , double val);    /* put lastGoalPos control in here */
+        void            setLastGoalPos(int n, double val);
         void            setJointsAtGoal(int arr[6]);
         void            setCurrVelocity(double n);
 
         double          getCurrPos(int n);
         double          getGoalPos(int n);
+        double          getLastGoalPos(int n);
         double          getCurrVelocity();
         double          getMaxRotation(int n);
         double          getMinRotation(int n);
         double          getMaxVelocity(int n);
         double          getResetStatePos(int n);
 
-        
         uint8_t         getJointsAtGoal();
         std::string     getJointName(int n);
 
@@ -61,10 +62,10 @@ class TX90_c {
     private:
 
         std::array<double,6>    currPos;
-        std::array<double,6>    goalPosition;
+        std::array<double,6>    goalPos;
+        std::array<double,6>    lastGoalPos;
         std::array<int,6>       jointsAtGoal;
         double                  currVelocity         = 0.4;
-        std::array<double,6>    lastGoalPosition; 
 
         static const int        links               = 6;
         static const int        minLink             = 1;   
@@ -123,41 +124,39 @@ void TX90_c::setCurrPos(int n, double val)
     currPos[n] = val;
 }
 
+double TX90_c::getCurrPos(int n)
+{
+    return currPos[n];
+}
+
 void TX90_c::setGoalPos(int n , double val)
 {
 /* Overwrites content of private member Robot_c.goalPosition[] with input
  * Along with copying existing goalPosition[] into lastGoalPosition[]   */
 
     // TX90_c::lastGoalPosition[n] = TX90_c::goalPosition[n];
-    goalPosition[n] = val;
-
+    goalPos[n] = val;
 }
 
+double TX90_c::getGoalPos(int n)
+{
+    return goalPos[n];
+}
+
+void TX90_c::setLastGoalPos(int n, double val)
+{
+    lastGoalPos[n] = val;
+}
+
+double TX90_c::getLastGoalPos(int n)
+{
+    return lastGoalPos[n];
+}
 
 void TX90_c::setJointsAtGoal(int arr[6])
 {
     for (int i = 0; i < 6; i++)
         jointsAtGoal[i] = arr[i];
-}
-
-void TX90_c::setCurrVelocity(double n)
-{
-    currVelocity = n;
-}
-
-double TX90_c::getCurrPos(int n)
-{
-    return currPos[n];
-}
-
-double TX90_c::getGoalPos(int n)
-{
-    return goalPosition[n];
-}
-
-double TX90_c::getCurrVelocity()
-{
-    return currVelocity;
 }
 
 uint8_t TX90_c::getJointsAtGoal()
@@ -171,6 +170,15 @@ uint8_t TX90_c::getJointsAtGoal()
     return counter;
 }
 
+void TX90_c::setCurrVelocity(double n)
+{
+    currVelocity = n;
+}
+
+double TX90_c::getCurrVelocity()
+{
+    return currVelocity;
+}
 
 std::string TX90_c::getJointName(int n)
 {
