@@ -16,12 +16,6 @@ enum INPUT_MODE {
 } INPUT_MODE;
 
 
- /* ----------------------------------------------------------------------
- *                      -------  Initializing   -------
- * ----------------------------------------------------------------------- */
-void manualCallback             (const bitten::control_msg::ConstPtr& manual        );
-void wpCallback                 (const bitten::control_msg::ConstPtr& wp            );
-void terminalCallback           (const bitten::control_msg::ConstPtr& terminal      );
-void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedback );
+
 
 

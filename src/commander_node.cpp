@@ -27,10 +27,18 @@
 #include "bitten/control_msg.h"
 
  /* ----------------------------------------------------------------------
+ *                      -------  Initializing   -------
+ * ----------------------------------------------------------------------- */
+void manualCallback             (const bitten::control_msg::ConstPtr& manual        );
+void wpCallback                 (const bitten::control_msg::ConstPtr& wp            );
+void terminalCallback           (const bitten::control_msg::ConstPtr& terminal      );
+void movementFeedbackCallback   (const bitten::feedback_msg::ConstPtr& moveFeedback );
+
+ /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
 bitten::feedback_msg commanderFeedbackMsg;     /* Used to send feedback to various nodes */
-bitten::control_msg passOnMsg;
+bitten::control_msg passOnMsg;                  
  /* ----------------------------------------------------------------------
  *                    -------  Global Variables   -------
  * ----------------------------------------------------------------------- */
