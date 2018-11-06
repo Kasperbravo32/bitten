@@ -229,7 +229,6 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 for (int i = 0; i < 6; i++)
                 {
                     sendCommand = true;
-                    // TX90.setLastGoalPos(i, TX90.getGoalPos(i));
                     TX90.setGoalPos(i, TX90.getResetStatePos(i));
                 }
             }
@@ -291,7 +290,6 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                             intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity()*2);
                             if (intendedGoal < TX90.getMaxRotation(i))
                             {
-                                TX90.setLastGoalPos(i, TX90.getGoalPos(i));
                                 TX90.setGoalPos(i, intendedGoal);
                                 justMoved = true;
                             }
@@ -304,7 +302,6 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                             intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity()*2);
                             if (intendedGoal > TX90.getMinRotation(i))
                             {
-                                TX90.setLastGoalPos(i, TX90.getGoalPos(i));
                                 TX90.setGoalPos(i, intendedGoal);
                                 justMoved = true;
                             }
@@ -314,7 +311,6 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                     {
                         if (justMoved == true)
                         {
-                            TX90.setLastGoalPos(i, TX90.getGoalPos(i));
                             TX90.setGoalPos(i, TX90.getCurrPos(i));
                             justMoved = false;
                         }
@@ -332,10 +328,8 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
 
                 std::cout << "OK!" << std::endl << "Moving robot to: " << commander->programName << "...";
                 for (int i = 0; i < 6; i++)
-                {
-                    // TX90.setLastGoalPos(i, TX90.getGoalPos(i));
                     TX90.setGoalPos(i, commander->jointPosition[i]);
-                }
+
                 goalExists = true;
                 jointTransmitReady = true;
             }
@@ -362,7 +356,6 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
         {
             TX90.setCurrPos(i , RobotState->actual.positions[i]);
             TX90.setGoalPos(i , TX90.getCurrPos(i));
-            // TX90.setLastGoalPos(i, TX90.getGoalPos(i));
         }
     }
 

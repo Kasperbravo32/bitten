@@ -17,6 +17,7 @@ class TX90_c {
         double          getMinRotation(int n);                          /* Function to get the possible rotation of the robot in negative direction, on a single joint                              */
         double          getMaxVelocity(int n);                          /* Function to get the max possible allowed speed of the robot, on a single joint                                           */
         double          getResetStatePos(int n);                        /* Function to get the coordinate of the resetstateposition, of a single joint                                              */
+        double          getLastGoalPos(int n);
 
         uint8_t         getJointsAtGoal();                              /* Returns an 8-bit integer, where the first 6 bits ([bit_0:bit_5]) determines whether or not each joint is at its goal position    */
         std::string     getJointName(int n);                            /* Returns the URDF name of a single joint                                                                                          */
@@ -103,17 +104,12 @@ void TX90_c::setGoalPos(int n , double val)
 
 double TX90_c::getGoalPos(int n)
 {
-    return goalPos[n];
-}
-
-void TX90_c::setLastGoalPos(int n, double val)
-{
-    lastGoalPos[n] = val;
+    return goalPosition[n];
 }
 
 double TX90_c::getLastGoalPos(int n)
 {
-    return lastGoalPos[n];
+    return lastGoalPosition[n];
 }
 
 void TX90_c::setJointsAtGoal(int arr[6])
