@@ -117,15 +117,19 @@ int main (int argc , char **argv)
             {
                 // jointsNearlyAtGoal();
 
-/*                if(numberOfNearlyGoals == 6)
+                // if(numberOfNearlyGoals == 6)
+                // {
+                //     sendCommand = true;
+                // }
+                // else 
+
+                if(! PubTimer--)
                 {
                     sendCommand = true;
                 }
-                else */
-
+                
                 if(sendCommand == true)
                 {
-                    // ros::spinOnce();
                     jointPathMsg.joint_names.clear();
                     jointPathMsg.points.clear();
                     jointPathPointMsg.positions.clear();
@@ -141,10 +145,6 @@ int main (int argc , char **argv)
                     jointTransmitReady = true;
                     sendCommand = false;
                     PubTimer = LOOP_RATE_INT / 3;
-                }
-                else if (! --PubTimer)
-                {
-                    sendCommand = true;
                 }
 
                 if (jointTransmitReady)
@@ -333,20 +333,12 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
     }
 
     for (int i = 0; i < 6; i++)
-    {
         TX90.setCurrPos(i, RobotState->actual.positions[i]);
 
-        // if (goalExists == true)
-        // {
-        //     static double posBoundary = 0.02 * TX90.getMaxRotation(i);
-        //     if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundary)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundary)))
-        //         jointAtGoalCounter++;
-        // }
-    }
-    int goals;
     if(goalExists == true)
-        goals = jointsNearlyAtGoal2();
-    if (/*jointAtGoalCounter*/goals == 6)
+        jointAtGoalCounter = jointsNearlyAtGoal2();
+
+    if (jointAtGoalCounter == 6)
     {
         movementFeedbackMsg.flags |= GOAL_REACHED;
         goalExists = false;
