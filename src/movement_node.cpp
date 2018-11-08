@@ -22,7 +22,8 @@
  * ----------------------------------------------------------------------- */
 void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr&   RobotState);
 void commanderCallback  (const bitten::control_msg::ConstPtr&                           commander);
-
+int jointsNearlyAtGoal(void);
+int jointsNearlyAtGoal2(void);
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
@@ -121,52 +122,21 @@ int main (int argc , char **argv)
                 break;
             case MANUAL_ID:
             {
-                double currDistance;
-                double totalDistance;
-                double doneDistance;
-                double percentDistance;
-                int numberOfNearlyGoals = 0;
-                
-                // ROS_INFO(" ");
-                for(int i = 0; i < 6; i++)
-                {
-                    if(TX90.getCurrPos(i) != TX90.getGoalPos(i) && TX90.getGoalPos(i) != TX90.getLastGoalPos(i))
-                    {
-                        currDistance = std::abs(TX90.getGoalPos(i) - TX90.getCurrPos(i));
-                        totalDistance = std::abs(TX90.getGoalPos(i) - TX90.getLastGoalPos(i));
-                        doneDistance = totalDistance - currDistance;
-                        if(doneDistance < 0.00001)
-                            doneDistance = 0.00001;
-                        if(totalDistance < 0.00001)
-                            totalDistance = 0.00001;
-                    }
-                    else
-                    {
-                        doneDistance = 1;
-                        totalDistance = 1;
-                    }
+                // jointsNearlyAtGoal();
 
-                    percentDistance = doneDistance / totalDistance;
-                    ROS_INFO("Joint %d: percent: %f = done: %f / total: %f .. curr: %f", i+1, percentDistance, doneDistance, totalDistance, currDistance);
-                    
-                    if(percentDistance > 0.6)
-                        numberOfNearlyGoals++;
-                }
-                ROS_INFO("Nearly goals: %d", numberOfNearlyGoals);
+                // if(numberOfNearlyGoals == 6)
+                // {
+                //     sendCommand = true;
+                // }
+                // else 
 
-/*                if(numberOfNearlyGoals == 6)
+                if(! PubTimer--)
                 {
                     sendCommand = true;
                 }
-                else */if (! --PubTimer)
+                
+                if(sendCommand == true)
                 {
-                    // sendCommand = true;
-                    
-                // }
-
-                // if(sendCommand == true)
-                // {
-                    ros::spinOnce();
                     jointPathMsg.joint_names.clear();
                     jointPathMsg.points.clear();
                     jointPathPointMsg.positions.clear();
@@ -180,7 +150,7 @@ int main (int argc , char **argv)
 
                     jointPathMsg.points.push_back(jointPathPointMsg);
                     jointTransmitReady = true;
-                    // sendCommand = false;
+                    sendCommand = false;
                     PubTimer = LOOP_RATE_INT / 3;
                 }
 
@@ -284,14 +254,14 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
             else
                 ButtonCounter = 0;
 
-            int jointAtGoalCounter = 0;
-            for (int i = 0; i < 6; i++)
-            {
-                static double posBoundry = 0.02 * TX90.getMaxRotation(i);
-                if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundry)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundry)))
-                    jointAtGoalCounter++;
-            }
-            if (jointAtGoalCounter == 6)
+            // int jointAtGoalCounter = 0;
+            // for (int i = 0; i < 6; i++)
+            // {
+            //     static double posBoundry = 0.02 * TX90.getMaxRotation(i);
+            //     if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundry)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundry)))
+            //         jointAtGoalCounter++;
+            // }
+            if (jointsNearlyAtGoal2() == 6)
             {
                 for (int i = 0; i < 6; i++)
                 {
@@ -300,11 +270,12 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                     {
                         if(((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1))
                         {
-                            intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity()*2);
+                            intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity());
                             if (intendedGoal < TX90.getMaxRotation(i))
                             {
                                 TX90.setGoalPos(i, intendedGoal);
                                 justMoved = true;
+                                sendCommand = true;
                             }
                         }
                     }
@@ -312,11 +283,12 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                     {
                         if(((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1))
                         {
-                            intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity()*2);
+                            intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity());
                             if (intendedGoal > TX90.getMinRotation(i))
                             {
                                 TX90.setGoalPos(i, intendedGoal);
                                 justMoved = true;
+                                sendCommand = true;
                             }
                         }
                     }
@@ -326,6 +298,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                         {
                             TX90.setGoalPos(i, TX90.getCurrPos(i));
                             justMoved = false;
+                            sendCommand = true;
                         }
                     }
                 }
@@ -373,16 +346,10 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
     }
 
     for (int i = 0; i < 6; i++)
-    {
         TX90.setCurrPos(i, RobotState->actual.positions[i]);
 
-        if (goalExists == true)
-        {
-            static double posBoundary = 0.02 * TX90.getMaxRotation(i);
-            if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundary)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundary)))
-                jointAtGoalCounter++;
-        }
-    }
+    if(goalExists == true)
+        jointAtGoalCounter = jointsNearlyAtGoal2();
 
     if (jointAtGoalCounter == 6)
     {
@@ -390,4 +357,45 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
         goalExists = false;
         feedbackTransmitReady = true;
     }
-}   
+}
+
+int jointsNearlyAtGoal(void)
+{
+    static double currDistance;
+    static double totalDistance;
+    static double doneDistance;
+    int numberOfNearlyGoals = 0;
+    for(int i = 0; i < 6; i++)
+    {
+        if(TX90.getCurrPos(i) != TX90.getGoalPos(i) && TX90.getGoalPos(i) != TX90.getLastGoalPos(i))
+        {
+            currDistance = std::abs(TX90.getGoalPos(i) - TX90.getCurrPos(i));
+            totalDistance = std::abs(TX90.getGoalPos(i) - TX90.getLastGoalPos(i));
+            doneDistance = totalDistance - currDistance;
+            if(doneDistance < 0.00001)
+                doneDistance = 0.00001;
+            if(totalDistance < 0.00001)
+                totalDistance = 0.00001;
+        }
+        else
+        {
+            doneDistance = 1;
+            totalDistance = 1;
+        }
+        if((doneDistance / totalDistance) > 0.6)
+            numberOfNearlyGoals++;
+    }
+    return numberOfNearlyGoals;
+}
+
+int jointsNearlyAtGoal2(void)
+{
+    int jointAtGoalCounter = 0;
+    for (int i = 0; i < 6; i++)
+    {
+        static double posBoundry = 0.02 * TX90.getMaxRotation(i);
+        if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundry)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundry)))
+            jointAtGoalCounter++;
+    }
+    return jointAtGoalCounter;
+}
