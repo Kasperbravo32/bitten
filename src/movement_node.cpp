@@ -47,6 +47,13 @@ bool clearTransmitReady     = false;
 bool twistJ0Ready           = false;
 bool sendCommand = true;
 
+bool justMovedArr[6]        ={false,
+                              false,
+                              false,
+                              false,
+                              false,
+                              false};
+
 int OPERATING_MODE = 0;
 
 TX90_c TX90;
@@ -185,6 +192,10 @@ int main (int argc , char **argv)
 
                 if (feedbackTransmitReady)
                 {
+                    movementFeedbackMsg.flags |= SENT_CURR_POS;
+                    for(int i = 0; i < 6; i++)
+                        movementFeedbackMsg.positions[i] = TX90.getCurrPos(i);
+                        
                     feedback_pub.publish(movementFeedbackMsg);
                     movementFeedbackMsg.flags = 0;
                     feedbackTransmitReady = false;
