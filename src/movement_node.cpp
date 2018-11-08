@@ -33,6 +33,9 @@ bitten::feedback_msg                    movementFeedbackMsg;        /* Message u
 
 
 trajectory_msgs::JointTrajectory        jointPathMsgTest;               /* Message used to transmit wanted position to motion_streaming_interface           */
+
+trajectory_msgs::JointTrajectory        jointPathMsgTest2;
+trajectory_msgs::JointTrajectoryPoint   jointPathPointMsgTest2;
 // trajectory_msgs::JointTrajectoryPoint   jointPathPointMsgTest;          /* Message used to contain specific points of wanted position, part of jointPathMsg */
 
 
@@ -71,7 +74,8 @@ int main (int argc , char **argv)
     ros::Subscriber movement_sub = n.subscribe<bitten::control_msg>                         ("movement_topic"       , 2 , commanderCallback);
     ros::Subscriber feedback_sub = n.subscribe<control_msgs::FollowJointTrajectoryFeedback> ("feedback_states"      , 2 , robotStateCallback);
     
-    ros::Publisher  movement_pub = n.advertise<trajectory_msgs::JointTrajectory>            ("joint_path_command"   , 2);
+    ros::Publisher  movement_pub = n.advertise<trajectory_msgs::JointTrajectory>            ("joint_path_command"   , 5, true);
+    ros::Publisher  movement_clearPub = n.advertise<trajectory_msgs::JointTrajectory>       ("joint_path_command"   , 5, true);
     ros::Publisher  feedback_pub = n.advertise<bitten::feedback_msg>                        ("movement_feedback"    , LOOP_RATE_INT);
 
     jointPathPointMsg.positions.resize(6);
@@ -81,6 +85,13 @@ int main (int argc , char **argv)
 
     jointPathMsgTest.joint_names.clear();
     jointPathMsgTest.points.clear();
+
+    for (int i = 0; i < 6; i++)
+    {                  
+        jointPathPointMsgTest2.positions.push_back(1);
+        jointPathPointMsgTest2.velocities.push_back(1);
+    }
+    jointPathMsgTest2.points.push_back(jointPathPointMsgTest2);
 
     ros::Rate loop_rate(LOOP_RATE_INT);
     sleep(1);
@@ -133,7 +144,31 @@ int main (int argc , char **argv)
 
             case MANUAL_ID:
             {
-                if(sendCommand == true)
+                // if(sendCommand == true)
+                // {
+                //     jointPathMsg.joint_names.clear();
+                //     jointPathMsg.points.clear();
+                //     jointPathPointMsg.positions.clear();
+                //     jointPathPointMsg.velocities.clear();
+
+                //     for (int i = 0; i < 6; i++)
+                //     {                  
+                //         jointPathMsg.joint_names.push_back(TX90.getJointName(i));
+                //         jointPathPointMsg.positions.push_back(TX90.getGoalPos(i));
+                //         jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity());
+                //     }
+
+                //     jointPathMsg.points.push_back(jointPathPointMsg);
+                //     jointTransmitReady = true;
+                //     sendCommand = false;
+                //     PubTimer = LOOP_RATE_INT/2;
+                // }
+                // else if(! PubTimer--)
+                // {
+                //     sendCommand = true;
+                // }
+
+                if (jointTransmitReady)
                 {
                     jointPathMsg.joint_names.clear();
                     jointPathMsg.points.clear();
@@ -148,40 +183,10 @@ int main (int argc , char **argv)
                     }
 
                     jointPathMsg.points.push_back(jointPathPointMsg);
-                    jointTransmitReady = true;
-                    sendCommand = false;
-                    PubTimer = LOOP_RATE_INT/2;
-                }
-                else if(! PubTimer--)
-                {
-                    sendCommand = true;
-                }
 
-                if (jointTransmitReady)
-                {
-                    // movement_pub.publish(jointPathMsgTest);
+                    movement_clearPub.publish(jointPathMsgTest);
                     movement_pub.publish(jointPathMsg);
                     jointTransmitReady = false;
-                }
-
-                if (twistJ0Ready)
-                {
-                    jointPathMsg.joint_names.clear();
-                    jointPathMsg.points.clear();
-                    jointPathPointMsg.positions.clear();
-
-                    jointPathMsg.joint_names.push_back(TX90.getJointName(0));
-                    jointPathPointMsg.positions.push_back(1.7);
-                    jointPathMsg.points.push_back(jointPathPointMsg);
-
-                    for (int i = 1; i < 6; i++)
-                    {
-                        jointPathMsg.joint_names.push_back(TX90.getJointName(i));
-                        jointPathPointMsg.positions.push_back(0);
-                    }
-
-                    movement_pub.publish(jointPathMsg);
-                    twistJ0Ready = false;
                 }
 
                 if (clearTransmitReady)
@@ -244,6 +249,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                     {
                         // sendCommand = true;
                         TX90.setGoalPos(i, TX90.getResetStatePos(i));
+                        jointTransmitReady = true;
                     }
                 }
             }
@@ -318,43 +324,58 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 double intendedGoal;
                 for (int i = 0; i < 6; i++)
                 {
-                    if (commander->jointVelocity[i] > 0)
+                    if ((commander->jointVelocity[i] > 0.2) && (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1))/*0*/)
                     {
-                        if(((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1))
-                        {
-                            intendedGoal = TX90.getCurrPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity() * 3);
-                            if (intendedGoal < TX90.getMaxRotation(i))
-                            {
-                                TX90.setGoalPos(i, intendedGoal);
-                                if(commander->jointVelocity[i] > 0.2)
-                                    TX90.setCurrVelocity(/*commander->jointVelocity[i]*/ 1);
-                                justMoved = true;
+                        // if()
+                        // {
+                            // intendedGoal = TX90.getCurrPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity() * 3);
+                            // if (intendedGoal < TX90.getMaxRotation(i))
+                            // {
+                                // if(commander->jointVelocity[i] > 0.2)
+                                // {
+                                    if(justMovedArr[i] == false)
+                                    {
+                                        TX90.setGoalPos(i, TX90.getMaxRotation(i) /*intendedGoal*/);
+                                        TX90.setCurrVelocity(/*commander->jointVelocity[i]*/ 1);
+                                        justMovedArr[i] = true;
+                                        jointTransmitReady = true;
+                                    }
+                                    // justMoved = true;
+                                // }
                                 // sendCommand = true;
-                            }
-                        }
+                            // }
+                        // }
                     }
-                    else if (commander->jointVelocity[i] < 0)
+                    else if((commander->jointVelocity[i] < -0.2 /*0*/) && (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1)))
                     {
-                        if(((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1))
-                        {
-                            intendedGoal = TX90.getCurrPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity() * 3);
-                            if (intendedGoal > TX90.getMinRotation(i))
-                            {
-                                TX90.setGoalPos(i, intendedGoal);
-                                if(commander->jointVelocity[i] < -0.2)
+                        // if()
+                        // {
+                            // intendedGoal = TX90.getCurrPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity() * 3);
+                            // if (intendedGoal > TX90.getMinRotation(i))
+                            // {
+                                if(justMovedArr[i] == false)
+                                {
+                                   TX90.setGoalPos(i, TX90.getMinRotation(i) /*intendedGoal*/);
+                                    // if(commander->jointVelocity[i] < -0.2)
                                     TX90.setCurrVelocity(/*commander->jointVelocity[i] * -1*/ 1);
-                                justMoved = true;
+                                    // justMoved = true;
+                                    justMovedArr[i] = true;
+                                    jointTransmitReady = true;
+                                }
                                 // sendCommand = true;
-                            }
-                        }
+                            // }
+                        // }
                     }
                     else
                     {
-                        if (justMoved == true)
+                        if (justMovedArr[i] == true)
                         {
+                            ROS_INFO("moved back to 0");
                             TX90.setGoalPos(i, TX90.getCurrPos(i));
                             TX90.setCurrVelocity(/*0.2*/ 1);
-                            justMoved = false;
+                            // justMoved = false;
+                            justMovedArr[i] = false;
+                            jointTransmitReady = true;
                             // sendCommand = true;
                         }
                     }
