@@ -31,6 +31,11 @@ trajectory_msgs::JointTrajectory        jointPathMsg;               /* Message u
 trajectory_msgs::JointTrajectoryPoint   jointPathPointMsg;          /* Message used to contain specific points of wanted position, part of jointPathMsg */
 bitten::feedback_msg                    movementFeedbackMsg;        /* Message used to report back when wanted position is reached, e.g. waypoint-mode  */
 
+
+trajectory_msgs::JointTrajectory        jointPathMsgTest;               /* Message used to transmit wanted position to motion_streaming_interface           */
+// trajectory_msgs::JointTrajectoryPoint   jointPathPointMsgTest;          /* Message used to contain specific points of wanted position, part of jointPathMsg */
+
+
 /* ----------------------------------------------------------------------
  *                    -------  Global Variables   -------
  * ----------------------------------------------------------------------- */
@@ -38,6 +43,8 @@ bool robotInitialized       = false;
 bool goalExists             = false;
 bool jointTransmitReady     = true;
 bool feedbackTransmitReady  = false;
+bool clearTransmitReady     = false;
+bool twistJ0Ready           = false;
 bool sendCommand = true;
 
 int OPERATING_MODE = 0;
@@ -65,6 +72,9 @@ int main (int argc , char **argv)
     jointPathPointMsg.accelerations.resize(6);
     jointPathPointMsg.effort.resize(1);
 
+    jointPathMsgTest.joint_names.clear();
+    jointPathMsgTest.points.clear();
+
     ros::Rate loop_rate(LOOP_RATE_INT);
     sleep(1);
 
@@ -73,7 +83,7 @@ int main (int argc , char **argv)
     else
         ROS_INFO("Failed to to initiate %s",nodeNames[MOVEMENT_NODE].c_str());
 
-    static int PubTimer = LOOP_RATE_INT / 5;
+    int PubTimer = LOOP_RATE_INT / 5;
 
 /*  -------------------------------------------------
          SUPERLOOP
@@ -89,12 +99,12 @@ int main (int argc , char **argv)
                     jointPathMsg.points.clear();
                     jointPathPointMsg.positions.clear();
                     jointPathPointMsg.velocities.clear();
-                    
+
                     for (int i = 0; i < 6; i++)
                     {
                         jointPathMsg.joint_names.push_back(TX90.getJointName(i));
                         jointPathPointMsg.positions.push_back(TX90.getGoalPos(i));
-                        jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity()*TX90.getMaxVelocity(i));
+                        jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity()/**TX90.getMaxVelocity(i)*/);
                     }
                     
                     jointPathMsg.points.push_back(jointPathPointMsg);
@@ -113,21 +123,9 @@ int main (int argc , char **argv)
                     feedbackTransmitReady = false;
                 }
                 break;
+
             case MANUAL_ID:
             {
-                // jointsNearlyAtGoal();
-
-                // if(numberOfNearlyGoals == 6)
-                // {
-                //     sendCommand = true;
-                // }
-                // else 
-
-                if(! PubTimer--)
-                {
-                    sendCommand = true;
-                }
-                
                 if(sendCommand == true)
                 {
                     jointPathMsg.joint_names.clear();
@@ -139,18 +137,50 @@ int main (int argc , char **argv)
                     {                  
                         jointPathMsg.joint_names.push_back(TX90.getJointName(i));
                         jointPathPointMsg.positions.push_back(TX90.getGoalPos(i));
+                        jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity());
                     }
 
                     jointPathMsg.points.push_back(jointPathPointMsg);
                     jointTransmitReady = true;
                     sendCommand = false;
-                    PubTimer = LOOP_RATE_INT / 3;
+                    PubTimer = LOOP_RATE_INT/2;
+                }
+                else if(! PubTimer--)
+                {
+                    sendCommand = true;
                 }
 
                 if (jointTransmitReady)
                 {
+                    // movement_pub.publish(jointPathMsgTest);
                     movement_pub.publish(jointPathMsg);
                     jointTransmitReady = false;
+                }
+
+                if (twistJ0Ready)
+                {
+                    jointPathMsg.joint_names.clear();
+                    jointPathMsg.points.clear();
+                    jointPathPointMsg.positions.clear();
+
+                    jointPathMsg.joint_names.push_back(TX90.getJointName(0));
+                    jointPathPointMsg.positions.push_back(1.7);
+                    jointPathMsg.points.push_back(jointPathPointMsg);
+
+                    for (int i = 1; i < 6; i++)
+                    {
+                        jointPathMsg.joint_names.push_back(TX90.getJointName(i));
+                        jointPathPointMsg.positions.push_back(0);
+                    }
+
+                    movement_pub.publish(jointPathMsg);
+                    twistJ0Ready = false;
+                }
+
+                if (clearTransmitReady)
+                {
+                    movement_pub.publish(jointPathMsgTest);
+                    clearTransmitReady = false;
                 }
 
                 if (feedbackTransmitReady)
@@ -194,14 +224,45 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 feedbackTransmitReady = true;
             }
 
+            static int b1c = 0;
             if (commander->buttons[1] == 1 && commander->buttons[2] == 1) //reset and deadmans button
             {
-                for (int i = 0; i < 6; i++)
+                if (++b1c == 5)
                 {
-                    sendCommand = true;
-                    TX90.setGoalPos(i, TX90.getResetStatePos(i));
+                    for (int i = 0; i < 6; i++)
+                    {
+                        // sendCommand = true;
+                        TX90.setGoalPos(i, TX90.getResetStatePos(i));
+                    }
                 }
             }
+            else
+                b1c = 0;
+
+            static int b4c = 0;
+
+            if (commander->buttons[4] == 1)
+            {
+                if (++b4c == 5)
+                {
+                    ROS_INFO("Clicked clearTrajButton");
+                    clearTransmitReady = true;
+                }
+            }
+            else
+                b4c = 0;
+
+            static int b5c = 0;
+            if (commander->buttons[5] == 1)
+            {
+                if (++b5c == 5)
+                {
+                    ROS_INFO("Clicked Twist button");
+                    twistJ0Ready = true;
+                }
+            }
+            else
+                b5c = 0;
 
             if (commander->buttons[7] == 1) //increment current velocity
             {
@@ -241,28 +302,23 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
             else
                 ButtonCounter = 0;
 
-            // int jointAtGoalCounter = 0;
-            // for (int i = 0; i < 6; i++)
+            // if (jointsNearlyAtGoal2() == 6)
             // {
-            //     static double posBoundry = 0.02 * TX90.getMaxRotation(i);
-            //     if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundry)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundry)))
-            //         jointAtGoalCounter++;
-            // }
-            if (jointsNearlyAtGoal2() == 6)
-            {
+                double intendedGoal;
                 for (int i = 0; i < 6; i++)
                 {
-                    static double intendedGoal;
                     if (commander->jointVelocity[i] > 0)
                     {
                         if(((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1))
                         {
-                            intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity());
+                            intendedGoal = TX90.getCurrPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity() * 3);
                             if (intendedGoal < TX90.getMaxRotation(i))
                             {
                                 TX90.setGoalPos(i, intendedGoal);
+                                if(commander->jointVelocity[i] > 0.2)
+                                    TX90.setCurrVelocity(/*commander->jointVelocity[i]*/ 1);
                                 justMoved = true;
-                                sendCommand = true;
+                                // sendCommand = true;
                             }
                         }
                     }
@@ -270,12 +326,14 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                     {
                         if(((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1))
                         {
-                            intendedGoal = TX90.getGoalPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity());
+                            intendedGoal = TX90.getCurrPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity() * 3);
                             if (intendedGoal > TX90.getMinRotation(i))
                             {
                                 TX90.setGoalPos(i, intendedGoal);
+                                if(commander->jointVelocity[i] < -0.2)
+                                    TX90.setCurrVelocity(/*commander->jointVelocity[i] * -1*/ 1);
                                 justMoved = true;
-                                sendCommand = true;
+                                // sendCommand = true;
                             }
                         }
                     }
@@ -284,12 +342,13 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                         if (justMoved == true)
                         {
                             TX90.setGoalPos(i, TX90.getCurrPos(i));
+                            TX90.setCurrVelocity(/*0.2*/ 1);
                             justMoved = false;
-                            sendCommand = true;
+                            // sendCommand = true;
                         }
                     }
                 }
-            }
+            // }
             break;
         }
         case WP_ID:

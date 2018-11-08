@@ -29,11 +29,11 @@ class TX90_c {
     private:
 
         std::array<double,6>    currPos;                                /* Array of doubles, keeps track of current position of each joint. is being updated in the movement node, by the feedback_states topic, from robot_state node  */
-        std::array<double,6>    goalPosition;                           /* Array of doubles, keeps track of goalPosition. Gets transmitted when the robot is supposed to move somewhere                                                 */
+        std::array<double,6>    goalPos;                                /* Array of doubles, keeps track of goalPosition. Gets transmitted when the robot is supposed to move somewhere                                                 */
         std::array<int,6>       jointsAtGoal;                           /* Array of ints, keeps track of, whether or not a joint is at its goal position. Could be remade into an 8-bits u_integer                                      */
         std::array<int,6>       jointsNearlyAtGoal;
         double                  currVelocity         = 0.4;             /* Double, value 0-1, controls the stepsize used when calculating new goalposition, should reset in increased or decreased speed                                */
-        std::array<double,6>    lastGoalPosition;                       /* Array to keep track of previous goalposition, used to time the exact moment of new position transmission                                                     */
+        std::array<double,6>    lastGoalPos;                            /* Array to keep track of previous goalposition, used to time the exact moment of new position transmission                                                     */
 
         static const int        links               = 6;                /* Int to define the amount of links on the robot   */
         static const int        minLink             = 1;                /* Int to define the value of the first link        */
@@ -41,7 +41,7 @@ class TX90_c {
 
         static const bool       tool                = false;
 
-        const std::array<double,6>    resetStatePosition = {{    0,0,0,0,0,0}};
+        const std::array<double,6>    resetStatePos      = {{    0,0,0,0,0,0}};
 
         const std::array<double,6>    maxRotation        = {{    3.14,                      /* joint_1  */
                                                                  2.57,                      /* joint_2  */
@@ -102,18 +102,18 @@ void TX90_c::setGoalPos(int n , double val)
 /* Overwrites content of private member Robot_c.goalPosition[] with input
  * Along with copying existing goalPosition[] into lastGoalPosition[]   */
 
-    lastGoalPosition[n] = goalPosition[n];
-    goalPosition[n] = val;
+    lastGoalPos[n] = goalPos[n];
+    goalPos[n] = val;
 }
 
 double TX90_c::getGoalPos(int n)
 {
-    return goalPosition[n];
+    return goalPos[n];
 }
 
 double TX90_c::getLastGoalPos(int n)
 {
-    return lastGoalPosition[n];
+    return lastGoalPos[n];
 }
 
 void TX90_c::setJointsAtGoal(int arr[6])
@@ -138,10 +138,10 @@ void TX90_c::setJointsNearlyAtGoal(int n)
     static double currDistance;
     static double totalDistance;
     static double doneDistance;
-    if(currPos[n] != goalPosition[n] && goalPosition[n] != lastGoalPosition[n])
+    if(currPos[n] != goalPos[n] && goalPos[n] != lastGoalPos[n])
     {
-        currDistance = std::abs(goalPosition[n] - currPos[n]);
-        totalDistance = std::abs(goalPosition[n] - lastGoalPosition[n]);
+        currDistance = std::abs(goalPos[n] - currPos[n]);
+        totalDistance = std::abs(goalPos[n] - lastGoalPos[n]);
         doneDistance = totalDistance - currDistance;
         if(doneDistance < 0.00001)
             doneDistance = 0.00001;
@@ -186,7 +186,7 @@ double TX90_c::getMaxVelocity(int n)
 
 double TX90_c::getResetStatePos(int n)
 {
-    return resetStatePosition[n];
+    return resetStatePos[n];
 }
 
 double TX90_c::getMaxRotation(int n)
