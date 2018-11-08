@@ -260,6 +260,9 @@ void wpCallback (const bitten::control_msg::ConstPtr& wp)
  * ----------------------------------------------------------------------- */
 void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedback)
 {
+    for (int i = 0; i < 6; i++)
+            tempCurrPos[i] = moveFeedback->positions[i];
+    
     if (moveFeedback->flags & GOAL_REACHED)
     {
         switch(INPUT_MODE)
@@ -281,8 +284,6 @@ void movementFeedbackCallback (const bitten::feedback_msg::ConstPtr& moveFeedbac
     if (moveFeedback->flags & SENT_CURR_POS)
     {
         gotPositions = true;
-        for (int i = 0; i < 6; i++)
-            tempCurrPos[i] = moveFeedback->positions[i];
     }
     else
         gotPositions = false;
