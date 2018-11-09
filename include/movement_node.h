@@ -50,7 +50,7 @@ class TX90_c {
                                                                  2.44,                      /* joint_5  */
                                                                  4.71}};                    /* joint_6  */
 
-        const std::array<double,6>    minRotation        = {{     -3.14,                    /* joint_1  */
+        const std::array<double,6>    minRotation        = {{    -3.14,                     /* joint_1  */
                                                                  -2.27,                     /* joint_2  */
                                                                  -2.53,                     /* joint_3  */
                                                                  -4.71,                     /* joint_4  */

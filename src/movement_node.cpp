@@ -144,30 +144,6 @@ int main (int argc , char **argv)
 
             case MANUAL_ID:
             {
-                // if(sendCommand == true)
-                // {
-                //     jointPathMsg.joint_names.clear();
-                //     jointPathMsg.points.clear();
-                //     jointPathPointMsg.positions.clear();
-                //     jointPathPointMsg.velocities.clear();
-
-                //     for (int i = 0; i < 6; i++)
-                //     {                  
-                //         jointPathMsg.joint_names.push_back(TX90.getJointName(i));
-                //         jointPathPointMsg.positions.push_back(TX90.getGoalPos(i));
-                //         jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity());
-                //     }
-
-                //     jointPathMsg.points.push_back(jointPathPointMsg);
-                //     jointTransmitReady = true;
-                //     sendCommand = false;
-                //     PubTimer = LOOP_RATE_INT/2;
-                // }
-                // else if(! PubTimer--)
-                // {
-                //     sendCommand = true;
-                // }
-
                 if (jointTransmitReady)
                 {
                     jointPathMsg.joint_names.clear();
@@ -227,11 +203,10 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
     switch(commander->id)
     {
         case MANUAL_ID:
-        {
             if (OPERATING_MODE != MANUAL_ID)
                 OPERATING_MODE = MANUAL_ID;
 
-            if (commander->flags & GET_CURR_POS) //sent current position to commander
+            if (commander->flags & GET_CURR_POS) /* sent current position to commander */
             {
                 for (int i = 0; i < 6; i++)
                     movementFeedbackMsg.positions[i] = TX90.getCurrPos(i);
@@ -247,7 +222,6 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 {
                     for (int i = 0; i < 6; i++)
                     {
-                        // sendCommand = true;
                         TX90.setGoalPos(i, TX90.getResetStatePos(i));
                         jointTransmitReady = true;
                     }
@@ -257,8 +231,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 b1c = 0;
 
             static int b4c = 0;
-
-            if (commander->buttons[4] == 1)
+            if (commander->buttons[4] == 1) /* Clicked right stick, left yellow button */
             {
                 if (++b4c == 5)
                 {
@@ -270,7 +243,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 b4c = 0;
 
             static int b5c = 0;
-            if (commander->buttons[5] == 1)
+            if (commander->buttons[5] == 1) /* Clicked right stick, right yellow button */
             {
                 if (++b5c == 5)
                 {
@@ -281,27 +254,10 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
             else
                 b5c = 0;
 
-            if (commander->buttons[7] == 1) //increment current velocity
+            static int b6c = 0;
+            if (commander->buttons[6] == 1)
             {
-                ButtonCounter++;
-                if (ButtonCounter == 6)
-                {
-                    if (TX90.getCurrVelocity() < 1)
-                    {
-                        TX90.setCurrVelocity(TX90.getCurrVelocity() + 0.05);
-                        ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
-                    }
-                }
-                else if (ButtonCounter == 60)
-                {
-                    TX90.setCurrVelocity(1);
-                    ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
-                }
-            }
-            else if (commander->buttons[6] == 1) //decrease current velocity
-            {
-                ButtonCounter++;
-                if (ButtonCounter == 6)
+                if (++b5c == 6)
                 {
                     if (TX90.getCurrVelocity() > 0)
                     {
@@ -309,82 +265,88 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                         ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                     }
                 }
-
-                if (ButtonCounter == 60)
+                else if (b5c == 60)
                 {
                     TX90.setCurrVelocity(0);
                     ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                 }
             }
             else
-                ButtonCounter = 0;
+                b5c = 0;
 
-            // if (jointsNearlyAtGoal2() == 6)
-            // {
-                double intendedGoal;
-                for (int i = 0; i < 6; i++)
+
+            static int b7c = 0;
+            if (commander->buttons[7] == 1) /* Increment Current Velocity */
+            {
+                if (++b7c == 6)
                 {
-                    if ((commander->jointVelocity[i] > 0.2) && (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1))/*0*/)
+                    if (TX90.getCurrVelocity() < 1)
                     {
-                        // if()
-                        // {
-                            // intendedGoal = TX90.getCurrPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity() * 3);
-                            // if (intendedGoal < TX90.getMaxRotation(i))
-                            // {
-                                // if(commander->jointVelocity[i] > 0.2)
-                                // {
-                                    if(justMovedArr[i] == false)
-                                    {
-                                        TX90.setGoalPos(i, TX90.getMaxRotation(i) /*intendedGoal*/);
-                                        TX90.setCurrVelocity(/*commander->jointVelocity[i]*/ 1);
-                                        justMovedArr[i] = true;
-                                        jointTransmitReady = true;
-                                    }
-                                    // justMoved = true;
-                                // }
-                                // sendCommand = true;
-                            // }
-                        // }
-                    }
-                    else if((commander->jointVelocity[i] < -0.2 /*0*/) && (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1)))
-                    {
-                        // if()
-                        // {
-                            // intendedGoal = TX90.getCurrPos(i) + ((1/LOOP_RATE_INT) * commander->jointVelocity[i] * TX90.getMaxVelocity(i) * TX90.getCurrVelocity() * 3);
-                            // if (intendedGoal > TX90.getMinRotation(i))
-                            // {
-                                if(justMovedArr[i] == false)
-                                {
-                                   TX90.setGoalPos(i, TX90.getMinRotation(i) /*intendedGoal*/);
-                                    // if(commander->jointVelocity[i] < -0.2)
-                                    TX90.setCurrVelocity(/*commander->jointVelocity[i] * -1*/ 1);
-                                    // justMoved = true;
-                                    justMovedArr[i] = true;
-                                    jointTransmitReady = true;
-                                }
-                                // sendCommand = true;
-                            // }
-                        // }
-                    }
-                    else
-                    {
-                        if (justMovedArr[i] == true)
-                        {
-                            ROS_INFO("moved back to 0");
-                            TX90.setGoalPos(i, TX90.getCurrPos(i));
-                            TX90.setCurrVelocity(/*0.2*/ 1);
-                            // justMoved = false;
-                            justMovedArr[i] = false;
-                            jointTransmitReady = true;
-                            // sendCommand = true;
-                        }
+                        TX90.setCurrVelocity(TX90.getCurrVelocity() + 0.05);
+                        ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                     }
                 }
-            // }
-            break;
-        }
+                else if (b7c == 60)
+                {
+                    TX90.setCurrVelocity(1);
+                    ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
+                }
+            }
+            else
+                b7c = 0;
+
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            double intendedGoal;
+            
+            for (int i = 0; i < 6; i++)
+            {
+                if ((commander->jointVelocity[i] > 0.2) && 
+                    (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || 
+                    ((i == 1 || i == 4 || i == 5) &&  commander->buttons[2] == 1)))
+                {
+                    if(justMovedArr[i] == false)
+                    {
+                        TX90.setGoalPos(i, TX90.getMaxRotation(i));
+                        justMovedArr[i] = true;
+                        jointTransmitReady = true;
+                    }
+                }
+                
+                else if ((commander->jointVelocity[i] < -0.2) && 
+                        (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || 
+                        ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1)))
+                {
+                    if (justMovedArr[i] == false)
+                    {
+                        TX90.setGoalPos(i, TX90.getMinRotation(i));
+                        justMovedArr[i] = true;
+                        jointTransmitReady = true;
+                    }
+                }
+                else
+                {
+                    if (justMovedArr[i] == true)
+                    {
+                        ROS_INFO("moved back to 0");
+                        TX90.setGoalPos(i, TX90.getCurrPos(i));
+                        TX90.setCurrVelocity(1);
+                        justMovedArr[i] = false;
+                        jointTransmitReady = true;
+                    }
+                }
+            }
+        break;
+
         case WP_ID:
-        {
+
             if (goalExists == false)
             {
                 if (OPERATING_MODE != WP_ID)
@@ -397,11 +359,11 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 goalExists = true;
                 jointTransmitReady = true;
             }
-            break;
-        }
+        break;
+
         default:
             ROS_INFO("Entered Missing ID callback");
-            break;
+        break;
     }
 }
 
