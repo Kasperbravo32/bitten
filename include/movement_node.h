@@ -191,10 +191,10 @@ double TX90_c::getResetStatePos(int n)
 
 double TX90_c::getMaxRotation(int n)
 {
-    return maxRotation[n];
+    return 0.995 * maxRotation[n];
 }
 
 double TX90_c::getMinRotation(int n)
 {
-    return minRotation[n];
+    return 0.995 * minRotation[n];
 }

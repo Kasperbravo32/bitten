@@ -22,6 +22,7 @@
  * ----------------------------------------------------------------------- */
 void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr&   RobotState);
 void commanderCallback  (const bitten::control_msg::ConstPtr&                           commander);
+
 int jointsNearlyAtGoal(void);
 int jointsNearlyAtGoal2(void);
  /* ----------------------------------------------------------------------
@@ -29,14 +30,10 @@ int jointsNearlyAtGoal2(void);
  * ----------------------------------------------------------------------- */
 trajectory_msgs::JointTrajectory        jointPathMsg;               /* Message used to transmit wanted position to motion_streaming_interface           */
 trajectory_msgs::JointTrajectoryPoint   jointPathPointMsg;          /* Message used to contain specific points of wanted position, part of jointPathMsg */
+
+trajectory_msgs::JointTrajectory        jointPathMsgTest;               /* Message used to transmit wanted position to motion_streaming_interface       */
+
 bitten::feedback_msg                    movementFeedbackMsg;        /* Message used to report back when wanted position is reached, e.g. waypoint-mode  */
-
-
-trajectory_msgs::JointTrajectory        jointPathMsgTest;               /* Message used to transmit wanted position to motion_streaming_interface           */
-
-trajectory_msgs::JointTrajectory        jointPathMsgTest2;
-trajectory_msgs::JointTrajectoryPoint   jointPathPointMsgTest2;
-// trajectory_msgs::JointTrajectoryPoint   jointPathPointMsgTest;          /* Message used to contain specific points of wanted position, part of jointPathMsg */
 
 
 /* ----------------------------------------------------------------------
@@ -47,8 +44,6 @@ bool goalExists             = false;
 bool jointTransmitReady     = true;
 bool feedbackTransmitReady  = false;
 bool clearTransmitReady     = false;
-bool twistJ0Ready           = false;
-bool sendCommand = true;
 
 bool justMovedArr[6]        ={false,
                               false,
@@ -57,7 +52,11 @@ bool justMovedArr[6]        ={false,
                               false,
                               false};
 
+bool stopMotion            = false;
+
 int OPERATING_MODE = 0;
+
+int buttonDebouncers[12];
 
 TX90_c TX90;
 
@@ -87,11 +86,7 @@ int main (int argc , char **argv)
     jointPathMsgTest.points.clear();
 
     for (int i = 0; i < 6; i++)
-    {                  
-        jointPathPointMsgTest2.positions.push_back(1);
-        jointPathPointMsgTest2.velocities.push_back(1);
-    }
-    jointPathMsgTest2.points.push_back(jointPathPointMsgTest2);
+        jointPathMsg.joint_names.push_back(TX90.getJointName(i));
 
     ros::Rate loop_rate(LOOP_RATE_INT);
     sleep(1);
@@ -100,8 +95,6 @@ int main (int argc , char **argv)
         ROS_INFO("Initiated %s",nodeNames[MOVEMENT_NODE].c_str());
     else
         ROS_INFO("Failed to to initiate %s",nodeNames[MOVEMENT_NODE].c_str());
-
-    int PubTimer = LOOP_RATE_INT / 5;
 
 /*  -------------------------------------------------
          SUPERLOOP
@@ -113,16 +106,14 @@ int main (int argc , char **argv)
             case WP_ID:
                 if (goalExists == true)
                 {
-                    jointPathMsg.joint_names.clear();
                     jointPathMsg.points.clear();
                     jointPathPointMsg.positions.clear();
                     jointPathPointMsg.velocities.clear();
 
                     for (int i = 0; i < 6; i++)
                     {
-                        jointPathMsg.joint_names.push_back(TX90.getJointName(i));
                         jointPathPointMsg.positions.push_back(TX90.getGoalPos(i));
-                        jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity()/**TX90.getMaxVelocity(i)*/);
+                        jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity());
                     }
                     
                     jointPathMsg.points.push_back(jointPathPointMsg);
@@ -146,21 +137,18 @@ int main (int argc , char **argv)
             {
                 if (jointTransmitReady)
                 {
-                    jointPathMsg.joint_names.clear();
                     jointPathMsg.points.clear();
                     jointPathPointMsg.positions.clear();
                     jointPathPointMsg.velocities.clear();
 
                     for (int i = 0; i < 6; i++)
-                    {                  
-                        jointPathMsg.joint_names.push_back(TX90.getJointName(i));
+                    {
                         jointPathPointMsg.positions.push_back(TX90.getGoalPos(i));
                         jointPathPointMsg.velocities.push_back(TX90.getCurrVelocity());
                     }
 
                     jointPathMsg.points.push_back(jointPathPointMsg);
-
-                    movement_clearPub.publish(jointPathMsgTest);
+                    movement_pub.publish(jointPathMsgTest);
                     movement_pub.publish(jointPathMsg);
                     jointTransmitReady = false;
                 }
@@ -181,6 +169,13 @@ int main (int argc , char **argv)
                     movementFeedbackMsg.flags = 0;
                     feedbackTransmitReady = false;
                 }
+
+                if (stopMotion == true)
+                {
+                    movement_pub.publish(jointPathMsgTest);
+                    stopMotion = false;
+                }
+
                 break;
             }
             default:
@@ -197,9 +192,6 @@ int main (int argc , char **argv)
  * ----------------------------------------------------------------------- */       
 void commanderCallback(const bitten::control_msg::ConstPtr& commander)
 {
-    static bool justMoved = false;
-    static int ButtonCounter = 0;
-
     switch(commander->id)
     {
         case MANUAL_ID:
@@ -215,10 +207,9 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 feedbackTransmitReady = true;
             }
 
-            static int b1c = 0;
-            if (commander->buttons[1] == 1 && commander->buttons[2] == 1) //reset and deadmans button
+            if (commander->buttons[1] == 1 && commander->buttons[2] == 1) /* Return to home pressed, while deadman is pressed */
             {
-                if (++b1c == 5)
+                if (++buttonDebouncers[0] == 5)
                 {
                     for (int i = 0; i < 6; i++)
                     {
@@ -228,36 +219,11 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 }
             }
             else
-                b1c = 0;
+                buttonDebouncers[0] = 0;
 
-            static int b4c = 0;
-            if (commander->buttons[4] == 1) /* Clicked right stick, left yellow button */
-            {
-                if (++b4c == 5)
-                {
-                    ROS_INFO("Clicked clearTrajButton");
-                    clearTransmitReady = true;
-                }
-            }
-            else
-                b4c = 0;
-
-            static int b5c = 0;
-            if (commander->buttons[5] == 1) /* Clicked right stick, right yellow button */
-            {
-                if (++b5c == 5)
-                {
-                    ROS_INFO("Clicked Twist button");
-                    twistJ0Ready = true;
-                }
-            }
-            else
-                b5c = 0;
-
-            static int b6c = 0;
             if (commander->buttons[6] == 1)
             {
-                if (++b5c == 6)
+                if (++buttonDebouncers[6] == 6)
                 {
                     if (TX90.getCurrVelocity() > 0)
                     {
@@ -265,20 +231,18 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                         ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                     }
                 }
-                else if (b5c == 60)
+                else if (buttonDebouncers[6] == 60)
                 {
                     TX90.setCurrVelocity(0);
                     ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                 }
             }
             else
-                b5c = 0;
+                buttonDebouncers[6] = 0;
 
-
-            static int b7c = 0;
             if (commander->buttons[7] == 1) /* Increment Current Velocity */
             {
-                if (++b7c == 6)
+                if (++buttonDebouncers[7] == 6)
                 {
                     if (TX90.getCurrVelocity() < 1)
                     {
@@ -286,26 +250,15 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                         ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                     }
                 }
-                else if (b7c == 60)
+                else if (buttonDebouncers[7] == 60)
                 {
                     TX90.setCurrVelocity(1);
                     ROS_INFO("Current Velocity: %f",TX90.getCurrVelocity());
                 }
             }
             else
-                b7c = 0;
+                buttonDebouncers[7] = 0;
 
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            double intendedGoal;
-            
             for (int i = 0; i < 6; i++)
             {
                 if ((commander->jointVelocity[i] > 0.2) && 
@@ -335,9 +288,10 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 {
                     if (justMovedArr[i] == true)
                     {
-                        ROS_INFO("moved back to 0");
                         TX90.setGoalPos(i, TX90.getCurrPos(i));
                         TX90.setCurrVelocity(1);
+
+                        stopMotion = true;
                         justMovedArr[i] = false;
                         jointTransmitReady = true;
                     }
@@ -346,7 +300,6 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
         break;
 
         case WP_ID:
-
             if (goalExists == false)
             {
                 if (OPERATING_MODE != WP_ID)
@@ -362,7 +315,6 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
         break;
 
         default:
-            ROS_INFO("Entered Missing ID callback");
         break;
     }
 }
