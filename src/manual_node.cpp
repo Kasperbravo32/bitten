@@ -19,7 +19,6 @@
  * ----------------------------------------------------------------------- */
 bitten::control_msg manual_msg;
 bool connectionEstablished = false;
-bool transmitManualRdy = false;
 
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
@@ -55,14 +54,8 @@ int main(int argc, char **argv)
     * ------------------------------------------------- */
     while (ros::ok())
     {
-        transmitManualRdy = true;
-
-        if (transmitManualRdy == true)
-        {
-            manualPub.publish(manual_msg);
-            manual_msg.flags = 0;
-            transmitManualRdy = false;
-        }
+        manualPub.publish(manual_msg);
+        manual_msg.flags = 0;
 
         ros::spinOnce();
         loop_rate.sleep();
@@ -101,7 +94,7 @@ int main(int argc, char **argv)
 // }
 
 /* ----------------------------------------------------------------------
- *                -------  Feedback Callback function   -------
+ *                -------  CAN Callback function   -------
  * ----------------------------------------------------------------------- */
 void canCallback(const bitten::can_msg::ConstPtr& can)
 {
@@ -296,9 +289,6 @@ void fbCallback(const bitten::feedback_msg::ConstPtr& feedback)
     if (feedback->recID == MANUAL_ID || feedback->recID == ALL_ID)
     {
         if (feedback->flags & PING)
-        {
             manual_msg.flags |= PONG;
-            transmitManualRdy = true;
-        }
     }
 }
