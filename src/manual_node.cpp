@@ -24,8 +24,6 @@ bitten::control_msg manual_msg;
  * ----------------------------------------------------------------------- */        
 int main(int argc, char **argv)
 {
-    bool newConnection = true;
-
     ros::init(argc, argv, "manual_node");
     ros::NodeHandle n;
     
