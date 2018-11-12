@@ -18,7 +18,6 @@
  *                       -------  Global variables   -------
  * ----------------------------------------------------------------------- */
 bitten::control_msg manual_msg;
-bool connectionEstablished = false;
 
  /* ----------------------------------------------------------------------
  *                          -------  Main   -------
@@ -29,9 +28,6 @@ int main(int argc, char **argv)
 
     ros::init(argc, argv, "manual_node");
     ros::NodeHandle n;
-
-    // ROS_INFO("Subscribing to \"%s\"", topicNames[JOY_TOPIC].c_str());
-    // ros::Subscriber joySub = n.subscribe<sensor_msgs::Joy>("joy", LOOP_RATE_INT, &joyCallback);
     
     ros::Subscriber canSub = n.subscribe<bitten::can_msg>("can_topic", LOOP_RATE_INT, &canCallback);
     ros::Subscriber feedbackSub = n.subscribe<bitten::feedback_msg>(topicNames[FEEDBACK_TOPIC], LOOP_RATE_INT, &fbCallback);
@@ -63,35 +59,6 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
-/* ----------------------------------------------------------------------
- *                -------  Joy Callback function   -------
- * ----------------------------------------------------------------------- */ 
-// void joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
-// {
-//     //joint 1
-//     manual_msg.jointVelocity[0] = joy->axes[0];
-//     //joint 2
-//     manual_msg.jointVelocity[1] = joy->axes[4];
-//     //joint 3
-//     manual_msg.jointVelocity[2] = joy->axes[1];
-//     //joint 4
-//     if(joy->buttons[15])
-//         manual_msg.jointVelocity[3] = -1;
-//     else if(joy->buttons[16])
-//         manual_msg.jointVelocity[3] = 1;
-//     else
-//         manual_msg.jointVelocity[3] = 0;
-//     //joint 5
-//     manual_msg.jointVelocity[4] = joy->axes[3];
-//     //joint 6
-//     if(joy->buttons[1])
-//         manual_msg.jointVelocity[5] = 1;
-//     else if(joy->buttons[3])
-//         manual_msg.jointVelocity[5] = -1;
-//     else
-//         manual_msg.jointVelocity[5] = 0;
-// }
 
 /* ----------------------------------------------------------------------
  *                -------  CAN Callback function   -------
@@ -164,7 +131,6 @@ void canCallback(const bitten::can_msg::ConstPtr& can)
             manual_msg.buttons[5] = 1;
         else
             manual_msg.buttons[5] = 0;
-
         break;
     }
     case 0x8CFDD634: //left joystick, basic message
@@ -231,7 +197,6 @@ void canCallback(const bitten::can_msg::ConstPtr& can)
             manual_msg.buttons[11] = 1;
         else
             manual_msg.buttons[11] = 0;
-
         break;
     }
     case 0x8CFDD733: //right joystick, extended message
@@ -252,7 +217,6 @@ void canCallback(const bitten::can_msg::ConstPtr& can)
         }
         else
             manual_msg.jointVelocity[5] = 0;
-
         break;
     }
     case 0x8CFDD734: //left joystick, extended message
@@ -273,7 +237,6 @@ void canCallback(const bitten::can_msg::ConstPtr& can)
         }
         else
             manual_msg.jointVelocity[3] = 0;
-
         break;
     }
     default:
