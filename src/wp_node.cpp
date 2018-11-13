@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     ros::init(argc,argv,nodeNames[WP_NODE]);
     ros::NodeHandle n;
 
-    wp_msg.nodeName = nodeNames[WP_TOPIC].c_str();
+    wp_msg.nodeName = nodeNames[WP_NODE].c_str();
     wp_msg.id       = WP_ID;
 
     ros::Publisher wpPub        = n.advertise<bitten::control_msg>  (topicNames[WP_TOPIC],5);

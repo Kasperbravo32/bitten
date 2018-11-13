@@ -12,48 +12,50 @@
 #include <global_node_definitions.h>
 #include "control_msgs/FollowJointTrajectoryFeedback.h"
 #include "trajectory_msgs/JointTrajectory.h"
+#include "trajectory_msgs/JointTrajectoryPoint.h"
 #include "bitten/feedback_msg.h"
 #include "bitten/control_msg.h"
 #include "movement_node.h"
 #include <cmath>
 #include <iostream>
+#include <fstream>
+
+#include <pwd.h>
 
 using namespace std;
 /* -----------------------------------------------------------------------
  *                     -------  Initializers  -------
  * ----------------------------------------------------------------------- */
-// void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr&   RobotState);
-// void commanderCallback  (const bitten::control_msg::ConstPtr&                           commander);
-
 void feedbackCallback  (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr& feedbackMsg);
-void jointPathCallback (const trajectory_msgs::JointTrajectory::ConstPtr& jointPathCallback);
- /* ----------------------------------------------------------------------
- *                    -------  Message objects   -------
- * ----------------------------------------------------------------------- */
+void jointPathCallback (const bitten::control_msg::ConstPtr& jointPathCallback);
 
 /* ----------------------------------------------------------------------
  *                    -------  Global Variables   -------
  * ----------------------------------------------------------------------- */
-iostream outputFile;
-
 passwd* pw = getpwuid(getuid());
-std::string path(pw->pw_dir);
-std::string testsPath        = path + "/catkin_ws/src/bitten/tests/";
-std::string currentRecordFile;
+string path(pw->pw_dir);
+string dataPath = path + "/catkin_ws/src/bitten/data_analysis/STUPIDF1LE.txt";
+string currentRecordFile;
 
+double goalPositions[6];
+double currPositions[6];
 
+bool goalReady  = false;
+bool justOpened = true;
+bool waypoints_started = false;
 /* ----------------------------------------------------------------------
  *                          -------  Main    -------
  * ----------------------------------------------------------------------- */
 int main (int argc , char **argv) 
 {    
-    ros::init(argc , argv , "DataCollector");
+    ros::init(argc , argv , "dataCollectionModule");
     ros::NodeHandle n;
 
-    ros::Subscriber DataJointPathCommSub = n.subscribe<trajectory_msgs::JointTrajectory>    ("joint_path_command", 2 , );
-    ros::Subscriber DataFeedbackSub      = n.subscribe<control_msgs::FollowJointTrajectoryFeedback> ("feedback_states"   , 2 , robotStateCallback);
+    ros::Subscriber DataJointPathCommSub = n.subscribe<bitten::control_msg>                         ("movement_topic", 2 , jointPathCallback);
+    ros::Subscriber DataFeedbackSub      = n.subscribe<control_msgs::FollowJointTrajectoryFeedback> ("feedback_states"   , 2 , feedbackCallback);
 
     ros::Rate loop_rate(LOOP_RATE_INT);
+
     sleep(1);
 
     if (DataJointPathCommSub && DataFeedbackSub)
@@ -61,21 +63,58 @@ int main (int argc , char **argv)
     else
         ROS_INFO("Failed to to initiate %s",nodeNames[DATACOLLECTOR_NODE].c_str());
 
+    std::ofstream logfile(dataPath , std::ios_base::out | std::ios_base::trunc);
 /*  -------------------------------------------------
          SUPERLOOP
     ------------------------------------------------- */
     while(ros::ok())
     {
-        if (outputputFile.is_open())
+        if (logfile.is_open())
         {
-            outputFile
+            if (justOpened == true)
+            {
+                ROS_INFO("Data Collector opened loggingfile");
+                justOpened = false;
+            }
+            
+            if (waypoints_started == true)
+            {
+                if (goalReady == true)
+                {
+                    logfile << "GOAL";
+                    for (int i = 0; i < 6; i++)
+                        logfile << " " << goalPositions[i];
+                    logfile << "\n";
+                    goalReady = false;
+                }
+
+                logfile << "ACTUAL";
+                for (int i = 0; i < 6; i++)
+                    logfile << " " << currPositions[i];
+                logfile << "\n";
+            }
         }
-        else
-            outputFile.open("/home/")
-        
+
+        else if (goalReady == true)
+        {
+            goalReady = false;
+
+            if (logfile.is_open())
+            {
+                logfile << "GOAL";
+                for (int i = 0; i < 6; i++)
+                    logfile << " " << goalPositions[i];
+                logfile << "\n";
+            }
+            else
+                ROS_INFO("Couldn't open data logging file.");
+        }
+            
         ros::spinOnce();
         loop_rate.sleep();
     }
+    ROS_INFO("Closing logfile");
+    logfile.close();
     return 0;
 }
 
@@ -86,13 +125,22 @@ int main (int argc , char **argv)
  * ----------------------------------------------------------------------- */
 void feedbackCallback  (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr& feedbackMsg)
 {
-
+    for (int i = 0; i < 6; i++)
+        currPositions[i] = feedbackMsg->actual.positions[i];
 }
 
 /* ----------------------------------------------------------------------
  *                -------  Joint Path Command Callback   -------
  * ----------------------------------------------------------------------- */
-void jointPathCallback (const trajectory_msgs::JointTrajectory::ConstPtr& jointPathCallback)
+void jointPathCallback (const bitten::control_msg::ConstPtr& jointPathCallback)
 {
-
+    if (jointPathCallback->nodeName == nodeNames[WP_NODE])
+    {
+        if (waypoints_started == false)
+            waypoints_started = true;
+        cout << "Got a goal-message" << endl;
+        goalReady = true;
+        for (int i = 0; i < 6; i++) 
+            goalPositions[i] = jointPathCallback->jointPosition[i];
+    }
 }

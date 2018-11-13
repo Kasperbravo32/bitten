@@ -214,6 +214,7 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
         else if (manual->buttons[0] == 0)
             debounceCounter = 0;
 
+        passOnMsg.nodeName = nodeNames[MANUAL_NODE];
         passOnMsg.buttons = manual->buttons;
         passOnMsg.jointVelocity = manual->jointVelocity;
         passOnMsg.id = MANUAL_ID;
@@ -226,7 +227,7 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
  * ----------------------------------------------------------------------- */ 
 void wpCallback (const bitten::control_msg::ConstPtr& wp)
 {
-    if (wp->flags & PONG)
+    if (wp->flags & PONG)   
         ping_flags |= (1 << 1);
 
     if (wp->flags & NEW_WAYPOINT)
@@ -235,6 +236,7 @@ void wpCallback (const bitten::control_msg::ConstPtr& wp)
         {
             if (robotOccupied == false)
             {
+                passOnMsg.nodeName = wp->nodeName;
                 passOnMsg.programName = wp->programName;
                 robotOccupied = true;
                 passOnMsg.jointPosition = wp->jointPosition;

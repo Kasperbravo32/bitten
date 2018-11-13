@@ -223,3 +223,7 @@ add_dependencies(commander_node bitten_generate_messages_cpp)
 add_executable(terminal_node src/terminal_node.cpp)
 target_link_libraries(terminal_node ${catkin_LIBRARIES})
 add_dependencies(terminal_node bitten_generate_messages_cpp)
+
+add_executable(dataCollectionModule src/dataCollectionModule.cpp)
+target_link_libraries(dataCollectionModule ${catkin_LIBRARIES})
+add_dependencies(dataCollectionModule bitten_generate_messages_cpp)
