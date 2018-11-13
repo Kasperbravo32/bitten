@@ -15,6 +15,7 @@ enum NODE_IDS {
     JOY_ID,
     MOVEMENT_ID,
     TERMINAL_ID,
+    DATACOLLECTOR_ID,
 
     ALL_ID,
 
@@ -30,6 +31,7 @@ enum NODE_INDICES {
     CONTROLLER_NODE,
     MOVEMENT_NODE,
     TERMINAL_NODE,
+    DATACOLLECTOR_NODE,
 
     NUMBER_OF_NODES
 };
@@ -42,7 +44,8 @@ std::string nodeNames[NUMBER_OF_NODES] = {
     "Commander Node",
     "Controller Node",
     "Movement Node",
-    "Terminal Node"
+    "Terminal Node",
+    "DataCollector Node"
 };
 
 
@@ -55,6 +58,7 @@ enum TOPIC_INDICES {
     JOINT_PATH_COMMAND_TOPIC,
     MOVEMENT_TOPIC,
     TERMINAL_TOPIC,
+    
 
     NUMBER_OF_TOPICS
 };
