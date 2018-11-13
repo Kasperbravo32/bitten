@@ -227,7 +227,7 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
  * ----------------------------------------------------------------------- */ 
 void wpCallback (const bitten::control_msg::ConstPtr& wp)
 {
-    if (wp->flags & PONG)
+    if (wp->flags & PONG)   
         ping_flags |= (1 << 1);
 
     if (wp->flags & NEW_WAYPOINT)
