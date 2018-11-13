@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import math
 
 actual_pos1 = []
 actual_pos2 = []
@@ -20,6 +21,13 @@ goal_time3 = []
 goal_time4 = []
 goal_time5 = []
 goal_time6 = []
+
+deviation1 = []
+deviation2 = []
+deviation3 = []
+deviation4 = []
+deviation5 = []
+deviation6 = []
 
 number_of_points = 0
 
@@ -46,7 +54,6 @@ for line in test_file:
         actual_pos5.append(float(line.split(" ")[5]))
         actual_pos6.append(float(line.split(" ")[6]))
         number_of_points = number_of_points + 1
-
 test_file.close()
 
 goal_time1.pop(0)
@@ -63,54 +70,57 @@ goal_time4.append(number_of_points)
 goal_time5.append(number_of_points)
 goal_time6.append(number_of_points)
 
-plt.figure(1)
+i = 0
+while i < len(goal_pos1):
+    number_at_goal = goal_time1[i]
+    actual_at_goal = actual_pos1[number_at_goal-1]
+    goal_value = goal_pos1[i]
+    deviation = math.degrees(abs(abs(goal_value) - abs(actual_at_goal)))
+    deviation1.append(deviation)
+    i = i + 1
 
-plt.subplot(321)
-plt.grid(True)
-plt.plot(actual_pos1)
-plt.plot(goal_time1, goal_pos1, marker = "x", linestyle = 'None', color = 'r')
-# plt.title("Joint 1")
-plt.xlabel("Points (n)")
-plt.ylabel("Angles (rad)")
+i = 0
+while i < len(goal_pos2):
+    number_at_goal = goal_time2[i]
+    actual_at_goal = actual_pos2[number_at_goal-1]
+    goal_value = goal_pos2[i]
+    deviation = math.degrees(abs(abs(goal_value) - abs(actual_at_goal)))
+    deviation2.append(deviation)
+    i = i + 1
 
-plt.subplot(322)
-plt.grid(True)
-plt.plot(actual_pos2)
-plt.plot(goal_time2, goal_pos2, marker = "x", linestyle = 'None', color = 'r')
-# plt.title("Joint 2")
-plt.xlabel("Points (n)")
-plt.ylabel("Angles (rad)")
+i = 0
+while i < len(goal_pos3):
+    number_at_goal = goal_time3[i]
+    actual_at_goal = actual_pos3[number_at_goal-1]
+    goal_value = goal_pos3[i]
+    deviation = math.degrees(abs(abs(goal_value) - abs(actual_at_goal)))
+    deviation3.append(deviation)
+    i = i + 1
 
-plt.subplot(323)
-plt.grid(True)
-plt.plot(actual_pos3)
-plt.plot(goal_time3, goal_pos3, marker = "x", linestyle = 'None', color = 'r')
-# plt.title("Joint 3")
-plt.xlabel("Points (n)")
-plt.ylabel("Angles (rad)")
+i = 0
+while i < len(goal_pos4):
+    number_at_goal = goal_time4[i]
+    actual_at_goal = actual_pos4[number_at_goal-1]
+    goal_value = goal_pos4[i]
+    deviation = math.degrees(abs(abs(goal_value) - abs(actual_at_goal)))
+    deviation4.append(deviation)
+    i = i + 1
 
-plt.subplot(324)
-plt.grid(True)
-plt.plot(actual_pos4)
-plt.plot(goal_time4, goal_pos4, marker = "x", linestyle = 'None', color = 'r')
-# plt.title("Joint 4")
-plt.xlabel("Points (n)")
-plt.ylabel("Angles (rad)")
+i = 0
+while i < len(goal_pos5):
+    number_at_goal = goal_time5[i]
+    actual_at_goal = actual_pos5[number_at_goal-1]
+    goal_value = goal_pos5[i]
+    deviation = math.degrees(abs(abs(goal_value) - abs(actual_at_goal)))
+    deviation5.append(deviation)
+    i = i + 1
 
-plt.subplot(325)
-plt.grid(True)
-plt.plot(actual_pos5)
-plt.plot(goal_time5, goal_pos5, marker = "x", linestyle = 'None', color = 'r')
-# plt.title("Joint 5")
-plt.xlabel("Points (n)")
-plt.ylabel("Angles (rad)")
+i = 0
+while i < len(goal_pos6):
+    number_at_goal = goal_time6[i]
+    actual_at_goal = actual_pos6[number_at_goal-1]
+    goal_value = goal_pos6[i]
+    deviation = math.degrees(abs(abs(goal_value) - abs(actual_at_goal)))
+    deviation6.append(deviation)
+    i = i + 1
 
-plt.subplot(326)
-plt.grid(True)
-plt.plot(actual_pos6)
-plt.plot(goal_time6, goal_pos6, marker = "x", linestyle = 'None', color = 'r')
-# plt.title("Joint 6")
-plt.xlabel("Points (n)")
-plt.ylabel("Angles (rad)")
-
-plt.show()
