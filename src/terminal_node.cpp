@@ -207,7 +207,7 @@ bool play_test_func()
     if (input_i != 1337)
     {
         terminalMsg.programName = ExistingFiles[input_i];
-        cout << "Playing file: " << ExistingFiles[input_i];
+        cout << "Playing file: " << ExistingFiles[input_i] << endl;
     }
         
     else
