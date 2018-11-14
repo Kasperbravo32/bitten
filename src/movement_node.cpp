@@ -288,7 +288,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 {
                     if (justMovedArr[i] == true)
                     {
-                        TX90.setGoalPos(i, TX90.getCurrPos(i));
+                        // TX90.setGoalPos(i, TX90.getCurrPos(i));
                         TX90.setCurrVelocity(1);
 
                         stopMotion = true;
