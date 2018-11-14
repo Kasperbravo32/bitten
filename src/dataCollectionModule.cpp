@@ -87,10 +87,9 @@ int main (int argc , char **argv)
                     for (int i = 0; i < 6; i++)
                         logfile << " " << goalPositions[i];
 
-                        
                     logfile << "\n";
-                    lineNumber++;
-                    cout << "Current line number: " << lineNumber << endl;
+                    cout << "Current line number : " << lineNumber << " [lines]" << endl;
+                    cout << "Current runtime     : " << lineNumber/50.0 << " [s]" << endl;
                     goalReady = false;
                 }
 
@@ -98,6 +97,7 @@ int main (int argc , char **argv)
                 for (int i = 0; i < 6; i++)
                     logfile << " " << currPositions[i];
                 logfile << "\n";
+
                 lineNumber++;
             }
         }
