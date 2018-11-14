@@ -43,6 +43,8 @@ double currPositions[6];
 bool goalReady  = false;
 bool justOpened = true;
 bool waypoints_started = false;
+
+int lineNumber = 0;
 /* ----------------------------------------------------------------------
  *                          -------  Main    -------
  * ----------------------------------------------------------------------- */
@@ -80,10 +82,15 @@ int main (int argc , char **argv)
             {
                 if (goalReady == true)
                 {
+                    
                     logfile << "GOAL";
                     for (int i = 0; i < 6; i++)
                         logfile << " " << goalPositions[i];
+
+                        
                     logfile << "\n";
+                    lineNumber++;
+                    cout << "Current line number: " << lineNumber << endl;
                     goalReady = false;
                 }
 
@@ -91,6 +98,7 @@ int main (int argc , char **argv)
                 for (int i = 0; i < 6; i++)
                     logfile << " " << currPositions[i];
                 logfile << "\n";
+                lineNumber++;
             }
         }
 
