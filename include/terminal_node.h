@@ -10,6 +10,7 @@ enum KEYWORD_INDICES {
     HELP,
     MODE,
     PLAY_TEST,
+    LOOP_TEST,
     DELETE_TEST,
     RECORD,
     CLEAR,
@@ -32,6 +33,7 @@ enum TERMINAL_FLAGS {
     START_RECORD        = 128,
     STOP_RECORD         = 256,
     GO_HOME_F           = 512,
+    LOOP_TEST_F         = 1024,
 
 
 
@@ -43,6 +45,7 @@ enum TERMINAL_FLAGS {
 std::string KeywordStrings[NUMBER_OF_KEYWORDS] = {  "help",
                                                     "mode",
                                                     "play_test",
+                                                    "loop_test",
                                                     "delete_test",
                                                     "record",
                                                     "clear",
@@ -53,6 +56,7 @@ std::string KeywordStrings[NUMBER_OF_KEYWORDS] = {  "help",
 bool help_func();
 bool mode_func();
 bool play_test_func();
+bool loop_test_func();
 bool delete_test_func();
 bool record_func();
 bool clearScreen();

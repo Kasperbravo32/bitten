@@ -60,6 +60,11 @@ const   int PING_RATE = LOOP_RATE_INT / 2;
         int ping_timer = PING_RATE;
         int waypointsRecorded = 0;
 
+        int chosenTestc;
+
+        std::string chosenTestStr;
+        int remainingLoops;
+
 double tempCurrPos[6];
 
 std::fstream RecordFile;
@@ -184,6 +189,7 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
     {
         if (manual->buttons[0] == 1)
         {
+            
             debounceCounter++;
             
             if (debounceCounter == 5)
@@ -198,6 +204,8 @@ void manualCallback (const bitten::control_msg::ConstPtr& manual)
 
                         for (int i = 0; i < 6; i++)
                             RecordFile << "\t" << tempCurrPos[i];
+
+                        gotPositions = false;
                     }
 
                     else if (NewWaypoint == true)
@@ -337,6 +345,24 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
         }
     }
 
+    if (terminal->flags & LOOP_TEST_F)
+    {
+        if (INPUT_MODE == WP_MODE)
+        {
+            remainingLoops = terminal->id;
+            chosenTestStr = terminal->programName;
+
+            commanderFeedbackMsg.val = terminal->id;
+            commanderFeedbackMsg.flags = START_TEST_LOOP;
+            commanderFeedbackMsg.programName = terminal->programName;
+            commanderFeedbackMsg.senderID = COMMANDER_ID;
+            commanderFeedbackMsg.recID = WP_ID;
+            fbTransmitReady = true;
+
+            remainingLoops--;
+        }
+    }
+
     if (terminal->flags & START_RECORD)
     {
         if (INPUT_MODE == MANUAL_MODE)
@@ -377,4 +403,6 @@ void terminalCallback (const bitten::control_msg::ConstPtr& terminal)
             jointStatesTransmitReady = true;
         }
     }
+
+    
 }

@@ -34,7 +34,7 @@ void jointPathCallback (const bitten::control_msg::ConstPtr& jointPathCallback);
  * ----------------------------------------------------------------------- */
 passwd* pw = getpwuid(getuid());
 string path(pw->pw_dir);
-string dataPath = path + "/catkin_ws/src/bitten/data_analysis/STUPIDF1LE.txt";
+string dataPath = path + "/catkin_ws/src/bitten/data_analysis/logfile.txt";
 string currentRecordFile;
 
 double goalPositions[6];
@@ -73,7 +73,6 @@ int main (int argc , char **argv)
         {
             if (justOpened == true)
             {
-                ROS_INFO("Data Collector opened loggingfile");
                 justOpened = false;
             }
             
@@ -106,14 +105,11 @@ int main (int argc , char **argv)
                     logfile << " " << goalPositions[i];
                 logfile << "\n";
             }
-            else
-                ROS_INFO("Couldn't open data logging file.");
         }
             
         ros::spinOnce();
         loop_rate.sleep();
     }
-    ROS_INFO("Closing logfile");
     logfile.close();
     return 0;
 }
@@ -138,7 +134,6 @@ void jointPathCallback (const bitten::control_msg::ConstPtr& jointPathCallback)
     {
         if (waypoints_started == false)
             waypoints_started = true;
-        cout << "Got a goal-message" << endl;
         goalReady = true;
         for (int i = 0; i < 6; i++) 
             goalPositions[i] = jointPathCallback->jointPosition[i];

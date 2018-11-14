@@ -58,7 +58,7 @@ enum TOPIC_INDICES {
     JOINT_PATH_COMMAND_TOPIC,
     MOVEMENT_TOPIC,
     TERMINAL_TOPIC,
-    
+
 
     NUMBER_OF_TOPICS
 };
@@ -100,6 +100,7 @@ enum FLAGS {
     START_TEST              = 262144,
     GET_CURR_POS            = 524288,
     SENT_CURR_POS           = 1048576,
+    START_TEST_LOOP         = 2097152,
     
     
 };

@@ -33,6 +33,7 @@ bool foundKeywordMatch  = false;
 bool (* KeywordFunctions[NUMBER_OF_KEYWORDS])( void ) = {   help_func,
                                                             mode_func,
                                                             play_test_func,
+                                                            loop_test_func,
                                                             delete_test_func,
                                                             record_func,
                                                             clearScreen,
@@ -103,6 +104,7 @@ int main (int argc , char **argv)
         {
             /* Secret stuff happens in here */
         }
+
         else if (!foundKeywordMatch)
             cout << "Didn't recognize input." << endl;
 
@@ -218,6 +220,72 @@ bool play_test_func()
 
     terminalMsg.flags = MODE_WAYPOINT_F | PLAY_TEST_F;
     return true;
+}
+
+bool loop_test_func() 
+{
+    static int chosenTest, chosenLoops;
+    cout << "Choose a file to play: " << endl << "_______________________" << endl;
+    readExistingTests();
+    
+    while(1)
+    {
+        cout << endl << "Your choice: ";
+        getline(cin , input_s);
+        stringstream input_ss(input_s);
+        if (input_ss >> input_i)
+        {
+            if (input_i == 1337 || ExistingFiles[input_i] != "")
+            {
+                chosenTest = input_i;
+                break;
+            }
+            else
+                cout << "Not a valid number." << endl;
+        }
+        else
+            cout << "Not valid input." << endl;
+    }
+
+
+    while(1)
+    {
+        cout << endl << "Enter number of times to loop: [1:63]: ";
+        getline(cin , input_s);
+        stringstream input_ss(input_s);
+
+        if (input_ss >> input_i)
+        {
+            if (input_i >= 1 && input_i <= 63)
+            {
+                chosenLoops = input_i;
+                break;
+            }
+                
+            else
+                cout << "Not a valid input." << endl;
+        }
+        else
+            cout << "Not a valid input." << endl;
+    }
+    
+    if (chosenTest != 1337)
+    {
+        terminalMsg.programName = ExistingFiles[chosenTest];
+        cout << "Playing file: " << ExistingFiles[chosenTest] << " " << chosenLoops << " times." << endl;
+    }
+        
+    else
+    {
+        terminalMsg.programName = "open_a_beer.txt";
+        cout << "Øl på vej!" << endl;
+    }
+
+    terminalMsg.flags = MODE_WAYPOINT_F | LOOP_TEST_F;
+    terminalMsg.id = chosenLoops;
+    return true;
+
+
 }
 
 bool delete_test_func()

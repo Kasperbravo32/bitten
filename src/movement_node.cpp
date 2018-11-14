@@ -276,7 +276,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                 else if ((commander->jointVelocity[i] < -0.2) && 
                         (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || 
                         ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1)))
-                {
+                {   
                     if (justMovedArr[i] == false)
                     {
                         TX90.setGoalPos(i, TX90.getMinRotation(i));
@@ -294,6 +294,11 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                         stopMotion = true;
                         justMovedArr[i] = false;
                         jointTransmitReady = true;
+                    }
+                    else
+                    {
+                        TX90.setGoalPos(i, TX90.getCurrPos(i));
+
                     }
                 }
             }
