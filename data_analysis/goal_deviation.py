@@ -31,7 +31,7 @@ deviation6 = []
 
 number_of_points = 0
 
-test_file = open("STUPIDF1LE.txt")
+test_file = open("logfile.txt.txt")
 for line in test_file:
     if "GOAL" in line:
         goal_pos1.append(float(line.split(" ")[1]))
@@ -124,3 +124,15 @@ while i < len(goal_pos6):
     deviation6.append(deviation)
     i = i + 1
 
+average_deviation1 = sum(deviation1)/len(deviation1)
+average_deviation2 = sum(deviation2)/len(deviation2)
+average_deviation3 = sum(deviation3)/len(deviation3)
+average_deviation4 = sum(deviation4)/len(deviation4)
+average_deviation5 = sum(deviation5)/len(deviation5)
+average_deviation6 = sum(deviation6)/len(deviation6)
+print(average_deviation1)
+print(average_deviation2)
+print(average_deviation3)
+print(average_deviation4)
+print(average_deviation5)
+print(average_deviation6)

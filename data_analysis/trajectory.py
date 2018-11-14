@@ -23,7 +23,7 @@ goal_time6 = []
 
 number_of_points = 0
 
-test_file = open("STUPIDF1LE.txt")
+test_file = open("logfile.txt")
 for line in test_file:
     if "GOAL" in line:
         goal_pos1.append(float(line.split(" ")[1]))
