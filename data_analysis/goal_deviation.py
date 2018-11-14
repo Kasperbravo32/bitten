@@ -1,5 +1,10 @@
 import matplotlib.pyplot as plt
 import math
+import numpy as np
+
+def avg_list(mylist):
+    avg = sum(mylist)/len(mylist)
+    return avg
 
 actual_pos1 = []
 actual_pos2 = []
@@ -31,7 +36,7 @@ deviation6 = []
 
 number_of_points = 0
 
-test_file = open("logfile.txt.txt")
+test_file = open("logfile.txt")
 for line in test_file:
     if "GOAL" in line:
         goal_pos1.append(float(line.split(" ")[1]))
@@ -124,15 +129,34 @@ while i < len(goal_pos6):
     deviation6.append(deviation)
     i = i + 1
 
-average_deviation1 = sum(deviation1)/len(deviation1)
-average_deviation2 = sum(deviation2)/len(deviation2)
-average_deviation3 = sum(deviation3)/len(deviation3)
-average_deviation4 = sum(deviation4)/len(deviation4)
-average_deviation5 = sum(deviation5)/len(deviation5)
-average_deviation6 = sum(deviation6)/len(deviation6)
+average_deviation1 = avg_list(deviation1)
+average_deviation2 = avg_list(deviation2)
+average_deviation3 = avg_list(deviation3)
+average_deviation4 = avg_list(deviation4)
+average_deviation5 = avg_list(deviation5)
+average_deviation6 = avg_list(deviation6)
+
 print(average_deviation1)
 print(average_deviation2)
 print(average_deviation3)
 print(average_deviation4)
 print(average_deviation5)
 print(average_deviation6)
+
+average_deviations = []
+average_deviations.append(average_deviation1)
+average_deviations.append(average_deviation2)
+average_deviations.append(average_deviation3)
+average_deviations.append(average_deviation4)
+average_deviations.append(average_deviation5)
+average_deviations.append(average_deviation6)
+
+x = np.arange(6)
+
+plt.figure(1)
+plt.bar(x, average_deviations)
+plt.title("Joint deviations in degrees")
+plt.xticks(x, ('Joint 1', 'Joint 2', 'Joint 3', 'Joint 4', 'Joint 5', 'Joint 6'))
+plt.ylabel("Degrees")
+
+plt.show()
