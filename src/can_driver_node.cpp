@@ -14,7 +14,12 @@
 #include <can_driver_node.h>
 #include <bitten/can_msg.h>
 #include <global_node_definitions.h>
- 
+
+ /* ----------------------------------------------------------------------
+ *                      -------  Initializing   -------
+ * ----------------------------------------------------------------------- */
+void processFrame(const struct can_frame& frame);
+
  /* ----------------------------------------------------------------------
  *                       -------  Global variables   -------
  * ----------------------------------------------------------------------- */
@@ -116,7 +121,12 @@ int main(int argc, char** argv)
         {
             case CAN_MTU:
             {
-                processFrame(frame);
+                // processFrame(frame);
+                can_msg.can_id = frame.can_id;
+                can_msg.lenth = frame.can_dlc; //payload is 8 bytes in length
+                for(int i = 0; i < 8; i++)
+                    can_msg.data[i] = frame.data[i];
+        
                 canPub.publish(can_msg);
                 break;
             }

@@ -16,7 +16,18 @@
 #include <global_node_definitions.h>
 #include "wp_node.h"
 
+ /* ----------------------------------------------------------------------
+ *                      -------  Initializing   -------
+ * ----------------------------------------------------------------------- */
+void fbCallback(const bitten::feedback_msg::ConstPtr& feedback);
+
+/* ----------------------------------------------------------------------
+ *                       -------  Global variables   -------
+ * ----------------------------------------------------------------------- */
 using namespace std;
+
+bitten::control_msg wp_msg;
+bitten::feedback_msg fb_msg;
 
 int NumberofWaypoints;                                              /* Number of waypoints excluding waypoint_0.                                        */
 int RemainingWaypoints;                                             /* Number of remaining waypoints to perform.                                        */

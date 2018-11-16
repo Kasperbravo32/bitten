@@ -14,6 +14,12 @@
 #include <global_node_definitions.h>
 #include <manual_node.h>
 
+ /* ----------------------------------------------------------------------
+ *                      -------  Initializing   -------
+ * ----------------------------------------------------------------------- */
+void canCallback(const bitten::can_msg::ConstPtr& can);
+void fbCallback(const bitten::feedback_msg::ConstPtr& feedback);
+
 /* ----------------------------------------------------------------------
  *                       -------  Global variables   -------
  * ----------------------------------------------------------------------- */
