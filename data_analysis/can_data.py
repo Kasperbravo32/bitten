@@ -9,7 +9,7 @@ can_temp = []
 can_gyro_vert = []
 can_angle = []
 
-can_file = open("candump-gravemaskine.log")
+can_file = open("candump-2018-11-20_111156.log")
 can_id = "628"
 can_id = can_id + "#"
 
@@ -41,41 +41,35 @@ for line in can_file:
             temp = numpy.int8(temp)
             can_temp.append(temp)
 
-            if acc_y != 0:
-                angle = acc_x/acc_y
-                angle = math.degrees(math.atan(angle))
-                can_angle.append(angle)
+            angle = math.atan2(acc_y, acc_x)
+            angle = math.degrees(angle) + 90
+            can_angle.append(angle)
 
         if mux == "06":
             temp_str = payload[4:6] + payload[2:4]
             gyro_vert = float.fromhex(temp_str)
-            gyro_vert = gyro_vert / float(1000)
+            gyro_vert = numpy.int16(gyro_vert) / float(1000)
+            gyro_vert = math.degrees(gyro_vert)
             can_gyro_vert.append(gyro_vert)
             
 can_file.close()
 
 plt.figure(1)
+plt.subplot(311)
 plt.grid(True)
 plt.plot(can_acc_x)
+plt.title("X-accelerometer [G]")
 
-plt.figure(2)
+plt.subplot(312)
 plt.grid(True)
 plt.plot(can_acc_y)
+plt.title("Y-accelerometer [G]")
 
-plt.figure(3)
-plt.grid(True)
-plt.plot(can_gyro)
-
-plt.figure(4)
-plt.grid(True)
-plt.plot(can_temp)
-
-plt.figure(5)
+plt.subplot(313)
 plt.grid(True)
 plt.plot(can_angle)
+plt.title("Angle [degrees]")
 
-plt.figure(6)
-plt.grid(True)
-plt.plot(can_gyro_vert)
+plt.tight_layout(pad=0, w_pad=0, h_pad=-0.6)
 
 plt.show()
