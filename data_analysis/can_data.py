@@ -1,51 +1,81 @@
 import matplotlib.pyplot as plt
+import math
+import numpy
 
-def hex_to_dec(hex_number):
-    mult = float(1)
-    every_other = 0
-    result = float(0)
-    for letter in hex_number:
-        if letter == "A":
-            letter = 10
-        elif letter == "B":
-            letter = 11
-        elif letter == "C":
-            letter = 12
-        elif letter == "D":
-            letter = 13
-        elif letter == "E":
-            letter = 14
-        elif letter == "F":
-            letter = 15
-        number = float(letter)
-        if every_other == 0:
-            result = result + ( number * ( mult * float(16) ) )
-            every_other = 1
-        else:
-            result = result + ( number * ( mult / float(16) ) )
-            every_other = 0
-        mult = mult * float(16)
-    return result
-
-values = []
+can_acc_x = []
+can_acc_y = []
+can_gyro = []
+can_temp = []
+can_gyro_vert = []
+can_angle = []
 
 can_file = open("candump-gravemaskine.log")
+can_id = "628"
+can_id = can_id + "#"
 
 for line in can_file:
-    if "600#01" in line:
-        value = line.split(" ")[2]
-        value = value.replace("600#01", "")
-        value = value.replace("\n","")
-        value = hex_to_dec(value)
-        values.append(value)
+    if can_id in line:
+        line = line.split(" ")[2]
+        line = line.replace(can_id, "")
+        payload = line.replace("\n","")
+        mux = payload[0:2]
+        if mux == "01":
+            temp_str = payload[4:6] + payload[2:4]
+            acc_x = float.fromhex(temp_str)
+            acc_x = numpy.int16(acc_x) / float(10000)
+            can_acc_x.append(acc_x)
 
+            temp_str = payload[8:10] + payload[6:8]
+            acc_y = float.fromhex(temp_str)
+            acc_y = numpy.int16(acc_y) / float(10000)
+            can_acc_y.append(acc_y)
+
+            temp_str = payload[12:14] + payload[10:12]
+            gyro = float.fromhex(temp_str)
+            gyro = numpy.int16(gyro) / float(1000)
+            gyro = math.degrees(gyro)
+            can_gyro.append(gyro)
+
+            temp_str = payload[14:16]
+            temp = float.fromhex(temp_str)
+            temp = numpy.int8(temp)
+            can_temp.append(temp)
+
+            if acc_y != 0:
+                angle = acc_x/acc_y
+                angle = math.degrees(math.atan(angle))
+                can_angle.append(angle)
+
+        if mux == "06":
+            temp_str = payload[4:6] + payload[2:4]
+            gyro_vert = float.fromhex(temp_str)
+            gyro_vert = gyro_vert / float(1000)
+            can_gyro_vert.append(gyro_vert)
+            
 can_file.close()
 
 plt.figure(1)
 plt.grid(True)
-plt.plot(values)
-# plt.title("Distance measurements")
-# plt.xlabel("Time (s)")
-# plt.ylabel("Distance (m)")
+plt.plot(can_acc_x)
+
+plt.figure(2)
+plt.grid(True)
+plt.plot(can_acc_y)
+
+plt.figure(3)
+plt.grid(True)
+plt.plot(can_gyro)
+
+plt.figure(4)
+plt.grid(True)
+plt.plot(can_temp)
+
+plt.figure(5)
+plt.grid(True)
+plt.plot(can_angle)
+
+plt.figure(6)
+plt.grid(True)
+plt.plot(can_gyro_vert)
 
 plt.show()
