@@ -14,9 +14,9 @@ can_temp = []
 can_gyro_vert = []
 can_angle = []
 
-can_file = open("candump-2018-11-20_111156.log")
+can_file = open("candump-2018-11-22_145909.log")
 # can_id can be 600, 608, 610, 618, 620 or 628
-can_id = "628"
+can_id = "608"
 can_id = can_id + "#"
 
 for line in can_file:
