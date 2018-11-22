@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath>
-
 /* Define the robot as a class, to keep track of, and modify all values, positions, states etc. */
 class TX90_c {
 
@@ -9,9 +7,8 @@ class TX90_c {
         
         void            setCurrPos(int n , double val);                 /* Function to change the current digital position of the robot                                             */
         void            setGoalPos(int n , double val);                 /* Function to change to current digital GoalPosition of the robot                                          */
-        void            setJointsAtGoal(int arr[6]);                    /* Function to change whether or not each joint is at its intended goal position, within an error margin    */
-        void            setJointsNearlyAtGoal(int n);
         void            setCurrVelocity(double n);                      /* Function to change the current velocity of the robot, 0-100% (0-1)                                       */
+        void            setJointsAtGoal(int arr[6]);                    /* Function to change whether or not each joint is at its intended goal position, within an error margin    */
 
         double          getCurrPos(int n);                              /* Function to get (return) the current position of a certain joint (joint_0 - joint_5)                                     */
         double          getGoalPos(int n);                              /* Function to get the current goal position of a single joint (joint_0 - joint_5)                                          */
@@ -20,10 +17,7 @@ class TX90_c {
         double          getMinRotation(int n);                          /* Function to get the possible rotation of the robot in negative direction, on a single joint                              */
         double          getMaxVelocity(int n);                          /* Function to get the max possible allowed speed of the robot, on a single joint                                           */
         double          getResetStatePos(int n);                        /* Function to get the coordinate of the resetstateposition, of a single joint                                              */
-        double          getLastGoalPos(int n);
-
         uint8_t         getJointsAtGoal();                              /* Returns an 8-bit integer, where the first 6 bits ([bit_0:bit_5]) determines whether or not each joint is at its goal position    */
-        int             getJointsNearlyAtGoal(int n);
         std::string     getJointName(int n);                            /* Returns the URDF name of a single joint                                                                                          */
 
     private:
@@ -31,10 +25,8 @@ class TX90_c {
         std::array<double,6>    currPos;                                /* Array of doubles, keeps track of current position of each joint. is being updated in the movement node, by the feedback_states topic, from robot_state node  */
         std::array<double,6>    goalPos;                                /* Array of doubles, keeps track of goalPosition. Gets transmitted when the robot is supposed to move somewhere                                                 */
         std::array<int,6>       jointsAtGoal;                           /* Array of ints, keeps track of, whether or not a joint is at its goal position. Could be remade into an 8-bits u_integer                                      */
-        std::array<int,6>       jointsNearlyAtGoal;
         double                  currVelocity         = 0.4;             /* Double, value 0-1, controls the stepsize used when calculating new goalposition, should reset in increased or decreased speed                                */
-        std::array<double,6>    lastGoalPos;                            /* Array to keep track of previous goalposition, used to time the exact moment of new position transmission                                                     */
-
+       
         static const int        links               = 6;                /* Int to define the amount of links on the robot   */
         static const int        minLink             = 1;                /* Int to define the value of the first link        */
         static const int        maxLink             = 6;                /* Int to define the value of the Last link         */
@@ -101,19 +93,12 @@ void TX90_c::setGoalPos(int n , double val)
 {
 /* Overwrites content of private member Robot_c.goalPosition[] with input
  * Along with copying existing goalPosition[] into lastGoalPosition[]   */
-
-    lastGoalPos[n] = goalPos[n];
     goalPos[n] = val;
 }
 
 double TX90_c::getGoalPos(int n)
 {
     return goalPos[n];
-}
-
-double TX90_c::getLastGoalPos(int n)
-{
-    return lastGoalPos[n];
 }
 
 void TX90_c::setJointsAtGoal(int arr[6])
@@ -131,37 +116,6 @@ uint8_t TX90_c::getJointsAtGoal()
         counter |= (1 << i);
     }
     return counter;
-}
-
-void TX90_c::setJointsNearlyAtGoal(int n)
-{
-    static double currDistance;
-    static double totalDistance;
-    static double doneDistance;
-    if(currPos[n] != goalPos[n] && goalPos[n] != lastGoalPos[n])
-    {
-        currDistance = std::abs(goalPos[n] - currPos[n]);
-        totalDistance = std::abs(goalPos[n] - lastGoalPos[n]);
-        doneDistance = totalDistance - currDistance;
-        if(doneDistance < 0.00001)
-            doneDistance = 0.00001;
-        if(totalDistance < 0.00001)
-            totalDistance = 0.00001;
-    }
-    else
-    {
-        doneDistance = 1;
-        totalDistance = 1;
-    }
-    if((doneDistance / totalDistance) > 0.5)
-        jointsNearlyAtGoal[n] = 1;
-    else
-        jointsNearlyAtGoal[n] = 0;
-}
-
-int TX90_c::getJointsNearlyAtGoal(int n)
-{
-    return jointsNearlyAtGoal[n];
 }
 
 void TX90_c::setCurrVelocity(double n)

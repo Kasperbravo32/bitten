@@ -14,8 +14,3 @@ enum INPUT_MODE {
     NO_MODE
     
 } INPUT_MODE;
-
-
-
-
-

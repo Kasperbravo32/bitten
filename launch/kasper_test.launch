@@ -1,5 +1,5 @@
 <launch>  
-    <!-- <arg name="robot_ip" default="10.82.18.254"/>
+    <arg name="robot_ip" default="10.82.18.254"/>
     <param name="robot_ip_address" type="str" value="$(arg robot_ip)" />
 
     <include file="$(find staubli_val3_driver)/launch/robot_state.launch">
@@ -8,7 +8,7 @@
 
     <include file="$(find staubli_val3_driver)/launch/motion_streaming_interface.launch">
         <arg name="robot_ip" value="$(arg robot_ip)" />
-    </include> -->
+    </include>
 
     <node pkg="bitten" type="movement_node" name="movement_node" output="screen"/>    
     
@@ -18,7 +18,7 @@
 
     <node pkg="bitten" type="manual_node" name="manual_node" output="screen"/>
 
-    <!-- <node pkg="bitten" type="can_driver_node" name="can_driver_node" output="screen"/> -->
+    <node pkg="bitten" type="can_driver_node" name="can_driver_node" output="screen"/>
 
     <node pkg="bitten" type="terminal_node" name="terminal_node" output="screen"/>
 </launch>

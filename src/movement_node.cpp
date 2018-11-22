@@ -23,8 +23,6 @@
 void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr&   RobotState);
 void commanderCallback  (const bitten::control_msg::ConstPtr&                           commander);
 
-int jointsNearlyAtGoal(void);
-int jointsNearlyAtGoal2(void);
  /* ----------------------------------------------------------------------
  *                    -------  Message objects   -------
  * ----------------------------------------------------------------------- */
@@ -35,7 +33,6 @@ trajectory_msgs::JointTrajectory        jointPathMsgTest;               /* Messa
 
 bitten::feedback_msg                    movementFeedbackMsg;        /* Message used to report back when wanted position is reached, e.g. waypoint-mode  */
 
-
 /* ----------------------------------------------------------------------
  *                    -------  Global Variables   -------
  * ----------------------------------------------------------------------- */
@@ -43,7 +40,7 @@ bool robotInitialized       = false;
 bool goalExists             = false;
 bool jointTransmitReady     = true;
 bool feedbackTransmitReady  = false;
-bool clearTransmitReady     = false;
+bool stopMotion             = false;
 
 bool justMovedArr[6]        ={false,
                               false,
@@ -52,10 +49,7 @@ bool justMovedArr[6]        ={false,
                               false,
                               false};
 
-bool stopMotion            = false;
-
 int OPERATING_MODE = 0;
-
 int buttonDebouncers[12];
 
 TX90_c TX90;
@@ -151,12 +145,6 @@ int main (int argc , char **argv)
                     movement_pub.publish(jointPathMsgTest);
                     movement_pub.publish(jointPathMsg);
                     jointTransmitReady = false;
-                }
-
-                if (clearTransmitReady)
-                {
-                    movement_pub.publish(jointPathMsgTest);
-                    clearTransmitReady = false;
                 }
 
                 if (feedbackTransmitReady)
@@ -329,8 +317,6 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
 void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr&   RobotState)
 {
     /* Update currPos from the feedback, measuring on the sensors   */
-    int jointAtGoalCounter = 0;
-
     if (!robotInitialized)
     {
         robotInitialized = true;
@@ -345,53 +331,21 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
         TX90.setCurrPos(i, RobotState->actual.positions[i]);
 
     if(goalExists == true)
-        jointAtGoalCounter = jointsNearlyAtGoal2();
-
-    if (jointAtGoalCounter == 6)
     {
-        movementFeedbackMsg.flags |= GOAL_REACHED;
-        goalExists = false;
-        feedbackTransmitReady = true;
-    }
-}
-
-int jointsNearlyAtGoal(void)
-{
-    static double currDistance;
-    static double totalDistance;
-    static double doneDistance;
-    int numberOfNearlyGoals = 0;
-    for(int i = 0; i < 6; i++)
-    {
-        if(TX90.getCurrPos(i) != TX90.getGoalPos(i) && TX90.getGoalPos(i) != TX90.getLastGoalPos(i))
+        int jointAtGoalCounter = 0;
+        double posBoundry;
+        for (int i = 0; i < 6; i++)
         {
-            currDistance = std::abs(TX90.getGoalPos(i) - TX90.getCurrPos(i));
-            totalDistance = std::abs(TX90.getGoalPos(i) - TX90.getLastGoalPos(i));
-            doneDistance = totalDistance - currDistance;
-            if(doneDistance < 0.00001)
-                doneDistance = 0.00001;
-            if(totalDistance < 0.00001)
-                totalDistance = 0.00001;
+            posBoundry = 0.02 * TX90.getMaxRotation(i);
+            if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundry)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundry)))
+                jointAtGoalCounter++;
         }
-        else
-        {
-            doneDistance = 1;
-            totalDistance = 1;
-        }
-        if((doneDistance / totalDistance) > 0.6)
-            numberOfNearlyGoals++;
-    }
-    return numberOfNearlyGoals;
-}
 
-int jointsNearlyAtGoal2(void)
-{
-    int jointAtGoalCounter = 0;
-    for (int i = 0; i < 6; i++)
-    {
-        static double posBoundry = 0.02 * TX90.getMaxRotation(i);
-        if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundry)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundry)))
-            jointAtGoalCounter++;
+        if (jointAtGoalCounter == 6)
+        {
+            movementFeedbackMsg.flags |= GOAL_REACHED;
+            goalExists = false;
+            feedbackTransmitReady = true;
+        }
     }
-    return jointAtGoalCounter;
 }

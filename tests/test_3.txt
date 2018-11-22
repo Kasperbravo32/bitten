@@ -1,3 +1,7 @@
 test_test
-waypoint_1	2.08327	0.458011	2.51685	0	0.690971	0
-waypoint_3	2.08327	0.455721	2.32973	0	0.683894	0
+waypoint_1	0	-1.5	0	0	0	0
+waypoint_3	0	0	0	0	0	0
+waypoint_5	0	1.5	0	0	0	0
+waypoint_7	1.5	1.5	0	0	0	0
+waypoint_9	3	1.5	0	0	0	0
+waypoint_11	0	0	0	0	0	0
