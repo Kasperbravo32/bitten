@@ -14,8 +14,16 @@ can_temp = []
 can_gyro_vert = []
 can_angle = []
 
-can_file = open("candump-2018-11-22_145909.log")
+can_file = open("DiggingTestOnExcavator.log")
 # can_id can be 600, 608, 610, 618, 620 or 628
+# Pitch / Roll: 600
+# Boom 1 : 608
+# Boom 2 : 610
+# Stick  : 618
+# Bucket : 620
+# Tilt   : 628
+# Robot Sensor is 628... maybe :>
+
 can_id = "608"
 can_id = can_id + "#"
 
