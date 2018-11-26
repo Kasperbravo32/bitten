@@ -225,7 +225,7 @@ bool play_test_func()
 bool loop_test_func() 
 {
     static int chosenTest, chosenLoops;
-    cout << "Choose a file to play: " << endl << "_______________________" << endl;
+    cout << "Choose a file to loop: " << endl << "_______________________" << endl;
     readExistingTests();
     
     while(1)
