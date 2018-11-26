@@ -1,0 +1,47 @@
+<launch>  
+<!-- Start the ROS Client -->
+    <arg name       = "robot_ip"            default = "10.82.18.254"/>
+    
+    <param name     = "robot_ip_address"    type = "str"    value = "$(arg robot_ip)" />
+
+    <include file   = "$(find staubli_val3_driver)/launch/robot_state.launch">
+        <arg name   = "robot_ip"            value = "$(arg robot_ip)" />
+    </include>
+
+    <include file   = "$(find staubli_val3_driver)/launch/motion_streaming_interface.launch">
+        <arg name   = "robot_ip"            value = "$(arg robot_ip)" />
+    </include>
+
+<!-- Start every Single Node created by Bitten Corp. -->
+
+    <!-- CAN Driver node -->
+    <node pkg = "bitten" type = "can_driver_node" 	    name = "can_driver_node" 	/> 
+    
+    <!-- Movement Node -->
+    <node pkg = "bitten" type = "movement_node" 	    name = "movement_node" output = "screen" />
+
+    <!-- Commander Node -->
+    <node pkg = "bitten" type = "commander_node" 	    name = "commander_node" output = "screen"   />
+
+    <!-- Waypoint Node -->
+    <node pkg = "bitten" type = "wp_node" 		        name = "waypoint_node" output = "screen"	/>
+
+    <!-- Manual Node -->
+    <node pkg = "bitten" type = "manual_node" 		    name = "manual_node" output = "screen" 	    />
+
+    <!-- Terminal Node -->
+    <node pkg = "bitten" type = "terminal_node" 	    name = "terminal_node" output = "screen"    />
+
+    <!-- Data Collection Module -->
+    <node pkg = "bitten" type = "dataCollectionModule" 	name = "dataCollectionModule" output = "screen"    />
+
+
+
+<!-- Open RVIZ Robot Visualizer -->
+    <!-- <include file="$(find staubli_tx90_support)/launch/load_tx90.launch" />
+    
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+    
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find industrial_robot_client)/config/robot_state_visualize.rviz" required="true" /> -->
+
+</launch>
