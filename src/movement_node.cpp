@@ -299,8 +299,7 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
             {
                 if (OPERATING_MODE != WP_ID)
                     OPERATING_MODE = WP_ID;
-
-                // std::cout << "OK!" << std::endl << "Moving robot to: " << commander->programName << "...";
+             
                 for (int i = 0; i < 6; i++)
                     TX90.setGoalPos(i, commander->jointPosition[i]);
 

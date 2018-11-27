@@ -14,7 +14,7 @@ can_temp = []
 can_gyro_vert = []
 can_angle = []
 
-can_file = open("DiggingTestOnExcavator.log")
+can_file = open("DiggingTestOnRobot.log")
 # can_id can be 600, 608, 610, 618, 620 or 628
 # Pitch / Roll: 600
 # Boom 1 : 608
@@ -24,7 +24,7 @@ can_file = open("DiggingTestOnExcavator.log")
 # Tilt   : 628
 # Robot Sensor is 628... maybe :>
 
-can_id = "608"
+can_id = "628"
 can_id = can_id + "#"
 
 for line in can_file:
