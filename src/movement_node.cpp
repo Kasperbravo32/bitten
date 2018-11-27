@@ -42,6 +42,13 @@ bool jointTransmitReady     = true;
 bool feedbackTransmitReady  = false;
 bool stopMotion             = false;
 
+bool posChanging[6]        ={false,
+                              false,
+                              false,
+                              false,
+                              false,
+                              false};
+
 bool justMovedArr[6]        ={false,
                               false,
                               false,
@@ -277,16 +284,12 @@ void commanderCallback(const bitten::control_msg::ConstPtr& commander)
                     if (justMovedArr[i] == true)
                     {
                         TX90.setGoalPos(i, TX90.getCurrPos(i));
-                        TX90.setCurrVelocity(1);
-
                         stopMotion = true;
                         justMovedArr[i] = false;
                         jointTransmitReady = true;
                     }
-                    else
-                    {
-
-                    }
+                    else if(posChanging[i])
+                        TX90.setGoalPos(i, TX90.getCurrPos(i));
                 }
             }
         break;
@@ -322,14 +325,22 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
         robotInitialized = true;
         for (int i = 0; i < 6; i++)
         {
-            TX90.setCurrPos(i , RobotState->actual.positions[i]);
-            TX90.setGoalPos(i , TX90.getCurrPos(i));
+            TX90.setCurrPos(i, RobotState->actual.positions[i]);
+            TX90.setGoalPos(i, TX90.getCurrPos(i));
+            TX90.setLastPos(i, TX90.getCurrPos(i));
         }
     }
 
     for (int i = 0; i < 6; i++)
+    {
         TX90.setCurrPos(i, RobotState->actual.positions[i]);
-
+        if(TX90.getLastPos(i) != TX90.getCurrPos(i))
+        {
+            posChanging[i] = true;
+        }
+        else
+            posChanging[i] = false;
+    }
     if(goalExists == true)
     {
         int jointAtGoalCounter = 0;

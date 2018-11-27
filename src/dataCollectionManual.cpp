@@ -27,7 +27,7 @@ using namespace std;
  *                     -------  Initializers  -------
  * ----------------------------------------------------------------------- */
 void feedbackCallback  (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr& feedbackMsg);
-void jointPathCallback (const trajectory_msgs::JointTrajectory::ConstPtr& jointPathCallback);
+void jointPathCallback (const bitten::control_msg::ConstPtr& jointPathCallback);
 
 /* ----------------------------------------------------------------------
  *                    -------  Global Variables   -------
@@ -46,8 +46,41 @@ bool waypoints_started = false;
 
 int lineNumber = 0;
 
-trajectory_msgs::JointTrajectory        jointPathMsg;               /* Message used to transmit wanted position to motion_streaming_interface           */
-trajectory_msgs::JointTrajectoryPoint   jointPathPointMsg;      
+double lastPos[6];
+
+double max_rotation[6] = {
+    3.14,
+    2.57,
+    2.53,
+    4.71,
+    2.44,
+    4.71
+};
+
+double min_rotation[6] = {
+    -3.14,
+    -2.27,
+    -2.53,
+    -4.71,
+    -2.01,
+    -4.71
+};
+
+bool posChanging[6]        ={false,
+                              false,
+                              false,
+                              false,
+                              false,
+                              false};
+
+bool justMovedArr[6] = {
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+};
 
 /* ----------------------------------------------------------------------
  *                          -------  Main    -------
@@ -57,7 +90,7 @@ int main (int argc , char **argv)
     ros::init(argc , argv , "dataCollectionModule");
     ros::NodeHandle n;
 
-    ros::Subscriber DataJointPathCommSub = n.subscribe<trajectory_msgs::JointTrajectory>            ("joint_path_command", 2 , jointPathCallback);
+    ros::Subscriber DataJointPathCommSub = n.subscribe<bitten::control_msg>            ("movement_topic", 2 , jointPathCallback);
     ros::Subscriber DataFeedbackSub      = n.subscribe<control_msgs::FollowJointTrajectoryFeedback> ("feedback_states"   , 2 , feedbackCallback);
 
     ros::Rate loop_rate(LOOP_RATE_INT);
@@ -105,7 +138,6 @@ int main (int argc , char **argv)
                 lineNumber++;
             }
         }
-
         else if (goalReady == true)
         {
             goalReady = false;
@@ -126,72 +158,73 @@ int main (int argc , char **argv)
     return 0;
 }
 
-
-
 /* ----------------------------------------------------------------------
  *                    -------  feedbackCallback   -------
  * ----------------------------------------------------------------------- */
 void feedbackCallback  (const control_msgs::FollowJointTrajectoryFeedback::ConstPtr& feedbackMsg)
 {
+    static bool first_pos = true;
+    if(first_pos)
+    {
+        first_pos = false;
+        for(int i = 0; i < 6; i++)
+            currPositions[i] = feedbackMsg->actual.positions[i];
+    }
+
     for (int i = 0; i < 6; i++)
+    {
+        lastPos[i] = currPositions[i];
         currPositions[i] = feedbackMsg->actual.positions[i];
+        if(currPositions[i] != lastPos[i])
+            posChanging[i] = true;
+        else
+            posChanging[i] = false;
+    }
 }
 
 /* ----------------------------------------------------------------------
  *                -------  Joint Path Command Callback   -------
  * ----------------------------------------------------------------------- */
-void jointPathCallback (const trajectory_msgs::JointTrajectory::ConstPtr& jointPathCallback)
+void jointPathCallback (const bitten::control_msg::ConstPtr& jointPathCallback)
 {
-
     if (waypoints_started == false)
         waypoints_started = true;
-    goalReady = true;
+    
+
     for (int i = 0; i < 6; i++)
     {
-        jointPathPointMsg.positions.push_back(jointPathCallback->points)
-        goalPositions[i] = jointPathCallback->positions[i];
-    }
-
-    for (int i = 0; i < 6; i++)
+        if ((jointPathCallback->jointVelocity[i] > 0.2) && 
+            (((i == 0 || i == 2 || i == 3) && jointPathCallback->buttons[8] == 1) || 
+            ((i == 1 || i == 4 || i == 5) &&  jointPathCallback->buttons[2] == 1)))
+        {
+            if(justMovedArr[i] == false)
             {
-                if ((commander->jointVelocity[i] > 0.2) && 
-                    (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || 
-                    ((i == 1 || i == 4 || i == 5) &&  commander->buttons[2] == 1)))
-                {
-                    if(justMovedArr[i] == false)
-                    {
-                        TX90.setGoalPos(i, TX90.getMaxRotation(i));
-                        justMovedArr[i] = true;
-                        jointTransmitReady = true;
-                    }
-                }
-                
-                else if ((commander->jointVelocity[i] < -0.2) && 
-                        (((i == 0 || i == 2 || i == 3) && commander->buttons[8] == 1) || 
-                        ((i == 1 || i == 4 || i == 5) && commander->buttons[2] == 1)))
-                {   
-                    if (justMovedArr[i] == false)
-                    {
-                        TX90.setGoalPos(i, TX90.getMinRotation(i));
-                        justMovedArr[i] = true;
-                        jointTransmitReady = true;
-                    }
-                }
-                else
-                {
-                    if (justMovedArr[i] == true)
-                    {
-                        TX90.setGoalPos(i, TX90.getCurrPos(i));
-                        TX90.setCurrVelocity(1);
-
-                        stopMotion = true;
-                        justMovedArr[i] = false;
-                        jointTransmitReady = true;
-                    }
-                    else
-                    {
-
-                    }
-                }
+                goalPositions[i] = max_rotation[i];
+                justMovedArr[i] = true;
+                goalReady = true;
             }
+        }
+        else if ((jointPathCallback->jointVelocity[i] < -0.2) && 
+                (((i == 0 || i == 2 || i == 3) && jointPathCallback->buttons[8] == 1) || 
+                ((i == 1 || i == 4 || i == 5) && jointPathCallback->buttons[2] == 1)))
+        {   
+            if (justMovedArr[i] == false)
+            {
+                goalPositions[i] = min_rotation[i];
+                justMovedArr[i] = true;
+                goalReady = true;
+            }
+        }
+        else
+        {
+            if (justMovedArr[i] == true)
+            {
+                goalPositions[i] = currPositions[i];
+                justMovedArr[i] = false;
+                goalReady = true;
+            }
+            else if(posChanging[i])
+                goalPositions[i] = currPositions[i];
+        }
+    }
 }

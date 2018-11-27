@@ -13,7 +13,7 @@ len_deviations = []
 
 number_of_points = 0
 
-test_file = open("logfile.txt")
+test_file = open("logfile1.txt")
 
 for line in test_file:
     if "GOAL" in line:
@@ -27,9 +27,9 @@ for line in test_file:
 
 test_file.close()
 
-for i in range(0,6):
-    goal_time[i].pop(0)
-    goal_time[i].append(number_of_points)
+# for i in range(0,6):
+#     goal_time[i].pop(0)
+#     goal_time[i].append(number_of_points)
 
 for i in range(0,6):
     j = 0

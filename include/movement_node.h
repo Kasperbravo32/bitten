@@ -20,10 +20,14 @@ class TX90_c {
         uint8_t         getJointsAtGoal();                              /* Returns an 8-bit integer, where the first 6 bits ([bit_0:bit_5]) determines whether or not each joint is at its goal position    */
         std::string     getJointName(int n);                            /* Returns the URDF name of a single joint                                                                                          */
 
+        void            setLastPos(int n, double pos); 
+        double          getLastPos(int n); 
+
     private:
 
         std::array<double,6>    currPos;                                /* Array of doubles, keeps track of current position of each joint. is being updated in the movement node, by the feedback_states topic, from robot_state node  */
         std::array<double,6>    goalPos;                                /* Array of doubles, keeps track of goalPosition. Gets transmitted when the robot is supposed to move somewhere                                                 */
+        std::array<double,6>    lastPos;                                /* Array of doubles, keeps track of goalPosition. Gets transmitted when the robot is supposed to move somewhere                                                 */
         std::array<int,6>       jointsAtGoal;                           /* Array of ints, keeps track of, whether or not a joint is at its goal position. Could be remade into an 8-bits u_integer                                      */
         double                  currVelocity         = 0.4;             /* Double, value 0-1, controls the stepsize used when calculating new goalposition, should reset in increased or decreased speed                                */
        
@@ -151,4 +155,14 @@ double TX90_c::getMaxRotation(int n)
 double TX90_c::getMinRotation(int n)
 {
     return 0.995 * minRotation[n];
+}
+
+void TX90_c::setLastPos(int n, double pos)
+{
+    lastPos[n] = pos;
+}
+
+double TX90_c::getLastPos(int n)
+{
+    return lastPos[n];
 }

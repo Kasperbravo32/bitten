@@ -33,7 +33,7 @@
     <node pkg = "bitten" type = "terminal_node" 	    name = "terminal_node" output = "screen"    />
 
     <!-- Data Collection Module -->
-    <node pkg = "bitten" type = "dataCollectionModule" 	name = "dataCollectionModule" output = "screen"    />
+    <node pkg = "bitten" type = "dataCollectionManual" 	name = "dataCollectionManual" output = "screen"    />
 
 
 
