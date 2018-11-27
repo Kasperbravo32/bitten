@@ -5,14 +5,14 @@ import numpy as np
 actual_pos = [[],[],[],[],[],[]]
 goal_pos = [[],[],[],[],[],[]]
 goal_time = [[],[],[],[],[],[]]
-deviations = [[],[],[],[],[],[]]
-average_deviations = []
-min_deviations = []
-max_deviations = []
-len_deviations = []
 
 max_rotation = [3.14, 2.57, 2.53, 4.71, 2.44, 4.71]
+for i in range(0,6):
+        max_rotation[i] = math.degrees(max_rotation[i]) - 5
+
 min_rotation = [-3.14, -2.27, -2.53, -4.71, -2.01, -4.71]
+for i in range(0,6):
+        min_rotation[i] = math.degrees(min_rotation[i]) + 5
 
 number_of_points = 0
 
@@ -34,10 +34,9 @@ test_file.close()
 #remove dublicate goals
 for i in range(0,6):
         last_goal = 0
-        j = 0
         index = 0
         length_of_list = len(goal_pos[i])
-        while j < length_of_list:
+        for j in range (0, length_of_list):
                 if last_goal == goal_pos[i][index]:
                         last_goal = goal_pos[i][index]
                         goal_pos[i].pop(index)
@@ -45,40 +44,35 @@ for i in range(0,6):
                 else:
                         last_goal = goal_pos[i][index]
                         index = index + 1
-                j = j + 1
 
+#calculate delay
+delay_up = [[],[],[],[],[],[]]
+delay_down = [[],[],[],[],[],[]]
+for i in range(0,6):
+        length_of_list = len(goal_pos[i])
+        for j in range(0, length_of_list):
+                if goal_pos[i][j] >= max_rotation[i]:
+                        k = goal_time[i][j]
+                        last_pos = actual_pos[i][k]
+                        delay_counter = 0
+                        while actual_pos[i][k] <= last_pos:
+                               delay_counter = delay_counter + 1
+                               last_pos = actual_pos[i][k]
+                               k = k + 1
+                        delay_up[i].append(delay_counter * 20)
+                elif goal_pos[i][j] <= min_rotation[i]:
+                        k = goal_time[i][j]
+                        last_pos = actual_pos[i][k]
+                        delay_counter = 0
+                        while actual_pos[i][k] >= last_pos:
+                               delay_counter = delay_counter + 1
+                               last_pos = actual_pos[i][k]
+                               k = k + 1
+                        delay_down[i].append(delay_counter * 20)
+                
 # for i in range(0,6):
 #     goal_time[i].pop(0)
 #     goal_time[i].append(number_of_points)
-
-#calculates deviations in degrees
-for i in range(0,6):
-    j = 0
-    while j < len(goal_pos[i]):
-        number_at_goal = goal_time[i][j]
-        actual_at_goal = actual_pos[i][number_at_goal-1]
-        goal_value = goal_pos[i][j]
-        deviation = abs(abs(goal_value) - abs(actual_at_goal))
-        deviations[i].append(deviation)
-        j = j + 1
-
-for i in range(0,6):
-    average_deviations.append(sum(deviations[i])/len(deviations[i]))
-print("average deviations:", average_deviations)
-
-for i in range(0,6):
-    min_deviations.append(min(deviations[i]))
-print("min deviations:", min_deviations)
-
-for i in range(0,6):
-    max_deviations.append(max(deviations[i]))
-print("max deviations:", max_deviations)
-
-for i in range(0,6):
-    len_deviations.append(len(deviations[i]))
-print("len deviations:", len_deviations)
-
-print(max_rotation)
 
 #plots
 plt.figure(1)
@@ -133,15 +127,25 @@ plt.xlabel("Points [n]")
 
 plt.tight_layout(pad=0.01, w_pad=-1.1, h_pad=-0.6)
 
-# plt.figure(2)
+fig, ax = plt.subplots()
 
-# x = np.arange(6)
-# markerline, stemlines, baseline = plt.stem(x, average_deviations, linefmt = "-.", markerfmt = "_")
-# plt.setp(markerline, color='b', linewidth=5, marker = "x")
-# plt.setp(stemlines, color='black', linewidth=1)
-# plt.setp(baseline, color='black', linewidth=1)
-# plt.title("Average joint deviations")
-# plt.xticks(x, ('Joint 1', 'Joint 2', 'Joint 3', 'Joint 4', 'Joint 5', 'Joint 6'))
-# plt.ylabel("Angles [degrees]")
+x = np.arange(6)
+width = 0.15
+markerline1, stemlines1, baseline1 = ax.stem(x - width, delay_up, linefmt = "-.", markerfmt = "_")
+markerline2, stemlines2, baseline2 = ax.stem(x + width, delay_down, linefmt = "-.", markerfmt = "_")
+# markerline, stemlines, baseline = plt.stem(x, delay_total, linefmt = "-.", markerfmt = "_")
+
+plt.setp(markerline1, color='b', linewidth=5, marker = "x")
+plt.setp(stemlines1, color='black', linewidth=1)
+plt.setp(baseline1, color='black', linewidth=1)
+
+plt.setp(markerline2, color='r', linewidth=5, marker = "x")
+plt.setp(stemlines2, color='black', linewidth=1)
+plt.setp(baseline2, color='black', linewidth=1)
+
+plt.title("Average joint response delay")
+plt.xticks(x, ('Joint 1', 'Joint 2', 'Joint 3', 'Joint 4', 'Joint 5', 'Joint 6'))
+plt.ylabel("Delay [ms]")
+ax.legend((markerline1, markerline2), ('Moving up', 'Moving down'))
 
 plt.show()
