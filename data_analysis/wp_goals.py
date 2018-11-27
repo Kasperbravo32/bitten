@@ -13,6 +13,7 @@ len_deviations = []
 
 number_of_points = 0
 
+#reads file
 test_file = open("logfile1.txt")
 
 for line in test_file:
@@ -27,10 +28,14 @@ for line in test_file:
 
 test_file.close()
 
-# for i in range(0,6):
-#     goal_time[i].pop(0)
-#     goal_time[i].append(number_of_points)
 
+
+#remove first item in list
+for i in range(0,6):
+    goal_time[i].pop(0)
+    goal_time[i].append(number_of_points)
+
+#calculate deviations in degrees
 for i in range(0,6):
     j = 0
     while j < len(goal_pos[i]):
@@ -57,7 +62,7 @@ for i in range(0,6):
     len_deviations.append(len(deviations[i]))
 print("len deviations:", len_deviations)
 
-
+#plots
 plt.figure(1)
 
 plt.subplot(321)

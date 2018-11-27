@@ -11,8 +11,12 @@ min_deviations = []
 max_deviations = []
 len_deviations = []
 
+max_rotation = [3.14, 2.57, 2.53, 4.71, 2.44, 4.71]
+min_rotation = [-3.14, -2.27, -2.53, -4.71, -2.01, -4.71]
+
 number_of_points = 0
 
+#read from file
 test_file = open("logfile1.txt")
 
 for line in test_file:
@@ -27,10 +31,27 @@ for line in test_file:
 
 test_file.close()
 
+#remove dublicate goals
+for i in range(0,6):
+        last_goal = 0
+        j = 0
+        index = 0
+        length_of_list = len(goal_pos[i])
+        while j < length_of_list:
+                if last_goal == goal_pos[i][index]:
+                        last_goal = goal_pos[i][index]
+                        goal_pos[i].pop(index)
+                        goal_time[i].pop(index)
+                else:
+                        last_goal = goal_pos[i][index]
+                        index = index + 1
+                j = j + 1
+
 # for i in range(0,6):
 #     goal_time[i].pop(0)
 #     goal_time[i].append(number_of_points)
 
+#calculates deviations in degrees
 for i in range(0,6):
     j = 0
     while j < len(goal_pos[i]):
@@ -57,6 +78,9 @@ for i in range(0,6):
     len_deviations.append(len(deviations[i]))
 print("len deviations:", len_deviations)
 
+print(max_rotation)
+
+#plots
 plt.figure(1)
 
 plt.subplot(321)
