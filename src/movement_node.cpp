@@ -334,9 +334,7 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
     {
         TX90.setCurrPos(i, RobotState->actual.positions[i]);
         if(TX90.getLastPos(i) != TX90.getCurrPos(i))
-        {
             posChanging[i] = true;
-        }
         else
             posChanging[i] = false;
     }
@@ -346,7 +344,7 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
         double posBoundry;
         for (int i = 0; i < 6; i++)
         {
-            posBoundry = 0.02 * TX90.getMaxRotation(i);
+            posBoundry = 0.1 * TX90.getMaxRotation(i);
             if((TX90.getCurrPos(i) >= (TX90.getGoalPos(i) - posBoundry)) && (TX90.getCurrPos(i) <= (TX90.getGoalPos(i) + posBoundry)))
                 jointAtGoalCounter++;
         }

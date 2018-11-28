@@ -14,7 +14,7 @@ len_deviations = []
 number_of_points = 0
 
 #reads file
-test_file = open("logfile1.txt")
+test_file = open("logfile.txt")
 
 for line in test_file:
     if "GOAL" in line:
@@ -28,12 +28,14 @@ for line in test_file:
 
 test_file.close()
 
-
-
 #remove first item in list
 for i in range(0,6):
     goal_time[i].pop(0)
     goal_time[i].append(number_of_points)
+
+for i in range(0,6):
+    goal_pos[i].pop()
+    goal_time[i].pop()
 
 #calculate deviations in degrees
 for i in range(0,6):
@@ -69,6 +71,10 @@ plt.subplot(321)
 plt.grid(True)
 plt.plot(actual_pos[0], color = 'black')
 plt.plot(goal_time[0], goal_pos[0], marker = "x", linestyle = 'None', color = 'b')
+plt.axvline(x=0, linestyle = "-.", color = "r")
+plt.axvline(x=2410, linestyle = "-.", color = "r")
+plt.axvline(x=4730, linestyle = "-.", color = "r")
+
 plt.title("Joint 1")
 # plt.xlabel("Points [n]")
 # plt.ylabel("Angles [degrees]")
@@ -77,6 +83,9 @@ plt.subplot(322)
 plt.grid(True)
 plt.plot(actual_pos[1], color = 'black')
 plt.plot(goal_time[1], goal_pos[1], marker = "x", linestyle = 'None', color = 'b')
+plt.axvline(x=0, linestyle = "-.", color = "r")
+plt.axvline(x=2410, linestyle = "-.", color = "r")
+plt.axvline(x=4730, linestyle = "-.", color = "r")
 plt.title("Joint 2")
 # plt.xlabel("Points [n]")
 # plt.ylabel("Angles [degrees]")
@@ -85,6 +94,9 @@ plt.subplot(323)
 plt.grid(True)
 plt.plot(actual_pos[2], color = 'black')
 plt.plot(goal_time[2], goal_pos[2], marker = "x", linestyle = 'None', color = 'b')
+plt.axvline(x=0, linestyle = "-.", color = "r")
+plt.axvline(x=2410, linestyle = "-.", color = "r")
+plt.axvline(x=4730, linestyle = "-.", color = "r")
 plt.title("Joint 3")
 # plt.xlabel("Points [n]")
 plt.ylabel("Angles [degrees]")
@@ -93,6 +105,9 @@ plt.subplot(324)
 plt.grid(True)
 plt.plot(actual_pos[3], color = 'black')
 plt.plot(goal_time[3], goal_pos[3], marker = "x", linestyle = 'None', color = 'b')
+plt.axvline(x=0, linestyle = "-.", color = "r")
+plt.axvline(x=2410, linestyle = "-.", color = "r")
+plt.axvline(x=4730, linestyle = "-.", color = "r")
 plt.title("Joint 4")
 # plt.xlabel("Points [n]")
 plt.ylabel("Angles [degrees]")
@@ -101,6 +116,9 @@ plt.subplot(325)
 plt.grid(True)
 plt.plot(actual_pos[4], color = 'black')
 plt.plot(goal_time[4], goal_pos[4], marker = "x", linestyle = 'None', color = 'b')
+plt.axvline(x=0, linestyle = "-.", color = "r")
+plt.axvline(x=2410, linestyle = "-.", color = "r")
+plt.axvline(x=4730, linestyle = "-.", color = "r")
 plt.title("Joint 5")
 plt.xlabel("Points [n]")
 # plt.ylabel("Angles [degrees]")
@@ -109,6 +127,9 @@ plt.subplot(326)
 plt.grid(True)
 plt.plot(actual_pos[5], color = 'black')
 plt.plot(goal_time[5], goal_pos[5], marker = "x", linestyle = 'None', color = 'b')
+plt.axvline(x=0, linestyle = "-.", color = "r")
+plt.axvline(x=2410, linestyle = "-.", color = "r")
+plt.axvline(x=4730, linestyle = "-.", color = "r")
 plt.title("Joint 6")
 plt.xlabel("Points [n]")
 # plt.ylabel("Angles [degrees]")
