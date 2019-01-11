@@ -332,6 +332,7 @@ void robotStateCallback (const control_msgs::FollowJointTrajectoryFeedback::Cons
 
     for (int i = 0; i < 6; i++)
     {
+        TX90.setLastPos(i, TX90.getCurrPos(i));
         TX90.setCurrPos(i, RobotState->actual.positions[i]);
         if(TX90.getLastPos(i) != TX90.getCurrPos(i))
             posChanging[i] = true;
