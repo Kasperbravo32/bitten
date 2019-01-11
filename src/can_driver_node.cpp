@@ -121,7 +121,6 @@ int main(int argc, char** argv)
         {
             case CAN_MTU:
             {
-                // processFrame(frame);
                 can_msg.can_id = frame.can_id;
                 can_msg.lenth = frame.can_dlc; //payload is 8 bytes in length
                 for(int i = 0; i < 8; i++)
